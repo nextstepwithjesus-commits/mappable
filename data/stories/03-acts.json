@@ -1,0 +1,1729 @@
+{
+ "about": "Истории Деяний пакета 1: главы сцен Деян 9, 22, 26 размечены целиком; истории речей Павла выходят в Деян 21, 23, 25. Составитель историй, пакет 1; черновик до второго ключа.",
+ "chapters": [
+  "Деян 9",
+  "Деян 22",
+  "Деян 26"
+ ],
+ "stories": [
+  {
+   "id": "e-savl-na-puti-v-damask",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Савл на пути в Дамаск",
+    "by": "atlas",
+    "common": [
+     "Обращение Савла"
+    ]
+   },
+   "summary": [
+    {
+     "text": "Савл шёл в Дамаск, чтобы связывать учеников.",
+     "refs": [
+      "Деян 9:1",
+      "Деян 9:2"
+     ]
+    },
+    {
+     "text": "Его осиял свет с неба, и он упал на землю.",
+     "refs": [
+      "Деян 9:3",
+      "Деян 9:4"
+     ]
+    },
+    {
+     "text": "Голос сказал: Я Иисус, Которого ты гонишь.",
+     "refs": [
+      "Деян 9:5"
+     ]
+    },
+    {
+     "text": "Через три дня Анания возложил на него руки, и он прозрел.",
+     "refs": [
+      "Деян 9:9",
+      "Деян 9:17",
+      "Деян 9:18"
+     ]
+    }
+   ],
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:1-19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-savl-na-puti-v-damask#s1",
+     "title": {
+      "short": "Савл просит письма в Дамаск",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:1-2"
+       ]
+      },
+      {
+       "link": 1,
+       "refs": [
+        "Деян 26:12"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s2",
+     "title": {
+      "short": "Свет с неба",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:3"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:6"
+       ]
+      },
+      {
+       "link": 1,
+       "refs": [
+        "Деян 26:13"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s3",
+     "title": {
+      "short": "Савл, Савл! что ты гонишь Меня?",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:4-5"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:7-8"
+       ]
+      },
+      {
+       "link": 1,
+       "refs": [
+        "Деян 26:14-15"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s4",
+     "title": {
+      "short": "Спутники Савла",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:7"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:9"
+       ]
+      }
+     ],
+     "moved": [
+      {
+       "account": 0,
+       "after": "Деян 9:6"
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s5",
+     "title": {
+      "short": "Встань и иди",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:6"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:10"
+       ]
+      },
+      {
+       "link": 1,
+       "refs": [
+        "Деян 26:16-18"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s6",
+     "title": {
+      "short": "Ослеп; привели в Дамаск",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:8-9"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:11"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s7",
+     "title": {
+      "short": "Анания",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:10-17"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:12-13"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-savl-na-puti-v-damask#s8",
+     "title": {
+      "short": "Прозрел и крестился",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "Деян 9:18-19"
+       ]
+      },
+      {
+       "link": 0,
+       "refs": [
+        "Деян 22:14-16"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "Господи! что повелишь мне делать?",
+      "refs": [
+       "Деян 9:6"
+      ]
+     },
+     "refs": [
+      "Деян 9:1",
+      "Деян 9:4",
+      "Деян 9:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "role": "speaks",
+     "roleText": {
+      "text": "Я Иисус, Которого ты гонишь",
+      "refs": [
+       "Деян 9:5"
+      ]
+     },
+     "refs": [
+      "Деян 9:5",
+      "Деян 9:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:pervosvyashchennik-deyan9",
+     "label": "первосвященнику",
+     "kind": "unnamed",
+     "role": "addressed",
+     "roleText": {
+      "text": "и выпросил у него письма в Дамаск к синагогам",
+      "refs": [
+       "Деян 9:2"
+      ]
+     },
+     "refs": [
+      "Деян 9:1",
+      "Деян 9:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:sputniki-savla",
+     "label": "Люди же, шедшие с ним",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "стояли в оцепенении, слыша голос, а никого не видя",
+      "refs": [
+       "Деян 9:7"
+      ]
+     },
+     "refs": [
+      "Деян 9:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ananiya-damask",
+     "label": "Анания",
+     "kind": "human",
+     "role": "acts",
+     "roleText": {
+      "text": "брат Савл! Господь Иисус, явившийся тебе на пути, которым ты шел, послал меня",
+      "refs": [
+       "Деян 9:17"
+      ]
+     },
+     "refs": [
+      "Деян 9:10",
+      "Деян 9:13",
+      "Деян 9:17"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:damask",
+     "label": "Дамаск",
+     "role": "to",
+     "refs": [
+      "Деян 9:2",
+      "Деян 9:3",
+      "Деян 9:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:ulitsa-pryamaya",
+     "label": "улицу, так называемую Прямую",
+     "role": "where",
+     "refs": [
+      "Деян 9:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:dom-iudy-damask",
+     "label": "Иудином доме",
+     "role": "where",
+     "refs": [
+      "Деян 9:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "mentioned",
+     "refs": [
+      "Деян 9:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Деян 22:6-16"
+     ],
+     "kind": "retelling",
+     "words": [
+      "Савл, Савл! что ты гонишь Меня?",
+      "Дамаску"
+     ],
+     "teller": "p-pavel",
+     "inStory": "e-pavel-govorit-k-narodu-s-lestnitsy",
+     "sameBook": true,
+     "action": true,
+     "note": "пересказ Павла в речи к народу: «выслушайте теперь мое оправдание» (Деян 22:1)",
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Деян 26:12-18"
+     ],
+     "kind": "retelling",
+     "words": [
+      "Савл, Савл! что ты гонишь Меня?",
+      "Дамаск"
+     ],
+     "teller": "p-pavel",
+     "inStory": "e-pavel-pered-agrippoy",
+     "sameBook": true,
+     "action": true,
+     "note": "пересказ Павла перед Агриппой: «царь Агриппа!» (Деян 26:2)",
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Деян 9:27"
+     ],
+     "kind": "retelling",
+     "words": [
+      "на пути он видел Господа"
+     ],
+     "teller": "p-varnava",
+     "inStory": "e-varnava-i-savl-v-ierusalime",
+     "sameBook": true,
+     "action": true,
+     "note": "Варнава рассказывает апостолам",
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "1Кор 9:1"
+     ],
+     "kind": "mention",
+     "words": [
+      "видел ли я Иисуса Христа"
+     ],
+     "note": "слова Павла; что он говорит об этой встрече — вывод (11 § 14.4)",
+     "cert": "inference"
+    },
+    {
+     "refs": [
+      "1Кор 15:8"
+     ],
+     "kind": "mention",
+     "words": [
+      "явился и мне"
+     ],
+     "note": "слова Павла; что он говорит об этой встрече — вывод (11 § 14.4)",
+     "cert": "inference"
+    },
+    {
+     "refs": [
+      "Гал 1:15-17"
+     ],
+     "kind": "mention",
+     "words": [
+      "возвратился в Дамаск"
+     ],
+     "action": true,
+     "note": "слова Павла; что он говорит об этой встрече — вывод (11 § 14.4)",
+     "cert": "inference"
+    },
+    {
+     "refs": [
+      "1Тим 1:13"
+     ],
+     "kind": "mention",
+     "words": [
+      "гонитель"
+     ],
+     "note": "слова Павла; что он говорит об этом времени — вывод (11 § 14.4)",
+     "cert": "inference"
+    }
+   ],
+   "discrepancies": [
+    {
+     "label": "когда",
+     "quotes": [
+      {
+       "ref": "Деян 22:6",
+       "text": "около полудня"
+      },
+      {
+       "ref": "Деян 26:13",
+       "text": "среди дня"
+      }
+     ]
+    },
+    {
+     "label": "спутники стояли или упали",
+     "quotes": [
+      {
+       "ref": "Деян 9:7",
+       "text": "Люди же, шедшие с ним, стояли в оцепенении"
+      },
+      {
+       "ref": "Деян 26:14",
+       "text": "Все мы упали на землю"
+      }
+     ]
+    },
+    {
+     "label": "видели ли спутники",
+     "quotes": [
+      {
+       "ref": "Деян 9:7",
+       "text": "а никого не видя"
+      },
+      {
+       "ref": "Деян 22:9",
+       "text": "Бывшие же со мною свет видели"
+      }
+     ]
+    },
+    {
+     "label": "слышали ли спутники",
+     "quotes": [
+      {
+       "ref": "Деян 9:7",
+       "text": "слыша голос"
+      },
+      {
+       "ref": "Деян 22:9",
+       "text": "но голоса Говорившего мне не слыхали"
+      }
+     ]
+    },
+    {
+     "label": "поручение",
+     "quotes": [
+      {
+       "ref": "Деян 9:15",
+       "text": "он есть Мой избранный сосуд"
+      },
+      {
+       "ref": "Деян 22:14",
+       "text": "Бог отцов наших предъизбрал тебя"
+      },
+      {
+       "ref": "Деян 26:16",
+       "text": "Я для того и явился тебе, чтобы поставить тебя служителем и свидетелем"
+      }
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Деян 9:1",
+     "end": "Деян 9:18",
+     "rule": 5,
+     "human": "рассказ один (повествователь); пересказы Павла — ссылки, их стихи — в историях речей (11 § 13.6; идея Н-2)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-savla-spuskayut-po-stene",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Савла спускают по стене в корзине",
+    "by": "atlas",
+    "manual": [
+     "спускают"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:20-25"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "стал проповедывать в синагогах об Иисусе, что Он есть Сын Божий",
+      "refs": [
+       "Деян 9:20"
+      ]
+     },
+     "refs": [
+      "Деян 9:22",
+      "Деян 9:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:iudei-v-damaske",
+     "label": "Иудеи",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "Иудеи согласились убить его",
+      "refs": [
+       "Деян 9:23"
+      ]
+     },
+     "refs": [
+      "Деян 9:22",
+      "Деян 9:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ucheniki-v-damaske",
+     "label": "Ученики",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "Ученики же ночью, взяв его, спустили по стене в корзине",
+      "refs": [
+       "Деян 9:25"
+      ]
+     },
+     "refs": [
+      "Деян 9:25"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:damask",
+     "label": "Дамаске",
+     "role": "where",
+     "refs": [
+      "Деян 9:22"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 9:20",
+     "end": "Деян 9:25",
+     "rule": 5,
+     "human": "Деян 9:19 («И был Савл несколько дней с учениками в Дамаске») — в прошлой истории: стих не делится"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-varnava-i-savl-v-ierusalime",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Варнава и Савл в Иерусалиме",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:26-30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "и смело проповедывал во имя Господа Иисуса",
+      "refs": [
+       "Деян 9:28"
+      ]
+     },
+     "refs": [
+      "Деян 9:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-varnava",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "Варнава же, взяв его, пришел к Апостолам",
+      "refs": [
+       "Деян 9:27"
+      ]
+     },
+     "refs": [
+      "Деян 9:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:apostoly",
+     "label": "Апостолам",
+     "kind": "group",
+     "role": "addressed",
+     "refs": [
+      "Деян 9:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ellinisty",
+     "label": "Еллинистами",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "а они покушались убить его",
+      "refs": [
+       "Деян 9:29"
+      ]
+     },
+     "refs": [
+      "Деян 9:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:bratiya-v-ierusalime",
+     "label": "Братия",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "отправили его в Кесарию и препроводили в Тарс",
+      "refs": [
+       "Деян 9:30"
+      ]
+     },
+     "refs": [
+      "Деян 9:30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "where",
+     "refs": [
+      "Деян 9:26",
+      "Деян 9:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:kesariya",
+     "label": "Кесарию",
+     "role": "via",
+     "refs": [
+      "Деян 9:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:tars",
+     "label": "Тарс",
+     "role": "to",
+     "refs": [
+      "Деян 9:30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 9:26",
+     "end": "Деян 9:30",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-tserkvi-v-pokoe",
+   "level": "story",
+   "kind": "summary",
+   "title": {
+    "short": "Церкви в покое",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:31"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "new:tserkvi",
+     "label": "Церкви",
+     "kind": "group",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Деян 9:31"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:iudeya",
+     "label": "Иудее",
+     "role": "where",
+     "refs": [
+      "Деян 9:31"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:galileya",
+     "label": "Галилее",
+     "role": "where",
+     "refs": [
+      "Деян 9:31"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:samariya",
+     "label": "Самарии",
+     "role": "where",
+     "refs": [
+      "Деян 9:31"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 9:31",
+     "end": "Деян 9:31",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-petr-i-eney",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Пётр и Эней",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:32-35"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-petr",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "Эней! исцеляет тебя Иисус Христос; встань с постели твоей",
+      "refs": [
+       "Деян 9:34"
+      ]
+     },
+     "refs": [
+      "Деян 9:32",
+      "Деян 9:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:eney",
+     "label": "Энея",
+     "kind": "human",
+     "role": "suffers",
+     "main": true,
+     "roleText": {
+      "text": "И он тотчас встал",
+      "refs": [
+       "Деян 9:34"
+      ]
+     },
+     "refs": [
+      "Деян 9:33",
+      "Деян 9:34"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:lidda",
+     "label": "Лидде",
+     "role": "where",
+     "refs": [
+      "Деян 9:32",
+      "Деян 9:35"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:saron",
+     "label": "Сароне",
+     "role": "mentioned",
+     "refs": [
+      "Деян 9:35"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 9:32",
+     "end": "Деян 9:35",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-petr-i-tavifa",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Пётр и Тавифа",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 9:36-43"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-petr",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "Тавифа! встань",
+      "refs": [
+       "Деян 9:40"
+      ]
+     },
+     "refs": [
+      "Деян 9:38",
+      "Деян 9:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tavifa",
+     "label": "Тавифа",
+     "kind": "human",
+     "role": "suffers",
+     "main": true,
+     "roleText": {
+      "text": "И она открыла глаза свои и, увидев Петра, села",
+      "refs": [
+       "Деян 9:40"
+      ]
+     },
+     "refs": [
+      "Деян 9:36",
+      "Деян 9:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ucheniki-v-ioppii",
+     "label": "ученики",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Деян 9:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:vdovitsy-v-ioppii",
+     "label": "вдовицы",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Деян 9:39",
+      "Деян 9:41"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:simon-kozhevnik",
+     "label": "Симона кожевника",
+     "kind": "human",
+     "role": "mentioned",
+     "refs": [
+      "Деян 9:43"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ioppiya",
+     "label": "Иоппии",
+     "role": "where",
+     "refs": [
+      "Деян 9:36",
+      "Деян 9:42"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gornitsa-v-ioppii",
+     "label": "горнице",
+     "role": "where",
+     "refs": [
+      "Деян 9:37",
+      "Деян 9:39"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 9:36",
+     "end": "Деян 9:42",
+     "rule": 5,
+     "human": "Деян 9:43 — следствие, связанное словами «пробыл он в Иоппии» (правило 6)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-pavel-govorit-k-narodu-s-lestnitsy",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Павел говорит к народу с лестницы",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 21:37-22:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Павел и тысяченачальник",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 21:37-40"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Моё оправдание",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 22:1-21"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Истреби от земли такого!",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 22:22-23"
+     ],
+     "change": [
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "выслушайте теперь мое оправдание перед вами",
+      "refs": [
+       "Деян 22:1"
+      ]
+     },
+     "refs": [
+      "Деян 21:37",
+      "Деян 21:39",
+      "Деян 21:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tysyachenachalnik-deyan21",
+     "label": "тысяченачальнику",
+     "kind": "unnamed",
+     "role": "speaks",
+     "roleText": {
+      "text": "ты знаешь по-гречески?",
+      "refs": [
+       "Деян 21:37"
+      ]
+     },
+     "refs": [
+      "Деян 21:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-v-ierusalime",
+     "label": "народу",
+     "kind": "group",
+     "role": "addressed",
+     "roleText": {
+      "text": "истреби от земли такого! ибо ему не должно жить",
+      "refs": [
+       "Деян 22:22"
+      ]
+     },
+     "refs": [
+      "Деян 21:39",
+      "Деян 21:40",
+      "Деян 22:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 22:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ananiya-damask",
+     "label": "Анания",
+     "kind": "human",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 22:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:gamaliil-uchitel",
+     "label": "Гамалиила",
+     "kind": "human",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 22:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:stefan",
+     "label": "Стефана",
+     "kind": "human",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 22:20"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:krepost-v-ierusalime",
+     "label": "крепость",
+     "role": "where",
+     "refs": [
+      "Деян 21:37"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:lestnitsa-kreposti",
+     "label": "лестнице",
+     "role": "where",
+     "refs": [
+      "Деян 21:40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 21:37",
+     "end": "Деян 22:22",
+     "rule": 5,
+     "human": "речь с рассказанной обстановкой: просьба говорить (21:37–40) и исход — крик народа (22:22–23); взятие Павла в храме (Деян 21:27–36) — прошлая история, Деян 21 целиком не размечена"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-ya-poshlyu-tebya-k-yazychnikam",
+   "level": "story",
+   "kind": "vision",
+   "title": {
+    "short": "Я пошлю тебя далеко к язычникам",
+    "by": "atlas"
+   },
+   "accounts": [],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "acts",
+     "main": true,
+     "mode": "in-speech",
+     "roleText": {
+      "text": "пришел я в исступление",
+      "refs": [
+       "Деян 22:17"
+      ]
+     },
+     "refs": [
+      "Деян 22:17"
+     ],
+     "antecedent": "Деян 21:40",
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "role": "speaks",
+     "mode": "in-speech",
+     "roleText": {
+      "text": "иди; Я пошлю тебя далеко к язычникам",
+      "refs": [
+       "Деян 22:21"
+      ]
+     },
+     "refs": [
+      "Деян 22:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:khram",
+     "label": "храме",
+     "role": "where",
+     "refs": [
+      "Деян 22:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "where",
+     "refs": [
+      "Деян 22:17"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Деян 22:17-21"
+     ],
+     "kind": "retelling",
+     "words": [
+      "молился в храме",
+      "исступление"
+     ],
+     "teller": "p-pavel",
+     "inStory": "e-pavel-govorit-k-narodu-s-lestnitsy",
+     "sameBook": true,
+     "action": true,
+     "note": "событие известно только из слов Павла (11 § 4.3): своя запись с единственным пересказом лица",
+     "cert": "scripture"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Деян 22:17",
+     "end": "Деян 22:21",
+     "rule": 4,
+     "human": "видение: «пришел я в исступление, и увидел Его» (Деян 22:17–18); стихи принадлежат истории речи"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-pavel-rimskiy-grazhdanin",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Павел — Римский гражданин",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 22:24-29"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "разве вам позволено бичевать Римского гражданина, да и без суда?",
+      "refs": [
+       "Деян 22:25"
+      ]
+     },
+     "refs": [
+      "Деян 22:25",
+      "Деян 22:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tysyachenachalnik-deyan21",
+     "label": "тысяченачальник",
+     "kind": "unnamed",
+     "role": "speaks",
+     "roleText": {
+      "text": "я за большие деньги приобрел это гражданство",
+      "refs": [
+       "Деян 22:28"
+      ]
+     },
+     "refs": [
+      "Деян 22:24",
+      "Деян 22:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:sotnik-deyan22",
+     "label": "сотнику",
+     "kind": "unnamed",
+     "role": "speaks",
+     "refs": [
+      "Деян 22:25",
+      "Деян 22:26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:krepost-v-ierusalime",
+     "label": "крепость",
+     "role": "where",
+     "refs": [
+      "Деян 22:24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 22:24",
+     "end": "Деян 22:29",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-pavel-pered-sinedrionom",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Павел перед синедрионом",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 22:30-23:10"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "я фарисей, сын фарисея; за чаяние воскресения мертвых меня судят",
+      "refs": [
+       "Деян 23:6"
+      ]
+     },
+     "refs": [
+      "Деян 23:1",
+      "Деян 23:3",
+      "Деян 23:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:tysyachenachalnik-deyan21",
+     "label": "тысяченачальник",
+     "kind": "unnamed",
+     "role": "acts",
+     "roleText": {
+      "text": "повелел воинам сойти взять его из среды их и отвести в крепость",
+      "refs": [
+       "Деян 23:10"
+      ]
+     },
+     "refs": [
+      "Деян 23:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ananiya-pervosvyashchennik",
+     "label": "Анания",
+     "kind": "human",
+     "role": "acts",
+     "roleText": {
+      "text": "приказал бить его по устам",
+      "refs": [
+       "Деян 23:2"
+      ]
+     },
+     "refs": [
+      "Деян 23:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:farisei-v-sinedrione",
+     "label": "фарисеев",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Деян 23:6",
+      "Деян 23:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:saddukei",
+     "label": "саддукеев",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Деян 23:6",
+      "Деян 23:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sinedrion",
+     "label": "синедрион",
+     "role": "where",
+     "refs": [
+      "Деян 22:30",
+      "Деян 23:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 22:30",
+     "end": "Деян 23:10",
+     "rule": 5,
+     "human": "Деян 23:11 (явление Господа ночью) — не размечено: Деян 23 целиком не входит в пакет"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-pavel-pered-agrippoy",
+   "level": "story",
+   "kind": "speech",
+   "title": {
+    "short": "Павел перед Агриппой",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Деян 25:13-26:32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Фест рассказывает Агриппе о Павле",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 25:13-22"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Фест представляет Павла",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 25:23-27"
+     ],
+     "change": [
+      "time",
+      "place"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Речь Павла",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 26:1-23"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Безумствуешь ты, Павел!",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 26:24-29"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Ничего достойного смерти",
+      "by": "atlas"
+     },
+     "refs": [
+      "Деян 26:30-32"
+     ],
+     "change": [
+      "place"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-pavel",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "я не воспротивился небесному видению",
+      "refs": [
+       "Деян 26:19"
+      ]
+     },
+     "refs": [
+      "Деян 25:19",
+      "Деян 26:1",
+      "Деян 26:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-agrippa",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "ты немного не убеждаешь меня сделаться Христианином",
+      "refs": [
+       "Деян 26:28"
+      ]
+     },
+     "refs": [
+      "Деян 25:13",
+      "Деян 25:22",
+      "Деян 26:1",
+      "Деян 26:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-verenika",
+     "role": "mentioned",
+     "refs": [
+      "Деян 25:13",
+      "Деян 25:23",
+      "Деян 26:30"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:fest",
+     "label": "Фест",
+     "kind": "human",
+     "role": "speaks",
+     "roleText": {
+      "text": "безумствуешь ты, Павел!",
+      "refs": [
+       "Деян 26:24"
+      ]
+     },
+     "refs": [
+      "Деян 25:14",
+      "Деян 25:24",
+      "Деян 26:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-feliks",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 25:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iisus",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "Деян 26:15"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:kesariya",
+     "label": "Кесарию",
+     "role": "where",
+     "refs": [
+      "Деян 25:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:sudebnaya-palata",
+     "label": "судебную палату",
+     "role": "where",
+     "refs": [
+      "Деян 25:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Деян 25:22",
+     "end": "Деян 26:31",
+     "rule": 5,
+     "human": "завязка — «хотел бы и я послушать этого человека» (25:22); развязка — «этот человек ничего, достойного смерти или уз, не делает» (26:31)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  }
+ ],
+ "classes": [],
+ "parallels": []
+}

@@ -19,8 +19,9 @@ import { join } from 'node:path';
 import type {
   ActorRelation,
   Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
-  Place, Prov, ReadingSet, Redirect, Source, Union, UnionTerm,
+  Place, Prov, ReadingSet, Redirect, Source, Story, TextParallel, Union, UnionTerm, VerseClass,
 } from './types.ts';
+import { attachStories } from './stories.ts';
 import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
 import { STEPS_D3 } from './corrections-d3.ts';
@@ -88,6 +89,14 @@ export interface Base {
   places?: Place[];
   /** Отношения лиц «не то же лицо» и «возможно, то же лицо» (02 § 3.11.1; Д-5). */
   relations: ActorRelation[];
+  /**
+   * Истории и повествования (02 § 3.12; 11 § 11): новая коллекция без прежних данных — из data/stories/*.json (stories.ts),
+   * после шагов правки. Классы стихов «вне историй», параллельные тексты и главы, размеченные целиком.
+   */
+  stories?: Story[];
+  verseClasses?: VerseClass[];
+  textParallels?: TextParallel[];
+  storyChapters?: string[];
   /**
    * Происхождение файлов base/ по умолчанию (02 § 3.1: у файла — значение по умолчанию, у записи — уточнение): путь от
    * base/ («actors/04-abraham.json», «origins.json», «lines/luke.json») → prov файла. Нет — как у переноса: черновик.
@@ -391,6 +400,7 @@ export function buildBase(opts: BuildOptions = {}) {
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
   base.ids = iss.table;
   base.places = readItems('places.json');
+  attachStories(base);
   return base;
 }
 
@@ -492,6 +502,8 @@ function main() {
   console.log(`после исправлений: изменений вне областей шагов ${bad}; отличий в прежнем виде ${d1.length}`);
   if (process.argv.includes('--verbose')) for (const x of d1) console.log(`   ${x.what} ${x.id}${x.fields ? ` [${x.fields.join(', ')}]` : ''}`);
   if (bad) process.exit(1);
+  attachStories(base);
+  console.log(`истории (data/stories): ${base.stories!.length}; классов «вне историй» ${base.verseClasses!.length}; размеченных глав ${base.storyChapters!.length}`);
   if (check) return;
 
   // 3. запись
@@ -517,6 +529,14 @@ function main() {
   write('memberships.json', file('Членство', base.memberships));
   write('chrono.json', file('Хронологические входы (прежний вид; переработка — этап Д6)', base.chrono));
   write('nodata.json', file('Нет сведений', base.nodata));
+  // истории (11 § 11; 02 § 3.12): составитель историй, черновик до второго ключа
+  const storyFile = <T>(title: string, items: T[]): BaseFile<T> => ({
+    schema: 1, title, prov: { by: 'составитель историй (11 § 12.1, И3)', at, status: 'draft', from: { vol: 'data/stories', commit } }, sources: [...TEXT_SOURCES], items,
+  });
+  write('stories.json', storyFile('Истории и повествования (11 § 11)', base.stories ?? []));
+  write('verse-classes.json', storyFile('Классы стихов «вне историй» (11 § 2.4)', base.verseClasses ?? []));
+  write('text-parallels.json', storyFile('Параллельные тексты вне историй (11 § 4.11.4)', base.textParallels ?? []));
+  write('story-chapters.json', storyFile('Главы, размеченные целиком (11 § 2.5)', base.storyChapters ?? []));
   // переадресация и выданные номера только дописываются (К-16): файл переписывается, только если есть новые строки
   const redirectsFile = join(OUT, 'redirects.json');
   if (!existsSync(redirectsFile)) write('redirects.json', file('Переадресация номеров', redirects));

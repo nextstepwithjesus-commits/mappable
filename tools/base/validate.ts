@@ -21,6 +21,7 @@ import { namedVerses, ownRefs } from './own-verses.ts';
 import { validateRegistry } from './sources.ts';
 import { loadIds, PREFIX, type IdKind } from './ids.ts';
 import { releaseOk } from './release.ts';
+import { validateStories } from './stories.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -84,6 +85,11 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     places: existsSync(join(dir, 'places.json')) ? items('places.json') : [],
     relations: existsSync(join(dir, 'relations.json')) ? items('relations.json') : [],
+    // истории (02 § 3.12; 11 § 11): файлы пишет перенос из data/stories/
+    stories: existsSync(join(dir, 'stories.json')) ? items('stories.json') : [],
+    verseClasses: existsSync(join(dir, 'verse-classes.json')) ? items('verse-classes.json') : [],
+    textParallels: existsSync(join(dir, 'text-parallels.json')) ? items('text-parallels.json') : [],
+    storyChapters: existsSync(join(dir, 'story-chapters.json')) ? items('story-chapters.json') : [],
     checks: loadChecks(dir),
     ids: loadIds(dir),
   };
@@ -293,6 +299,7 @@ export function validate(base: Base): Issue[] {
   }
   // ---------- места (02 § 3.13; 05 § 10; К-11, К-14) ----------
   validatePlaces(base, err, warn, (w, ref) => texts(w, ref));
+  validateStories(base, err, warn);
 
   // ---------- новые правила (К-8) ----------
   // «толк.» у обозначения союза и родства словами: у них нет набора прочтений — толкование здесь не хранится (02 § 3.1).

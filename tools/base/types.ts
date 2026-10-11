@@ -604,3 +604,193 @@ export interface Place {
   sources?: string[];
   prov?: Partial<Prov>;
 }
+
+// ---------- истории (02 § 3.12; 11 § 11.2; В-21, В-30) ----------
+
+/** Уровень (11 § 2.1): повествование — ряд историй без своих стихов; часть — поле истории, не уровень (В-21). */
+export type StoryLevel = 'cycle' | 'story';
+/** Вид истории (11 § 2.3). */
+export type StoryKind =
+  | 'event' | 'speech' | 'parable' | 'jesus-story' | 'told-story'
+  | 'vision' | 'dream' | 'sign-act' | 'song' | 'prayer' | 'genealogy' | 'summary' | 'notice';
+
+/** Рассказ повествователя в одной книге (11 § 4.5, вид 1). */
+export interface Account {
+  /** Отрезки стихов одной книги: ['1Цар 28:1-2', '1Цар 29:1-11']. */
+  refs: Ref[];
+  /** Уровень «это та же история»: у основного рассказа — «Писание». */
+  cert: Cert;
+  /** Основание склейки рассказов (11 § 2.6): единственное событие; разные книги без расхождения во времени; сказано. */
+  basis?: {
+    kind: 'single-event' | 'other-books' | 'said';
+    refs: Ref[];
+    /** Для other-books — слова времени у рассказов, проверенные на расхождение (пусто, если их нет). */
+    time?: Ref[];
+    note?: string;
+  };
+}
+
+/** Часть истории (11 § 2.2, правило 9): только у истории длиннее 20 стихов; адрес — по первому стиху. */
+export interface StoryPart {
+  n: number;
+  title: { short: string; by: 'atlas' };
+  /** По каждому рассказу, если их несколько. */
+  refs: Ref[];
+  /** Какой признак сцены сменился: место, состав лиц, время. У первой части — пусто. */
+  change: ('place' | 'actors' | 'time')[];
+}
+
+/** Сцена синопсиса (11 § 4.11.2): `e-…#s<n>`. */
+export interface Scene {
+  id: string;
+  title: { short: string; by: 'atlas' };
+  /** Клетки: `account` — номер рассказа (с нуля), `link` — номер ссылки-пересказа в `links`. */
+  refs: { account?: number; link?: number; refs: Ref[] }[];
+  /** Стих, поделённый между этой сценой и соседней: стоит в обеих, копируется один раз. */
+  split?: Ref[];
+  /** Стихи разных рассказов на одной высоте. */
+  pairs?: Ref[][];
+  /** В этом рассказе сцена стоит в другом месте — «в Лк — раньше, после 9:13». */
+  moved?: { account: number; after: Ref }[];
+}
+
+/**
+ * Участник истории (11 § 4.3). `actor` — номер лица базы (`p-…`); `god` — Бог словами текста (строка над лицами, 11 § 4.3);
+ * `new:<слово>` — лица ещё нет в базе (жена Ноя, расслабленный): строка ведёт на «Эту карточку мы ещё не составили»
+ * (07 § 8.5), а лицо заводит Д4. У `god` и `new:` — `label`: слова стиха, по которым лицо названо.
+ */
+export interface StoryActor {
+  actor: string;
+  label?: string;
+  /** Вид лица для `new:` (для строки: «группа», «птица»). */
+  kind?: ActorKind;
+  role: 'acts' | 'speaks' | 'addressed' | 'suffers' | 'mentioned';
+  main?: boolean;
+  /** В каком рассказе (номер с нуля), если не во всех. */
+  account?: number;
+  mode?: 'vision' | 'after-death' | 'in-speech' | 'parable';
+  roleText?: { text: string; refs: Ref[] };
+  refs: Ref[];
+  /**
+   * В стихах истории лицо названо только словом «Он», «её»: стих, где перед этим названо имя (тот же рассказ или прошлая
+   * история той же книги). Проверка имени — по этому стиху.
+   */
+  antecedent?: Ref;
+  cert: Cert;
+}
+
+/** Место истории (11 § 4.3; 05 § 5.1). Мест в базе ещё нет (05, Д5): `new:<слово>` с `label` — словами стиха. */
+export interface StoryPlace {
+  place: string;
+  label?: string;
+  role: 'where' | 'from' | 'to' | 'via' | 'mentioned';
+  account?: number;
+  refs: Ref[];
+  cert: Cert;
+}
+
+/** Вид ссылки на историю (11 § 4.5): рассказ — это Account. */
+export type LinkKind = 'retelling' | 'mention' | 'allusion' | 'possibly-same' | 'type';
+
+/** Место Писания вне рассказов истории (11 § 4.5). */
+export interface StoryLink {
+  refs: Ref[];
+  kind: LinkKind;
+  /** Для пересказа лица: кто рассказывает; стихи принадлежат истории речи (`inStory`). */
+  teller?: string;
+  inStory?: string;
+  /** Для possibly-same: номер другой истории. */
+  story?: string;
+  /** mention с несколькими целями (надписание Пс 53:2) — выбор цели «толк.». */
+  targets?: string[];
+  /** Для allusion — стих истории со словами пары. */
+  basis?: Ref[];
+  /** Слова стиха ссылки, по которым он связан с историей (имя, место, предмет, слово действия; 11 § 11.3 п. 6). */
+  words?: string[];
+  /** Упоминание называет действие (для значимости). */
+  action?: boolean;
+  /** Слова лица расходятся с повествователем — не в значимость. */
+  contradicts?: boolean;
+  /** Связь внутри книги: в значимость не идёт. */
+  sameBook?: boolean;
+  cert: Cert;
+  /** Для «толк.»: труды совета источников (R9; В-30). */
+  works?: Cite[];
+  note?: string;
+}
+
+/** «Другая история — так сказано» (Мк 8:19–20). */
+export interface StoryRelation {
+  story: string;
+  kind: 'different';
+  refs: Ref[];
+  cert: Cert;
+}
+
+/** Тема трудного (11 § 8.3 п. 2). */
+export type HardTopic =
+  | 'смерть на глазах' | 'убийство' | 'казнь' | 'гибель детей' | 'угроза жизни ребёнка' | 'насилие над женщиной'
+  | 'блуд' | 'нагота' | 'самоубийство' | 'вызывание умершего' | 'страшные образы видения';
+
+export interface Story {
+  /** `e-…` — смысловой номер, хранится в записи (02 § 3.3.1). */
+  id: string;
+  level: StoryLevel;
+  kind: StoryKind;
+  /** Повествование. */
+  partOf?: string;
+  /**
+   * Название атласа (11 § 2.7). `manual` — значимые слова простого названия, которых нет в стихах истории в той же основе
+   * (другой корень, «ручная проверка», 11 § 11.3 п. 9).
+   */
+  title: { short: string; full?: string; alt?: string[]; common?: string[]; by: 'atlas'; manual?: string[] };
+  summary?: { text: string; refs: Ref[] }[];
+  /** ≥ 1; у повествования — пусто; у события, известного только из слов лица, — пусто, есть пересказ с `teller`. */
+  accounts: Account[];
+  parts?: StoryPart[];
+  scenes?: Scene[];
+  actors: StoryActor[];
+  places: StoryPlace[];
+  time?: { epoch?: string; after?: { story: string; refs: Ref[]; cert: Cert }[]; said?: { text: string; refs: Ref[] } };
+  links: StoryLink[];
+  relations?: StoryRelation[];
+  /** Различия — только цитатами стихов не меньше двух рассказов; label — короткая подпись атласа. */
+  discrepancies?: { label: string; quotes: { ref: Ref; text: string }[] }[];
+  /** Вставка, рассказ внутри речи, разрыв. */
+  nested?: { story: string; at: Ref; kind: 'insert' | 'told' | 'gap' }[];
+  /** Завязка, развязка и правило 11 § 2.2; human — почему решал человек (протокол И0). */
+  boundary?: { start: Ref; end?: Ref; rule: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8; human?: string }[];
+  hard?: { topic: HardTopic; refs: Ref[] }[];
+  /**
+   * Строка «назван ещё» в блоке «Где об этом в Библии» (11 § 4.5 п. 8): стих, где назван участник, но это не ссылка на
+   * историю (В-21) — «Голиаф Гефянин назван ещё в 2 Цар 21:19 — см. различия рассказов». Поля в 11 § 11.2 нет: поправка.
+   */
+  seeAlso?: { text: string; refs: Ref[]; story?: string }[];
+  themes?: string[];
+  source: { method: 'reading'; candidates?: ('prev-§17' | 'oshb' | 'openbible' | 'tsk' | 'names' | 'action-words' | 'theographic')[] };
+  prov?: Partial<Prov>;
+}
+
+/** Класс стихов «вне историй» (11 § 2.4). Ключ — `книга глава:с-по`. Стихи историй класса не получают: они в рассказах. */
+export interface VerseClass {
+  book: string;
+  ch: number;
+  from: number;
+  to: number;
+  class: 'law' | 'list' | 'teaching' | 'prophecy' | 'psalm' | 'wisdom' | 'intro';
+  why?: string;
+  /** Свод законов в разрыве этой истории (правило 8). */
+  inGap?: string;
+  prov?: Partial<Prov>;
+}
+
+/** Параллельные тексты вне историй (11 § 4.11.4): Ис 2 и Мих 4. Не связь и не тождество событий. */
+export interface TextParallel {
+  /** `tp-…`. */
+  id: string;
+  refs: Ref[][];
+  /** Слова, которые стоят во всех отрезках вне скобок. */
+  basis: { ref: Ref; text: string }[];
+  cert: 'scripture';
+  prov?: Partial<Prov>;
+}

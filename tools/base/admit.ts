@@ -37,8 +37,8 @@ export const PROBE_BANNER = 'Данные не проверены: проба';
 
 export type Coll =
   | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'cite' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
-  | 'line' | 'epoch' | 'anchor' | 'place' | 'relation';
-export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place', 'relation'];
+  | 'line' | 'epoch' | 'anchor' | 'place' | 'relation' | 'story' | 'vclass' | 'textparallel';
+export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place', 'relation', 'story', 'vclass', 'textparallel'];
 
 /**
  * Файлы base/ по коллекциям допуска (02 § 3.17 [4.1]; К-10): каждый файл базы принадлежит коллекции допуска или списку
@@ -49,12 +49,13 @@ export const COLL_FILES: Record<Coll, RegExp> = {
   reading: /^readings\.json$/, cite: /^readings\.json$/, area: /^areas\.json$/, membership: /^memberships\.json$/, nodata: /^nodata\.json$/,
   chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/,
   place: /^places\.json$/, relation: /^relations\.json$/,
+  story: /^stories\.json$/, vclass: /^verse-classes\.json$/, textparallel: /^text-parallels\.json$/,
 };
 /**
  * Служебные файлы base/ — не коллекции допуска: реестр источников, журнал подписей, исправления, выданные номера,
  * таблица нумерации стихов, отчёт и подсказки переноса.
  */
-export const SERVICE_FILES: RegExp[] = [/^sources\.json$/, /^checks\.json$/, /^corrections\.json$/, /^ids\.json$/, /^versification\//, /^legacy\//];
+export const SERVICE_FILES: RegExp[] = [/^story-chapters\.json$/, /^sources\.json$/, /^checks\.json$/, /^corrections\.json$/, /^ids\.json$/, /^versification\//, /^legacy\//];
 
 /** Запись базы для допуска: ключ, вид, сама запись, файл, содержащая запись и ключи записей, без которых её не показать. */
 export interface Rec {
@@ -177,6 +178,14 @@ export function records(base: Base): Rec[] {
   for (const a of base.anchors?.anchors ?? []) add('anchor', `anchor:${a.id}`, a, 'anchors.json', []);
   // места (02 § 3.13; К-11): связи с другими местами — ссылки, а не зависимости (§ 3.17)
   for (const p of base.places ?? []) add('place', `place:${p.id}`, p, 'places.json', []);
+  // истории (02 § 3.12): зависимости — лица-участники и тот, кто пересказывает; связанные истории, повествование и
+  // места — ссылки, а не зависимости (§ 3.17); `god` и `new:` — не записи базы
+  for (const st of base.stories ?? []) {
+    const people = [...st.actors.map((a) => a.actor), ...st.links.map((l) => l.teller)].filter((x): x is string => !!x && x.startsWith('p-'));
+    add('story', `story:${st.id}`, st, 'stories.json', people.map(A));
+  }
+  for (const c of base.verseClasses ?? []) add('vclass', `vclass:${c.book} ${c.ch}:${c.from}-${c.to}`, c, 'verse-classes.json', []);
+  for (const t of base.textParallels ?? []) add('textparallel', `textparallel:${t.id}`, t, 'text-parallels.json', []);
   return out;
 }
 

@@ -1,0 +1,2278 @@
+{
+ "about": "Истории Царств пакета 1: 1 Цар 17 (сцена 1.9), 1 Цар 25 (сцена 1.10), 2 Цар 21 (строка о 2 Цар 21:19), 3 Цар 17–18 (на них ссылается Послание Иакова, сцена 1.11) — размечены целиком; рассказ 1 Пар 20:4–8 склеен по 11 § 2.6. Составитель историй, пакет 1; черновик до второго ключа.",
+ "chapters": [
+  "1Цар 17",
+  "1Цар 25",
+  "2Цар 21",
+  "3Цар 17",
+  "3Цар 18"
+ ],
+ "stories": [
+  {
+   "id": "e-david-i-goliaf",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Давид и Голиаф",
+    "by": "atlas"
+   },
+   "summary": [
+    {
+     "text": "Филистимлянин Голиаф сорок дней вызывал Израиль на поединок.",
+     "refs": [
+      "1Цар 17:4",
+      "1Цар 17:16"
+     ]
+    },
+    {
+     "text": "Давид пришёл в стан и вызвался сразиться с ним.",
+     "refs": [
+      "1Цар 17:32"
+     ]
+    },
+    {
+     "text": "Давид бросил камень из пращи и поразил Филистимлянина.",
+     "refs": [
+      "1Цар 17:49"
+     ]
+    },
+    {
+     "text": "Филистимляне, увидев, что силач их умер, побежали.",
+     "refs": [
+      "1Цар 17:51"
+     ]
+    }
+   ],
+   "accounts": [
+    {
+     "refs": [
+      "1Цар 17:1-58"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Голиаф вызывает на поединок",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:1-11"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Иессей посылает Давида",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:12-19"
+     ],
+     "change": [
+      "actors",
+      "place"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Давид в стане",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:20-30"
+     ],
+     "change": [
+      "place",
+      "time"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Давид у Саула",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:31-40"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Поединок",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:41-54"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 6,
+     "title": {
+      "short": "Чей ты сын, юноша?",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 17:55-58"
+     ],
+     "change": [
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "Так одолел Давид Филистимлянина пращею и камнем",
+      "refs": [
+       "1Цар 17:50"
+      ]
+     },
+     "refs": [
+      "1Цар 17:12",
+      "1Цар 17:32",
+      "1Цар 17:49",
+      "1Цар 17:50"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-goliaf",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "дайте мне человека, и мы сразимся вдвоем",
+      "refs": [
+       "1Цар 17:10"
+      ]
+     },
+     "refs": [
+      "1Цар 17:4",
+      "1Цар 17:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-saul",
+     "role": "speaks",
+     "roleText": {
+      "text": "иди, и да будет Господь с тобою",
+      "refs": [
+       "1Цар 17:37"
+      ]
+     },
+     "refs": [
+      "1Цар 17:2",
+      "1Цар 17:33",
+      "1Цар 17:37",
+      "1Цар 17:55"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iessey",
+     "role": "speaks",
+     "roleText": {
+      "text": "И сказал Иессей Давиду, сыну своему",
+      "refs": [
+       "1Цар 17:17"
+      ]
+     },
+     "refs": [
+      "1Цар 17:12",
+      "1Цар 17:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-eliav-syn-iesseya",
+     "role": "speaks",
+     "roleText": {
+      "text": "зачем ты сюда пришел?",
+      "refs": [
+       "1Цар 17:28"
+      ]
+     },
+     "refs": [
+      "1Цар 17:13",
+      "1Цар 17:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-aminadav-syn-iesseya",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 17:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-samma-syn-iesseya",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 17:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avenir",
+     "role": "speaks",
+     "roleText": {
+      "text": "да живет душа твоя, царь; я не знаю",
+      "refs": [
+       "1Цар 17:55"
+      ]
+     },
+     "refs": [
+      "1Цар 17:55",
+      "1Цар 17:57"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:filistimlyane-1tsar17",
+     "label": "Филистимляне",
+     "kind": "people",
+     "role": "acts",
+     "roleText": {
+      "text": "Филистимляне, увидев, что силач их умер, побежали",
+      "refs": [
+       "1Цар 17:51"
+      ]
+     },
+     "refs": [
+      "1Цар 17:1",
+      "1Цар 17:51"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:izrailtyane-1tsar17",
+     "label": "Израильтяне",
+     "kind": "people",
+     "role": "acts",
+     "roleText": {
+      "text": "и очень испугались и ужаснулись",
+      "refs": [
+       "1Цар 17:11"
+      ]
+     },
+     "refs": [
+      "1Цар 17:2",
+      "1Цар 17:11",
+      "1Цар 17:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:oruzhenosets-goliafa",
+     "label": "оруженосец",
+     "kind": "unnamed",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 17:7",
+      "1Цар 17:41"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:lev-1tsar17",
+     "label": "лев",
+     "kind": "animal",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "1Цар 17:34"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:medved-1tsar17",
+     "label": "медведь",
+     "kind": "animal",
+     "role": "mentioned",
+     "mode": "in-speech",
+     "refs": [
+      "1Цар 17:34"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sokkhof",
+     "label": "Сокхофе",
+     "role": "where",
+     "refs": [
+      "1Цар 17:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:efes-dammim",
+     "label": "Ефес-Даммиме",
+     "role": "where",
+     "refs": [
+      "1Цар 17:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:dolina-duba",
+     "label": "долине дуба",
+     "role": "where",
+     "refs": [
+      "1Цар 17:2",
+      "1Цар 17:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:vifleem",
+     "label": "Вифлееме",
+     "role": "from",
+     "refs": [
+      "1Цар 17:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gef",
+     "label": "Гефа",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 17:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:akkaron",
+     "label": "Аккарона",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 17:52"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:ierusalim",
+     "label": "Иерусалим",
+     "role": "to",
+     "refs": [
+      "1Цар 17:54"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "1Цар 18:6"
+     ],
+     "kind": "mention",
+     "words": [
+      "с победы над Филистимлянином"
+     ],
+     "sameBook": true,
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "1Цар 19:5"
+     ],
+     "kind": "mention",
+     "words": [
+      "поразить Филистимлянина"
+     ],
+     "sameBook": true,
+     "action": true,
+     "note": "слова Ионафана; имени нет — что речь об этом поединке, вывод",
+     "cert": "inference"
+    },
+    {
+     "refs": [
+      "1Цар 21:9"
+     ],
+     "kind": "mention",
+     "words": [
+      "меч Голиафа Филистимлянина",
+      "поразил в долине дуба"
+     ],
+     "sameBook": true,
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "1Цар 22:10"
+     ],
+     "kind": "mention",
+     "words": [
+      "меч Голиафа Филистимлянина"
+     ],
+     "sameBook": true,
+     "cert": "scripture"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "1Цар 17:10",
+     "end": "1Цар 17:51",
+     "rule": 2,
+     "human": "завязка — «дайте мне человека, и мы сразимся вдвоем» (17:10); развязка — «Филистимляне, увидев, что силач их умер, побежали» (17:51); 17:55–58 начата внутри дела (правило 2); после — новые дела «заключил с Давидом союз» (18:3) и «подозрительно смотрел Саул на Давида» (18:9) (правило 5)"
+    }
+   ],
+   "hard": [
+    {
+     "topic": "смерть на глазах",
+     "refs": [
+      "1Цар 17:49",
+      "1Цар 17:50",
+      "1Цар 17:51"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   },
+   "seeAlso": [
+    {
+     "text": "Голиаф Гефянин назван ещё в 2 Цар 21:19 — см. различия рассказов",
+     "refs": [
+      "2Цар 21:19",
+      "1Пар 20:5"
+     ],
+     "story": "e-snova-voyna-s-filistimlyanami"
+    }
+   ]
+  },
+  {
+   "id": "e-umer-samuil",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Умер Самуил",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-samuil",
+     "role": "suffers",
+     "main": true,
+     "roleText": {
+      "text": "И умер Самуил",
+      "refs": [
+       "1Цар 25:1"
+      ]
+     },
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:izrailtyane-1tsar25",
+     "label": "Израильтяне",
+     "kind": "people",
+     "role": "acts",
+     "roleText": {
+      "text": "и плакали по нем, и погребли его в доме его, в Раме",
+      "refs": [
+       "1Цар 25:1"
+      ]
+     },
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "roleText": {
+      "text": "Давид встал и сошел к пустыне Фаран",
+      "refs": [
+       "1Цар 25:1"
+      ]
+     },
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:rama",
+     "label": "Раме",
+     "role": "where",
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:pustynya-faran",
+     "label": "пустыне Фаран",
+     "role": "to",
+     "refs": [
+      "1Цар 25:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "1Цар 25:1",
+     "end": "1Цар 25:1",
+     "rule": 5,
+     "human": "известие: сцены нет; «Давид встал и сошел к пустыне Фаран» — переход в том же стихе, история о Навале начинается со стиха 25:2 (11 § 2.3, образец протокола И0). Мирная кончина одного — не трудное (11 § 8.3 п. 3)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-naval-i-avigeya",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Навал и Авигея",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Цар 25:2-42"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Давид посылает к Навалу",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 25:2-13"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Слуга извещает Авигею",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 25:14-19"
+     ],
+     "change": [
+      "place",
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Авигея встречает Давида",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 25:20-35"
+     ],
+     "change": [
+      "place"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Навал умер",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 25:36-38"
+     ],
+     "change": [
+      "place",
+      "time"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Авигея становится женою Давида",
+      "by": "atlas"
+     },
+     "refs": [
+      "1Цар 25:39-42"
+     ],
+     "change": [
+      "time"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-naval",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "кто такой Давид, и кто такой сын Иессеев?",
+      "refs": [
+       "1Цар 25:10"
+      ]
+     },
+     "refs": [
+      "1Цар 25:3",
+      "1Цар 25:10",
+      "1Цар 25:38"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avigeya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "Тогда Авигея поспешно взяла двести хлебов",
+      "refs": [
+       "1Цар 25:18"
+      ]
+     },
+     "refs": [
+      "1Цар 25:3",
+      "1Цар 25:18",
+      "1Цар 25:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "благословен Господь Бог Израилев, Который послал тебя ныне навстречу мне",
+      "refs": [
+       "1Цар 25:32"
+      ]
+     },
+     "refs": [
+      "1Цар 25:4",
+      "1Цар 25:13",
+      "1Цар 25:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:otroki-davida",
+     "label": "отроков",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "1Цар 25:5",
+      "1Цар 25:9"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:sluga-navala",
+     "label": "один из слуг",
+     "kind": "unnamed",
+     "role": "speaks",
+     "roleText": {
+      "text": "итак подумай и посмотри, что делать",
+      "refs": [
+       "1Цар 25:17"
+      ]
+     },
+     "refs": [
+      "1Цар 25:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "acts",
+     "roleText": {
+      "text": "Дней через десять поразил Господь Навала, и он умер",
+      "refs": [
+       "1Цар 25:38"
+      ]
+     },
+     "refs": [
+      "1Цар 25:38"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:maon",
+     "label": "Маоне",
+     "role": "where",
+     "refs": [
+      "1Цар 25:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:karmil",
+     "label": "Кармиле",
+     "role": "where",
+     "refs": [
+      "1Цар 25:2",
+      "1Цар 25:5"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "1Цар 25:5",
+     "end": "1Цар 25:42",
+     "rule": 5,
+     "human": "смерть Навала — известие о смерти одного, без сцены умирания: не трудное (11 § 8.3 п. 3)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-zhyony-davida",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Жёны Давида",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "1Цар 25:43-44"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "И Ахиноаму из Изрееля взял Давид, и обе они были его женами",
+      "refs": [
+       "1Цар 25:43"
+      ]
+     },
+     "refs": [
+      "1Цар 25:43"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhinoama",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 25:43"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-saul",
+     "role": "acts",
+     "roleText": {
+      "text": "Саул же отдал дочь свою Мелхолу, жену Давидову, Фалтию",
+      "refs": [
+       "1Цар 25:44"
+      ]
+     },
+     "refs": [
+      "1Цар 25:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-melkhola",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 25:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-faltiy-syn-laisha",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 25:44"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-laish-otets-faltiya",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 25:44"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:izreel",
+     "label": "Изрееля",
+     "role": "from",
+     "refs": [
+      "1Цар 25:43"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gallim",
+     "label": "Галлима",
+     "role": "mentioned",
+     "refs": [
+      "1Цар 25:44"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "1Цар 25:43",
+     "end": "1Цар 25:44",
+     "rule": 5,
+     "human": "известие без сцены; со следствием истории о Навале словами не связано (правило 6 не действует)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-golod-tri-goda-i-gavaonityane",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Голод три года и Гаваонитяне",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "2Цар 21:1-14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "И вопросил Давид Господа",
+      "refs": [
+       "2Цар 21:1"
+      ]
+     },
+     "refs": [
+      "2Цар 21:1",
+      "2Цар 21:3",
+      "2Цар 21:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "speaks",
+     "roleText": {
+      "text": "это ради Саула и кровожадного дома его",
+      "refs": [
+       "2Цар 21:1"
+      ]
+     },
+     "refs": [
+      "2Цар 21:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:gavaonityane",
+     "label": "Гаваонитян",
+     "kind": "people",
+     "role": "speaks",
+     "roleText": {
+      "text": "из его потомков выдай нам семь человек",
+      "refs": [
+       "2Цар 21:6"
+      ]
+     },
+     "refs": [
+      "2Цар 21:1",
+      "2Цар 21:2",
+      "2Цар 21:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-saul",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:1",
+      "2Цар 21:2",
+      "2Цар 21:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-memfivosfey",
+     "role": "mentioned",
+     "roleText": {
+      "text": "Но пощадил царь Мемфивосфея, сына Ионафана",
+      "refs": [
+       "2Цар 21:7"
+      ]
+     },
+     "refs": [
+      "2Цар 21:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ritspa",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "и не допускала касаться их птицам небесным днем и зверям полевым ночью",
+      "refs": [
+       "2Цар 21:10"
+      ]
+     },
+     "refs": [
+      "2Цар 21:8",
+      "2Цар 21:10",
+      "2Цар 21:11"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-armon",
+     "role": "suffers",
+     "refs": [
+      "2Цар 21:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-memfivosfey-syn-saula",
+     "role": "suffers",
+     "refs": [
+      "2Цар 21:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-melkhola",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-adriel",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ionafan",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:7",
+      "2Цар 21:12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:giva-saula",
+     "label": "Гиве Саула",
+     "role": "where",
+     "refs": [
+      "2Цар 21:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:iavis-galaadskiy",
+     "label": "Иависа Галаадского",
+     "role": "from",
+     "refs": [
+      "2Цар 21:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:bef-san",
+     "label": "Беф-Сана",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:tsela",
+     "label": "Цела",
+     "role": "where",
+     "refs": [
+      "2Цар 21:14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "2Цар 21:1",
+     "end": "2Цар 21:14",
+     "rule": 5,
+     "human": "завязка — «Был голод на земле… три года» (21:1); развязка — «и умилостивился Бог над страною после того» (21:14)"
+    }
+   ],
+   "hard": [
+    {
+     "topic": "казнь",
+     "refs": [
+      "2Цар 21:6",
+      "2Цар 21:9"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-snova-voyna-s-filistimlyanami",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Снова война с Филистимлянами",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "2Цар 21:15-22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "1Пар 20:4-8"
+     ],
+     "cert": "scripture",
+     "basis": {
+      "kind": "other-books",
+      "refs": [
+       "2Цар 21:18",
+       "1Пар 20:4",
+       "2Цар 21:20-22",
+       "1Пар 20:6-8"
+      ],
+      "time": [
+       "2Цар 21:18",
+       "1Пар 20:4"
+      ],
+      "note": "одни слова: «Совохай Хушатянин», «древко копья было, как навой у ткачей», рослый человек «по шести пальцев… двадцать четыре», «пали от руки Давида и слуг его» (2 Цар 21:18–22; 1 Пар 20:4–8); «Потом» (2 Цар 21:18) и «После того» (1 Пар 20:4) не расходятся. У 2 Цар — ещё сражение с Иесвием (21:15–17)"
+     }
+    }
+   ],
+   "scenes": [
+    {
+     "id": "e-snova-voyna-s-filistimlyanami#s1",
+     "title": {
+      "short": "Давид утомился; Авесса спасает его",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "2Цар 21:15-17"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-snova-voyna-s-filistimlyanami#s2",
+     "title": {
+      "short": "Совохай Хушатянин",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "2Цар 21:18"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "1Пар 20:4"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-snova-voyna-s-filistimlyanami#s3",
+     "title": {
+      "short": "Елханан",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "2Цар 21:19"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "1Пар 20:5"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-snova-voyna-s-filistimlyanami#s4",
+     "title": {
+      "short": "Рослый человек в Гефе",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "2Цар 21:20-21"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "1Пар 20:6-7"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "e-snova-voyna-s-filistimlyanami#s5",
+     "title": {
+      "short": "Пали от руки Давида и слуг его",
+      "by": "atlas"
+     },
+     "refs": [
+      {
+       "account": 0,
+       "refs": [
+        "2Цар 21:22"
+       ]
+      },
+      {
+       "account": 1,
+       "refs": [
+        "1Пар 20:8"
+       ]
+      }
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-david",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "и Давид утомился",
+      "refs": [
+       "2Цар 21:15"
+      ]
+     },
+     "refs": [
+      "2Цар 21:15",
+      "2Цар 21:17",
+      "2Цар 21:22",
+      "1Пар 20:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avessa",
+     "role": "acts",
+     "account": 0,
+     "roleText": {
+      "text": "Но ему помог Авесса, сын Саруин",
+      "refs": [
+       "2Цар 21:17"
+      ]
+     },
+     "refs": [
+      "2Цар 21:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iesviy",
+     "role": "suffers",
+     "account": 0,
+     "refs": [
+      "2Цар 21:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sovokhay",
+     "role": "acts",
+     "roleText": {
+      "text": "тогда Совохай Хушатянин убил Сафута",
+      "refs": [
+       "2Цар 21:18"
+      ]
+     },
+     "refs": [
+      "2Цар 21:18",
+      "1Пар 20:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-safut",
+     "role": "suffers",
+     "refs": [
+      "2Цар 21:18",
+      "1Пар 20:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-elkhanan-syn-yagare-orgima",
+     "role": "acts",
+     "roleText": {
+      "text": "тогда убил Елханан, сын Ягаре-Оргима Вифлеемского, Голиафа Гефянина",
+      "refs": [
+       "2Цар 21:19"
+      ]
+     },
+     "refs": [
+      "2Цар 21:19",
+      "1Пар 20:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-yagare-orgim",
+     "role": "mentioned",
+     "account": 0,
+     "refs": [
+      "2Цар 21:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-goliaf",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:19",
+      "1Пар 20:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-lakhmiy",
+     "role": "suffers",
+     "account": 1,
+     "refs": [
+      "1Пар 20:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:roslyy-v-gefe",
+     "label": "человек рослый",
+     "kind": "unnamed",
+     "role": "suffers",
+     "roleText": {
+      "text": "и он поносил Израильтян",
+      "refs": [
+       "2Цар 21:21"
+      ]
+     },
+     "refs": [
+      "2Цар 21:20",
+      "1Пар 20:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ionafan-syn-sammy",
+     "role": "acts",
+     "refs": [
+      "2Цар 21:21",
+      "1Пар 20:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-samma-syn-iesseya",
+     "role": "mentioned",
+     "refs": [
+      "2Цар 21:21",
+      "1Пар 20:7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:gob",
+     "label": "Гобе",
+     "role": "where",
+     "account": 0,
+     "refs": [
+      "2Цар 21:18",
+      "2Цар 21:19"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gef",
+     "label": "Гефе",
+     "role": "where",
+     "refs": [
+      "2Цар 21:20",
+      "2Цар 21:22",
+      "1Пар 20:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:gazer",
+     "label": "Газере",
+     "role": "where",
+     "account": 1,
+     "refs": [
+      "1Пар 20:4"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "discrepancies": [
+    {
+     "label": "кого убил Елханан",
+     "quotes": [
+      {
+       "ref": "2Цар 21:19",
+       "text": "убил Елханан, сын Ягаре-Оргима Вифлеемского, Голиафа Гефянина"
+      },
+      {
+       "ref": "1Пар 20:5",
+       "text": "Елханам, сын Иаира, поразил Лахмия, брата Голиафова, Гефянина"
+      }
+     ]
+    },
+    {
+     "label": "где была война",
+     "quotes": [
+      {
+       "ref": "2Цар 21:18",
+       "text": "в Гобе"
+      },
+      {
+       "ref": "1Пар 20:4",
+       "text": "в Газере"
+      }
+     ]
+    },
+    {
+     "label": "имя убитого Совохаем",
+     "quotes": [
+      {
+       "ref": "2Цар 21:18",
+       "text": "убил Сафута"
+      },
+      {
+       "ref": "1Пар 20:4",
+       "text": "поразил Сафа"
+      }
+     ]
+    },
+    {
+     "label": "чей сын Ионафан",
+     "quotes": [
+      {
+       "ref": "2Цар 21:21",
+       "text": "Ионафан, сын Сафая, брата Давидова"
+      },
+      {
+       "ref": "1Пар 20:7",
+       "text": "Ионафан, сын Шимы, брата Давидова"
+      }
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "2Цар 21:15",
+     "end": "2Цар 21:22",
+     "rule": 5,
+     "human": "одна история, два рассказа (11 § 13.6): второй истории о Голиафе каталог не заводит; строка — на странице «Давид и Голиаф»"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-ni-rosy-ni-dozhdya",
+   "level": "cycle",
+   "kind": "event",
+   "title": {
+    "short": "Ни росы, ни дождя",
+    "by": "atlas"
+   },
+   "accounts": [],
+   "actors": [],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "3Цар 17:1",
+     "end": "3Цар 18:45",
+     "rule": 3,
+     "human": "повествование: засуха объявлена «в сии годы не будет ни росы, ни дождя» (17:1), дождь — «и пошел большой дождь» (18:45); между ними — истории со своими делами, которые засуху не двигают (правило 3). Что Кармил (18:19–40) — шаг дела о дожде, словами повествователя не сказано: три истории главы 18 — решение составителя для протокола И0"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-vorony-kormyat-iliyu",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Вороны кормят Илию",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 17:1-7"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "в сии годы не будет ни росы, ни дождя, разве только по моему слову",
+      "refs": [
+       "3Цар 17:1"
+      ]
+     },
+     "refs": [
+      "3Цар 17:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhav",
+     "role": "addressed",
+     "refs": [
+      "3Цар 17:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господне",
+     "role": "speaks",
+     "roleText": {
+      "text": "воронам Я повелел кормить тебя там",
+      "refs": [
+       "3Цар 17:4"
+      ]
+     },
+     "refs": [
+      "3Цар 17:2",
+      "3Цар 17:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:vorony-iliyi",
+     "label": "вороны",
+     "kind": "animal",
+     "role": "acts",
+     "roleText": {
+      "text": "И вороны приносили ему хлеб и мясо поутру",
+      "refs": [
+       "3Цар 17:6"
+      ]
+     },
+     "refs": [
+      "3Цар 17:4",
+      "3Цар 17:6"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:potok-khorafa",
+     "label": "потока Хорафа",
+     "role": "where",
+     "refs": [
+      "3Цар 17:3",
+      "3Цар 17:5"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:iordan",
+     "label": "Иордана",
+     "role": "mentioned",
+     "refs": [
+      "3Цар 17:3"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Иак 5:17"
+     ],
+     "kind": "mention",
+     "words": [
+      "Илия",
+      "не было дождя"
+     ],
+     "action": true,
+     "note": "подробности только в Иак 5:17: «молитвою помолился» и «три года и шесть месяцев»; «три года и шесть месяцев» — и в Лк 4:25",
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Лк 4:25"
+     ],
+     "kind": "mention",
+     "words": [
+      "Илии",
+      "заключено было небо три года и шесть месяцев"
+     ],
+     "action": true,
+     "note": "слова Иисуса в Назарете",
+     "cert": "scripture"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "3Цар 17:1",
+     "end": "3Цар 17:7",
+     "rule": 5,
+     "human": "завязка — засуха объявлена (17:1); развязка этой истории — «этот поток высох, ибо не было дождя на землю» (17:7); дождь (18:45) — далеко, через другие дела: ссылка, а не одна история (11 § 2.2, предел расстояния)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-iliya-i-vdova-v-sarepte",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Илия и вдова в Сарепте",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 17:8-16"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "мука в кадке не истощится, и масло в кувшине не убудет",
+      "refs": [
+       "3Цар 17:14"
+      ]
+     },
+     "refs": [
+      "3Цар 17:13",
+      "3Цар 17:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:vdova-sareptskaya",
+     "label": "женщине вдове",
+     "kind": "unnamed",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "у меня ничего нет печеного, а только есть горсть муки в кадке",
+      "refs": [
+       "3Цар 17:12"
+      ]
+     },
+     "refs": [
+      "3Цар 17:9",
+      "3Цар 17:10",
+      "3Цар 17:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господне",
+     "role": "speaks",
+     "refs": [
+      "3Цар 17:8",
+      "3Цар 17:14"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sarepta",
+     "label": "Сарепту Сидонскую",
+     "role": "where",
+     "refs": [
+      "3Цар 17:9",
+      "3Цар 17:10"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Лк 4:26"
+     ],
+     "kind": "mention",
+     "words": [
+      "Илия",
+      "вдове в Сарепту Сидонскую"
+     ],
+     "action": true,
+     "note": "слова Иисуса в Назарете",
+     "cert": "scripture"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "3Цар 17:9",
+     "end": "3Цар 17:16",
+     "rule": 3
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-iliya-i-syn-vdovy",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Илия и сын вдовы",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 17:17-24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "acts",
+     "main": true,
+     "roleText": {
+      "text": "смотри, сын твой жив",
+      "refs": [
+       "3Цар 17:23"
+      ]
+     },
+     "refs": [
+      "3Цар 17:18",
+      "3Цар 17:22",
+      "3Цар 17:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:vdova-sareptskaya",
+     "label": "женщины",
+     "kind": "unnamed",
+     "role": "speaks",
+     "roleText": {
+      "text": "теперь-то я узнала, что ты человек Божий",
+      "refs": [
+       "3Цар 17:24"
+      ]
+     },
+     "refs": [
+      "3Цар 17:17",
+      "3Цар 17:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:syn-vdovy-sareptskoy",
+     "label": "сын",
+     "kind": "unnamed",
+     "role": "suffers",
+     "main": true,
+     "roleText": {
+      "text": "и возвратилась душа отрока сего в него, и он ожил",
+      "refs": [
+       "3Цар 17:22"
+      ]
+     },
+     "refs": [
+      "3Цар 17:17",
+      "3Цар 17:19",
+      "3Цар 17:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "acts",
+     "roleText": {
+      "text": "И услышал Господь голос Илии",
+      "refs": [
+       "3Цар 17:22"
+      ]
+     },
+     "refs": [
+      "3Цар 17:22"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:gornitsa-iliyi",
+     "label": "горницу",
+     "role": "where",
+     "refs": [
+      "3Цар 17:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "3Цар 17:17",
+     "end": "3Цар 17:24",
+     "rule": 5
+    }
+   ],
+   "hard": [
+    {
+     "topic": "смерть на глазах",
+     "refs": [
+      "3Цар 17:17"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-iliya-i-avdiy",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Илия и Авдий",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 18:1-18"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "сегодня я покажусь ему",
+      "refs": [
+       "3Цар 18:15"
+      ]
+     },
+     "refs": [
+      "3Цар 18:1",
+      "3Цар 18:7",
+      "3Цар 18:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:avdiy-nad-dvortsom",
+     "label": "Авдия",
+     "kind": "human",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "Авдий взял сто пророков, и скрывал их",
+      "refs": [
+       "3Цар 18:4"
+      ]
+     },
+     "refs": [
+      "3Цар 18:3",
+      "3Цар 18:7",
+      "3Цар 18:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhav",
+     "role": "speaks",
+     "roleText": {
+      "text": "ты ли это, смущающий Израиля?",
+      "refs": [
+       "3Цар 18:17"
+      ]
+     },
+     "refs": [
+      "3Цар 18:3",
+      "3Цар 18:5",
+      "3Цар 18:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iezavel",
+     "role": "mentioned",
+     "refs": [
+      "3Цар 18:4",
+      "3Цар 18:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господне",
+     "role": "speaks",
+     "roleText": {
+      "text": "пойди и покажись Ахаву, и Я дам дождь на землю",
+      "refs": [
+       "3Цар 18:1"
+      ]
+     },
+     "refs": [
+      "3Цар 18:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:samariya",
+     "label": "Самарии",
+     "role": "where",
+     "refs": [
+      "3Цар 18:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "3Цар 18:1",
+     "end": "3Цар 18:17",
+     "rule": 5,
+     "human": "дело — «пойди и покажись Ахаву» (18:1), развязка — «Когда Ахав увидел Илию» (18:17); обещание дождя (18:1) исполняется в 18:45 через новое дело на Кармиле: решает человек, протокол И0"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-iliya-i-proroki-vaala-na-karmile",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Илия и пророки Ваала на Кармиле",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 18:19-40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Собери Израиля на гору Кармил",
+      "by": "atlas"
+     },
+     "refs": [
+      "3Цар 18:19-24"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Пророки Ваала призывают Ваала",
+      "by": "atlas"
+     },
+     "refs": [
+      "3Цар 18:25-29"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Огонь Господень",
+      "by": "atlas"
+     },
+     "refs": [
+      "3Цар 18:30-40"
+     ],
+     "change": [
+      "time"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "если Господь есть Бог, то последуйте Ему",
+      "refs": [
+       "3Цар 18:21"
+      ]
+     },
+     "refs": [
+      "3Цар 18:21",
+      "3Цар 18:30",
+      "3Цар 18:36"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhav",
+     "role": "acts",
+     "roleText": {
+      "text": "И послал Ахав ко всем сынам Израилевым",
+      "refs": [
+       "3Цар 18:20"
+      ]
+     },
+     "refs": [
+      "3Цар 18:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:proroki-vaala",
+     "label": "пророков Вааловых",
+     "kind": "group",
+     "role": "acts",
+     "roleText": {
+      "text": "Ваале, услышь нас!",
+      "refs": [
+       "3Цар 18:26"
+      ]
+     },
+     "refs": [
+      "3Цар 18:19",
+      "3Цар 18:25",
+      "3Цар 18:40"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:narod-na-karmile",
+     "label": "народу",
+     "kind": "group",
+     "role": "speaks",
+     "roleText": {
+      "text": "Господь есть Бог, Господь есть Бог!",
+      "refs": [
+       "3Цар 18:39"
+      ]
+     },
+     "refs": [
+      "3Цар 18:21",
+      "3Цар 18:30",
+      "3Цар 18:39"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "god",
+     "label": "Господень",
+     "role": "acts",
+     "roleText": {
+      "text": "И ниспал огонь Господень и пожрал всесожжение",
+      "refs": [
+       "3Цар 18:38"
+      ]
+     },
+     "refs": [
+      "3Цар 18:38"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:karmil-gora",
+     "label": "гору Кармил",
+     "role": "where",
+     "refs": [
+      "3Цар 18:19",
+      "3Цар 18:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:potok-kisson",
+     "label": "потоку Киссону",
+     "role": "where",
+     "refs": [
+      "3Цар 18:40"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "3Цар 18:19",
+     "end": "3Цар 18:39",
+     "rule": 5,
+     "human": "новое дело — «Тот Бог, Который даст ответ посредством огня, есть Бог» (18:24); развязка — «Господь есть Бог» (18:39); 18:40 — следствие (правило 6)"
+    }
+   ],
+   "hard": [
+    {
+     "topic": "казнь",
+     "refs": [
+      "3Цар 18:40"
+     ]
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-oblako-velichinoyu-v-ladon",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-ni-rosy-ni-dozhdya",
+   "title": {
+    "short": "Облако величиною в ладонь",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "3Цар 18:41-46"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-iliya",
+     "role": "speaks",
+     "main": true,
+     "roleText": {
+      "text": "пойди, ешь и пей, ибо слышен шум дождя",
+      "refs": [
+       "3Цар 18:41"
+      ]
+     },
+     "refs": [
+      "3Цар 18:41",
+      "3Цар 18:42",
+      "3Цар 18:46"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-akhav",
+     "role": "acts",
+     "roleText": {
+      "text": "Ахав же сел в колесницу",
+      "refs": [
+       "3Цар 18:45"
+      ]
+     },
+     "refs": [
+      "3Цар 18:41",
+      "3Цар 18:42",
+      "3Цар 18:45"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:otrok-iliyi",
+     "label": "отроку",
+     "kind": "unnamed",
+     "role": "speaks",
+     "roleText": {
+      "text": "вот, небольшое облако поднимается от моря, величиною в ладонь человеческую",
+      "refs": [
+       "3Цар 18:44"
+      ]
+     },
+     "refs": [
+      "3Цар 18:43",
+      "3Цар 18:44"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:karmil-gora",
+     "label": "Кармила",
+     "role": "where",
+     "refs": [
+      "3Цар 18:42"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:izreel",
+     "label": "Изреель",
+     "role": "to",
+     "refs": [
+      "3Цар 18:45",
+      "3Цар 18:46"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Иак 5:18"
+     ],
+     "kind": "mention",
+     "words": [
+      "небо дало дождь"
+     ],
+     "action": true,
+     "note": "«И опять помолился» — подробность только в Иак 5:18; в 3 Цар 18:42 слова «молился» нет",
+     "cert": "scripture"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "3Цар 18:41",
+     "end": "3Цар 18:45",
+     "rule": 5,
+     "human": "развязка повествования — «и пошел большой дождь» (18:45)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  }
+ ],
+ "classes": [],
+ "parallels": []
+}

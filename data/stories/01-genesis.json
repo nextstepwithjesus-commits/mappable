@@ -1,0 +1,2683 @@
+{
+ "about": "Истории Бытия: главы 1–11 размечены целиком (11 § 2.5); Быт 15 и Быт 22:1–19 — истории, на которые ссылается Послание Иакова (сцена 1.11). Составитель историй, пакет 1 (10 § 4.2.2); черновик до второго ключа. Правила — 11 § 2.2–2.7, § 8.3; решения «решает человек» — поле boundary.human и отчёт docs/app/reviews/истории-пакет-1-отчёт.md.",
+ "chapters": [
+  "Быт 1",
+  "Быт 2",
+  "Быт 3",
+  "Быт 4",
+  "Быт 5",
+  "Быт 6",
+  "Быт 7",
+  "Быт 8",
+  "Быт 9",
+  "Быт 10",
+  "Быт 11"
+ ],
+ "stories": [
+  {
+   "id": "e-bog-tvorit-nebo-i-zemlyu",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Бог творит небо и землю",
+    "by": "atlas",
+    "manual": [
+     "творит"
+    ],
+    "common": [
+     "Сотворение мира",
+     "Шесть дней творения"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 1:1-2:3"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "День первый: свет",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:1-5"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "День второй: твердь",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:6-8"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "День третий: суша и зелень",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:9-13"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "День четвёртый: светила",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:14-19"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "День пятый: рыбы и птицы",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:20-23"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 6,
+     "title": {
+      "short": "День шестой: звери и человек",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 1:24-31"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 7,
+     "title": {
+      "short": "День седьмой",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 2:1-3"
+     ],
+     "change": [
+      "time"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Бог",
+     "role": "acts",
+     "refs": [
+      "Быт 1:1"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "В начале сотворил Бог небо и землю",
+      "refs": [
+       "Быт 1:1"
+      ]
+     }
+    },
+    {
+     "actor": "new:chelovek-byt1",
+     "label": "человека",
+     "kind": "group",
+     "role": "addressed",
+     "refs": [
+      "Быт 1:27",
+      "Быт 1:28"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "мужчину и женщину сотворил их",
+      "refs": [
+       "Быт 1:27"
+      ]
+     }
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 1:1",
+     "end": "Быт 2:3",
+     "rule": 1
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-adam-i-zhena-v-rayu",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Адам и жена его в раю",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 2:4-25"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Господь Бог создаёт человека",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 2:4-7"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Сад в Едеме",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 2:8-17"
+     ],
+     "change": [
+      "place"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Господь Бог создаёт жену",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 2:18-25"
+     ],
+     "change": [
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь Бог",
+     "role": "acts",
+     "refs": [
+      "Быт 2:7"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-adam",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 2:7",
+      "Быт 2:25"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И нарек человек имена всем скотам",
+      "refs": [
+       "Быт 2:20"
+      ]
+     }
+    },
+    {
+     "actor": "p-eva",
+     "role": "acts",
+     "refs": [
+      "Быт 2:22",
+      "Быт 2:25"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "она будет называться женою, ибо взята от мужа",
+      "refs": [
+       "Быт 2:23"
+      ]
+     }
+    },
+    {
+     "actor": "new:zhivotnye-byt2",
+     "label": "животных полевых и всех птиц небесных",
+     "kind": "group",
+     "role": "suffers",
+     "refs": [
+      "Быт 2:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:edem",
+     "label": "Едеме",
+     "role": "where",
+     "refs": [
+      "Быт 2:8"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 2:4",
+     "end": "Быт 2:25",
+     "rule": 1
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-zmey-i-plod-dereva",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Змей и плод дерева",
+    "by": "atlas",
+    "common": [
+     "Грехопадение",
+     "Изгнание из рая"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 3:1-24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Змей и жена у дерева",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 3:1-7"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Господь Бог зовёт Адама",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 3:8-22"
+     ],
+     "change": [
+      "time",
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Вне сада Едемского",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 3:23-24"
+     ],
+     "change": [
+      "place"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь Бог",
+     "role": "speaks",
+     "refs": [
+      "Быт 3:8",
+      "Быт 3:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zmey",
+     "label": "змей",
+     "kind": "animal",
+     "role": "speaks",
+     "refs": [
+      "Быт 3:1",
+      "Быт 3:4",
+      "Быт 3:14"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Змей был хитрее всех зверей полевых",
+      "refs": [
+       "Быт 3:1"
+      ]
+     }
+    },
+    {
+     "actor": "p-eva",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 3:1",
+      "Быт 3:6",
+      "Быт 3:20"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и взяла плодов его и ела",
+      "refs": [
+       "Быт 3:6"
+      ]
+     }
+    },
+    {
+     "actor": "p-adam",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 3:8",
+      "Быт 3:12",
+      "Быт 3:17"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и скрылся Адам и жена его от лица Господа Бога",
+      "refs": [
+       "Быт 3:8"
+      ]
+     }
+    },
+    {
+     "actor": "new:kheruvim-byt3",
+     "label": "Херувима",
+     "kind": "angel",
+     "role": "acts",
+     "refs": [
+      "Быт 3:24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sad-edemskiy",
+     "label": "сада Едемского",
+     "role": "from",
+     "refs": [
+      "Быт 3:23"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 3:1",
+     "end": "Быт 3:24",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-kain-i-avel",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Каин и Авель",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 4:1-16"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "speaks",
+     "refs": [
+      "Быт 4:4",
+      "Быт 4:9"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kain",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 4:1",
+      "Быт 4:8",
+      "Быт 4:16"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Каин принес от плодов земли дар Господу",
+      "refs": [
+       "Быт 4:3"
+      ]
+     }
+    },
+    {
+     "actor": "p-avel",
+     "role": "suffers",
+     "main": true,
+     "refs": [
+      "Быт 4:2",
+      "Быт 4:4",
+      "Быт 4:8"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И был Авель пастырь овец",
+      "refs": [
+       "Быт 4:2"
+      ]
+     }
+    },
+    {
+     "actor": "p-adam",
+     "role": "acts",
+     "refs": [
+      "Быт 4:1"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-eva",
+     "role": "acts",
+     "refs": [
+      "Быт 4:1"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:nod",
+     "label": "земле Нод",
+     "role": "to",
+     "refs": [
+      "Быт 4:16"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "hard": [
+    {
+     "topic": "убийство",
+     "refs": [
+      "Быт 4:8"
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 4:3",
+     "end": "Быт 4:16",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-kain-i-gorod-enokh",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Каин и город Енох",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 4:17-24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-kain",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 4:17"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И построил он город",
+      "refs": [
+       "Быт 4:17"
+      ]
+     }
+    },
+    {
+     "actor": "p-zhena-kaina",
+     "role": "acts",
+     "refs": [
+      "Быт 4:17"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-enokh-syn-kaina",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:17",
+      "Быт 4:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-irad",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-mekhiael",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-mafusal-syn-mekhiaelya",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-lamekh-kainit",
+     "role": "speaks",
+     "main": true,
+     "refs": [
+      "Быт 4:18",
+      "Быт 4:19",
+      "Быт 4:23"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Ада и Цилла! послушайте голоса моего",
+      "refs": [
+       "Быт 4:23"
+      ]
+     }
+    },
+    {
+     "actor": "p-ada-zhena-lamekha",
+     "role": "addressed",
+     "refs": [
+      "Быт 4:19",
+      "Быт 4:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-tsilla",
+     "role": "addressed",
+     "refs": [
+      "Быт 4:19",
+      "Быт 4:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iaval",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:20"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "он был отец живущих в шатрах со стадами",
+      "refs": [
+       "Быт 4:20"
+      ]
+     }
+    },
+    {
+     "actor": "p-iuval",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:21"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "он был отец всех играющих на гуслях и свирели",
+      "refs": [
+       "Быт 4:21"
+      ]
+     }
+    },
+    {
+     "actor": "p-tuvalkain",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:22"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "который был ковачом всех орудий из меди и железа",
+      "refs": [
+       "Быт 4:22"
+      ]
+     }
+    },
+    {
+     "actor": "p-noema",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:22"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:gorod-enokh",
+     "label": "город",
+     "role": "where",
+     "refs": [
+      "Быт 4:17"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "hard": [
+    {
+     "topic": "убийство",
+     "refs": [
+      "Быт 4:23"
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 4:17",
+     "end": "Быт 4:24",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-sif-i-enos",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Сиф и Енос",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 4:25-26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-adam",
+     "role": "acts",
+     "refs": [
+      "Быт 4:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-eva",
+     "role": "acts",
+     "refs": [
+      "Быт 4:25"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Бог положил мне другое семя, вместо Авеля",
+      "refs": [
+       "Быт 4:25"
+      ]
+     }
+    },
+    {
+     "actor": "p-sif",
+     "role": "mentioned",
+     "main": true,
+     "refs": [
+      "Быт 4:25",
+      "Быт 4:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-enos",
+     "role": "mentioned",
+     "refs": [
+      "Быт 4:26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 4:25",
+     "end": "Быт 4:26",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-rodoslovie-adama",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Родословие Адама",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 5:1-32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-adam",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 5:1",
+      "Быт 5:3"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sif",
+     "role": "acts",
+     "refs": [
+      "Быт 5:3",
+      "Быт 5:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-enos",
+     "role": "acts",
+     "refs": [
+      "Быт 5:6",
+      "Быт 5:9"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kainan",
+     "role": "acts",
+     "refs": [
+      "Быт 5:9",
+      "Быт 5:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-maleleil",
+     "role": "acts",
+     "refs": [
+      "Быт 5:12",
+      "Быт 5:15"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iared",
+     "role": "acts",
+     "refs": [
+      "Быт 5:15",
+      "Быт 5:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-enokh",
+     "role": "acts",
+     "refs": [
+      "Быт 5:18",
+      "Быт 5:21",
+      "Быт 5:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-mafusal",
+     "role": "acts",
+     "refs": [
+      "Быт 5:21",
+      "Быт 5:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-lamekh",
+     "role": "acts",
+     "refs": [
+      "Быт 5:25",
+      "Быт 5:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-noy",
+     "role": "acts",
+     "refs": [
+      "Быт 5:29",
+      "Быт 5:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sim",
+     "role": "mentioned",
+     "refs": [
+      "Быт 5:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kham",
+     "role": "mentioned",
+     "refs": [
+      "Быт 5:32"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iafet",
+     "role": "mentioned",
+     "refs": [
+      "Быт 5:32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "nested": [
+    {
+     "story": "e-bog-vzyal-enokha",
+     "at": "Быт 5:24",
+     "kind": "insert"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 5:1",
+     "end": "Быт 5:32",
+     "rule": 1
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-bog-vzyal-enokha",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Бог взял Еноха",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 5:24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-enokh",
+     "role": "suffers",
+     "main": true,
+     "refs": [
+      "Быт 5:24"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И ходил Енох пред Богом",
+      "refs": [
+       "Быт 5:24"
+      ]
+     }
+    },
+    {
+     "actor": "god",
+     "label": "Бог",
+     "role": "acts",
+     "refs": [
+      "Быт 5:24"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 5:24",
+     "rule": 1,
+     "human": "известие внутри родословия: у действия есть исход — «не стало его, потому что Бог взял его» (11 § 2.3, образец Быт 5:24)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-syny-bozhii-i-docheri-chelovecheskie",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Сыны Божии и дочери человеческие",
+    "by": "atlas",
+    "common": [
+     "Люди перед потопом"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 6:1-8"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "speaks",
+     "refs": [
+      "Быт 6:6",
+      "Быт 6:7"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "истреблю с лица земли человеков, которых Я сотворил",
+      "refs": [
+       "Быт 6:7"
+      ]
+     }
+    },
+    {
+     "actor": "new:syny-bozhii-byt6",
+     "label": "сыны Божии",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Быт 6:2",
+      "Быт 6:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:docheri-chelovecheskie",
+     "label": "дочерей человеческих",
+     "kind": "group",
+     "role": "suffers",
+     "refs": [
+      "Быт 6:2",
+      "Быт 6:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:ispoliny-byt6",
+     "label": "исполины",
+     "kind": "group",
+     "role": "mentioned",
+     "refs": [
+      "Быт 6:4"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-noy",
+     "role": "acts",
+     "refs": [
+      "Быт 6:8"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Ной же обрел благодать пред очами Господа",
+      "refs": [
+       "Быт 6:8"
+      ]
+     }
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 6:5",
+     "end": "Быт 6:8",
+     "rule": 5,
+     "human": "6:1–4 — обстановка той же истории: заглавие «Вот житие Ноя» (6:9) ставит границу после 6:8 (правило 1)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-zhitie-noya",
+   "level": "cycle",
+   "kind": "event",
+   "title": {
+    "short": "Житие Ноя",
+    "by": "atlas"
+   },
+   "accounts": [],
+   "actors": [],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 6:9",
+     "rule": 1,
+     "human": "повествование по заглавию «Вот житие Ноя» (6:9) до заглавия «Вот родословие сынов Ноевых» (10:1)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-noy-i-potop",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-zhitie-noya",
+   "title": {
+    "short": "Ной и потоп",
+    "by": "atlas",
+    "full": "Ной, ковчег и потоп: от «Вот житие Ноя» до радуги",
+    "common": [
+     "Всемирный потоп",
+     "Ноев ковчег"
+    ]
+   },
+   "summary": [
+    {
+     "text": "Земля наполнилась злодеяниями, и Бог велел Ною сделать ковчег.",
+     "refs": [
+      "Быт 6:11",
+      "Быт 6:14"
+     ]
+    },
+    {
+     "text": "Вода покрыла горы, и всё живое на суше умерло.",
+     "refs": [
+      "Быт 7:19",
+      "Быт 7:22"
+     ]
+    },
+    {
+     "text": "Остались только Ной и бывшие с ним в ковчеге.",
+     "refs": [
+      "Быт 7:23"
+     ]
+    },
+    {
+     "text": "Бог поставил с ними завет: потопа больше не будет.",
+     "refs": [
+      "Быт 9:11"
+     ]
+    }
+   ],
+   "accounts": [
+    {
+     "refs": [
+      "Быт 6:9-9:17"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Бог велит Ною сделать ковчег",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 6:9-22"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Ной входит в ковчег",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 7:1-16"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Вода усиливается на земле",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 7:17-24"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 4,
+     "title": {
+      "short": "Ворон и голубь",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 8:1-14"
+     ],
+     "change": [
+      "time"
+     ]
+    },
+    {
+     "n": 5,
+     "title": {
+      "short": "Ной выходит из ковчега",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 8:15-22"
+     ],
+     "change": [
+      "place",
+      "time"
+     ]
+    },
+    {
+     "n": 6,
+     "title": {
+      "short": "Радуга — знамение завета",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 9:1-17"
+     ],
+     "change": [
+      "place"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Бог",
+     "role": "speaks",
+     "refs": [
+      "Быт 6:13"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И сказал… Бог Ною",
+      "refs": [
+       "Быт 6:13"
+      ]
+     }
+    },
+    {
+     "actor": "p-noy",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 6:9",
+      "Быт 6:22",
+      "Быт 7:7",
+      "Быт 8:18",
+      "Быт 8:20"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И сделал Ной всё",
+      "refs": [
+       "Быт 6:22"
+      ]
+     }
+    },
+    {
+     "actor": "new:zhena-noya",
+     "label": "жена Ноя",
+     "kind": "unnamed",
+     "role": "acts",
+     "refs": [
+      "Быт 7:7",
+      "Быт 7:13",
+      "Быт 8:18"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и жена Ноева",
+      "refs": [
+       "Быт 7:13"
+      ]
+     }
+    },
+    {
+     "actor": "p-sim",
+     "role": "acts",
+     "refs": [
+      "Быт 6:10",
+      "Быт 7:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kham",
+     "role": "acts",
+     "refs": [
+      "Быт 6:10",
+      "Быт 7:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iafet",
+     "role": "acts",
+     "refs": [
+      "Быт 6:10",
+      "Быт 7:13"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "new:zheny-synovey-noya",
+     "label": "жены сынов его",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Быт 7:7",
+      "Быт 7:13",
+      "Быт 8:18"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и три жены сынов его с ними",
+      "refs": [
+       "Быт 7:13"
+      ]
+     }
+    },
+    {
+     "actor": "new:zveri-v-kovchege",
+     "label": "звери",
+     "kind": "group",
+     "role": "acts",
+     "refs": [
+      "Быт 7:14",
+      "Быт 7:15"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и вошли к Ною в ковчег по паре",
+      "refs": [
+       "Быт 7:15"
+      ]
+     }
+    },
+    {
+     "actor": "new:voron-noya",
+     "label": "ворона",
+     "kind": "animal",
+     "role": "acts",
+     "refs": [
+      "Быт 8:7"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и выпустил ворона",
+      "refs": [
+       "Быт 8:7"
+      ]
+     }
+    },
+    {
+     "actor": "new:golub-noya",
+     "label": "голубя",
+     "kind": "animal",
+     "role": "acts",
+     "refs": [
+      "Быт 8:8",
+      "Быт 8:9",
+      "Быт 8:10",
+      "Быт 8:11",
+      "Быт 8:12"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Потом выпустил от себя голубя",
+      "refs": [
+       "Быт 8:8"
+      ]
+     }
+    }
+   ],
+   "places": [
+    {
+     "place": "new:gory-araratskie",
+     "label": "горах Араратских",
+     "role": "where",
+     "refs": [
+      "Быт 8:4"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Быт 9:28"
+     ],
+     "kind": "mention",
+     "words": [
+      "Ной",
+      "после потопа"
+     ],
+     "sameBook": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Быт 10:1"
+     ],
+     "kind": "mention",
+     "words": [
+      "После потопа"
+     ],
+     "sameBook": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Быт 10:32"
+     ],
+     "kind": "mention",
+     "words": [
+      "после потопа"
+     ],
+     "sameBook": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Быт 11:10"
+     ],
+     "kind": "mention",
+     "words": [
+      "после потопа"
+     ],
+     "sameBook": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Ис 54:9"
+     ],
+     "kind": "mention",
+     "words": [
+      "воды Ноя",
+      "не придут более на землю"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Мф 24:37-39"
+     ],
+     "kind": "mention",
+     "words": [
+      "вошел Ной в ковчег",
+      "пришел потоп"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Лк 17:26-27"
+     ],
+     "kind": "mention",
+     "words": [
+      "вошел Ной в ковчег",
+      "пришел потоп"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Евр 11:7"
+     ],
+     "kind": "retelling",
+     "words": [
+      "Ной",
+      "приготовил ковчег"
+     ],
+     "action": true,
+     "cert": "scripture",
+     "note": "пересказ в обзоре: «Верою…»"
+    },
+    {
+     "refs": [
+      "1Пет 3:20"
+     ],
+     "kind": "mention",
+     "words": [
+      "во дни Ноя",
+      "строения ковчега",
+      "восемь душ"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "2Пет 2:5"
+     ],
+     "kind": "mention",
+     "words": [
+      "семейство Ноя",
+      "навел потоп"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "2Пет 3:6"
+     ],
+     "kind": "allusion",
+     "basis": [
+      "Быт 7:21",
+      "Быт 7:23"
+     ],
+     "words": [
+      "потоплен водою"
+     ],
+     "cert": "inference",
+     "note": "имени нет; «потоплен водою» — пара к «вода», «истребилось» в Быт 7:21–23; другого рассказа о гибели мира водой нет (11 § 4.5, вид 4)"
+    }
+   ],
+   "hard": [
+    {
+     "topic": "смерть на глазах",
+     "refs": [
+      "Быт 7:21",
+      "Быт 7:22",
+      "Быт 7:23"
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 6:13",
+     "end": "Быт 9:11",
+     "rule": 1,
+     "human": "граница в 6:9 — заглавие «Вот житие Ноя» (правило 1); завязка — «Я истреблю их с земли» и «с тобою Я поставлю завет Мой» (6:13, 18); развязка — «поставляю завет Мой с вами» (9:11); после — новое дело «насадил виноградник» (9:20, правило 5)"
+    }
+   ],
+   "source": {
+    "method": "reading",
+    "candidates": [
+     "names",
+     "action-words"
+    ]
+   }
+  },
+  {
+   "id": "e-noy-sazhaet-vinogradnik",
+   "level": "story",
+   "kind": "event",
+   "partOf": "e-zhitie-noya",
+   "title": {
+    "short": "Ной сажает виноградник",
+    "by": "atlas",
+    "manual": [
+     "сажает"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 9:18-29"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-noy",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 9:20",
+      "Быт 9:24",
+      "Быт 9:28"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Ной начал возделывать землю и насадил виноградник",
+      "refs": [
+       "Быт 9:20"
+      ]
+     }
+    },
+    {
+     "actor": "p-kham",
+     "role": "acts",
+     "refs": [
+      "Быт 9:18",
+      "Быт 9:22"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И увидел Хам, отец Ханаана, наготу отца своего",
+      "refs": [
+       "Быт 9:22"
+      ]
+     }
+    },
+    {
+     "actor": "p-sim",
+     "role": "acts",
+     "refs": [
+      "Быт 9:18",
+      "Быт 9:23"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Сим же и Иафет взяли одежду",
+      "refs": [
+       "Быт 9:23"
+      ]
+     }
+    },
+    {
+     "actor": "p-iafet",
+     "role": "acts",
+     "refs": [
+      "Быт 9:18",
+      "Быт 9:23"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-khanaan",
+     "role": "addressed",
+     "refs": [
+      "Быт 9:18",
+      "Быт 9:25"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "проклят Ханаан",
+      "refs": [
+       "Быт 9:25"
+      ]
+     }
+    }
+   ],
+   "places": [],
+   "links": [],
+   "hard": [
+    {
+     "topic": "нагота",
+     "refs": [
+      "Быт 9:21",
+      "Быт 9:22",
+      "Быт 9:23"
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 9:20",
+     "end": "Быт 9:27",
+     "rule": 5,
+     "human": "9:18–19 — переход к новому делу; 9:28–29 — годы Ноя, конец жития (до заглавия 10:1)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-rodoslovie-synov-noevykh",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Родословие сынов Ноевых",
+    "by": "atlas",
+    "common": [
+     "Таблица народов"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 10:1-32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Сыны Иафета",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 10:1-5"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Сыны Хама",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 10:6-20"
+     ],
+     "change": [
+      "actors"
+     ]
+    },
+    {
+     "n": 3,
+     "title": {
+      "short": "Дети у Сима",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 10:21-32"
+     ],
+     "change": [
+      "actors"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-sim",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 10:1",
+      "Быт 10:21"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-kham",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 10:1",
+      "Быт 10:6"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iafet",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 10:1",
+      "Быт 10:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nimrod",
+     "role": "mentioned",
+     "refs": [
+      "Быт 10:8"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ever",
+     "role": "mentioned",
+     "refs": [
+      "Быт 10:21",
+      "Быт 10:24",
+      "Быт 10:25"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-falek",
+     "role": "mentioned",
+     "refs": [
+      "Быт 10:25"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "во дни его земля разделена",
+      "refs": [
+       "Быт 10:25"
+      ]
+     }
+    }
+   ],
+   "places": [],
+   "links": [],
+   "nested": [
+    {
+     "story": "e-nimrod-silnyy-zverolov",
+     "at": "Быт 10:8",
+     "kind": "insert"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 10:1",
+     "end": "Быт 10:32",
+     "rule": 1,
+     "human": "заглавие «Вот родословие сынов Ноевых» (10:1) — история; «Сыны Иафета» (10:2), «Сыны Хама» (10:6), «Были дети и у Сима» (10:21) — части (11 § 2.2, правило 1, образец)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-nimrod-silnyy-zverolov",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Нимрод — сильный зверолов",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 10:8-12"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-nimrod",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 10:8",
+      "Быт 10:9"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "он был сильный зверолов пред Господом",
+      "refs": [
+       "Быт 10:9"
+      ]
+     }
+    }
+   ],
+   "places": [
+    {
+     "place": "new:vavilon",
+     "label": "Вавилон",
+     "role": "where",
+     "refs": [
+      "Быт 10:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:sennaar",
+     "label": "земле Сеннаар",
+     "role": "where",
+     "refs": [
+      "Быт 10:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:nineviya",
+     "label": "Ниневию",
+     "role": "mentioned",
+     "refs": [
+      "Быт 10:11"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 10:8",
+     "end": "Быт 10:12",
+     "rule": 1,
+     "human": "рассказ внутри родословия: дела лица, а не только рождение (11 § 2.3); кто «вышел» в 10:11 — Ассур или Нимрод, текст решает по-разному в переводах: участником записан только Нимрод"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-bashnya-do-nebes",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Башня до небес",
+    "by": "atlas",
+    "common": [
+     "Вавилонская башня",
+     "Смешение языков"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 11:1-9"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "new:stroiteli-bashni",
+     "label": "сыны человеческие",
+     "kind": "group",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 11:3",
+      "Быт 11:4",
+      "Быт 11:5"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "построим себе город и башню, высотою до небес",
+      "refs": [
+       "Быт 11:4"
+      ]
+     }
+    },
+    {
+     "actor": "god",
+     "label": "Господь",
+     "role": "acts",
+     "refs": [
+      "Быт 11:5",
+      "Быт 11:8"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И рассеял их Господь оттуда по всей земле",
+      "refs": [
+       "Быт 11:8"
+      ]
+     }
+    }
+   ],
+   "places": [
+    {
+     "place": "new:sennaar",
+     "label": "земле Сеннаар",
+     "role": "where",
+     "refs": [
+      "Быт 11:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:vavilon",
+     "label": "Вавилон",
+     "role": "where",
+     "refs": [
+      "Быт 11:9"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 11:1",
+     "end": "Быт 11:9",
+     "rule": 5
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-rodoslovie-sima",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Родословие Сима",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 11:10-26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-sim",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 11:10"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-arfaksad",
+     "role": "acts",
+     "refs": [
+      "Быт 11:10",
+      "Быт 11:12"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sala",
+     "role": "acts",
+     "refs": [
+      "Быт 11:12",
+      "Быт 11:14"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ever",
+     "role": "acts",
+     "refs": [
+      "Быт 11:14",
+      "Быт 11:16"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-falek",
+     "role": "acts",
+     "refs": [
+      "Быт 11:16",
+      "Быт 11:18"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-ragav",
+     "role": "acts",
+     "refs": [
+      "Быт 11:18",
+      "Быт 11:20"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-serukh",
+     "role": "acts",
+     "refs": [
+      "Быт 11:20",
+      "Быт 11:22"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nakhor",
+     "role": "acts",
+     "refs": [
+      "Быт 11:22",
+      "Быт 11:24"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-farra",
+     "role": "acts",
+     "refs": [
+      "Быт 11:24",
+      "Быт 11:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avraam",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nakhor-syn-farry",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:26"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-aran",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:26"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 11:10",
+     "end": "Быт 11:26",
+     "rule": 1
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-rodoslovie-farry",
+   "level": "story",
+   "kind": "genealogy",
+   "title": {
+    "short": "Родословие Фарры",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 11:27-30"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-farra",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 11:27",
+      "Быт 11:28"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-avraam",
+     "role": "acts",
+     "refs": [
+      "Быт 11:27",
+      "Быт 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-nakhor-syn-farry",
+     "role": "acts",
+     "refs": [
+      "Быт 11:27",
+      "Быт 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-aran",
+     "role": "acts",
+     "refs": [
+      "Быт 11:27",
+      "Быт 11:28"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И умер Аран при Фарре, отце своем",
+      "refs": [
+       "Быт 11:28"
+      ]
+     }
+    },
+    {
+     "actor": "p-lot",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:27"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sarra",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:29",
+      "Быт 11:30"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И Сара была неплодна и бездетна",
+      "refs": [
+       "Быт 11:30"
+      ]
+     }
+    },
+    {
+     "actor": "p-milka",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:29"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-iska",
+     "role": "mentioned",
+     "refs": [
+      "Быт 11:29"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ur-khaldeyskiy",
+     "label": "Уре Халдейском",
+     "role": "where",
+     "refs": [
+      "Быт 11:28"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 11:27",
+     "end": "Быт 11:30",
+     "rule": 1
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-farra-i-avram-v-kharrane",
+   "level": "story",
+   "kind": "notice",
+   "title": {
+    "short": "Фарра и Аврам в Харране",
+    "by": "atlas"
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 11:31-32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "p-farra",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 11:31",
+      "Быт 11:32"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "И взял Фарра Аврама, сына своего, и Лота, сына Аранова",
+      "refs": [
+       "Быт 11:31"
+      ]
+     }
+    },
+    {
+     "actor": "p-avraam",
+     "role": "acts",
+     "refs": [
+      "Быт 11:31"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-lot",
+     "role": "acts",
+     "refs": [
+      "Быт 11:31"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "actor": "p-sarra",
+     "role": "acts",
+     "refs": [
+      "Быт 11:31"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:ur-khaldeyskiy",
+     "label": "Ура Халдейского",
+     "role": "from",
+     "refs": [
+      "Быт 11:31"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:kharran",
+     "label": "Харрана",
+     "role": "where",
+     "refs": [
+      "Быт 11:31",
+      "Быт 11:32"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [],
+   "boundary": [
+    {
+     "start": "Быт 11:31",
+     "end": "Быт 11:32",
+     "rule": 5,
+     "human": "известие: сцены нет (нет речи, одна смена места — переход); после родословия Фарры — новое дело «чтобы идти в землю Ханаанскую» (11:31)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-gospod-zaklyuchaet-zavet-s-avramom",
+   "level": "story",
+   "kind": "vision",
+   "title": {
+    "short": "Господь заключает завет с Аврамом",
+    "by": "atlas",
+    "manual": [
+     "заключает"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 15:1-21"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "parts": [
+    {
+     "n": 1,
+     "title": {
+      "short": "Не бойся, Аврам",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 15:1-11"
+     ],
+     "change": []
+    },
+    {
+     "n": 2,
+     "title": {
+      "short": "Завет при захождении солнца",
+      "by": "atlas"
+     },
+     "refs": [
+      "Быт 15:12-21"
+     ],
+     "change": [
+      "time"
+     ]
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Господа",
+     "role": "speaks",
+     "refs": [
+      "Быт 15:1",
+      "Быт 15:18"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "не бойся, Аврам; Я твой щит",
+      "refs": [
+       "Быт 15:1"
+      ]
+     }
+    },
+    {
+     "actor": "p-avraam",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 15:1",
+      "Быт 15:6",
+      "Быт 15:18"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Аврам поверил Господу, и Он вменил ему это в праведность",
+      "refs": [
+       "Быт 15:6"
+      ]
+     }
+    },
+    {
+     "actor": "p-eliezer-iz-damaska",
+     "role": "mentioned",
+     "refs": [
+      "Быт 15:2"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [],
+   "links": [
+    {
+     "refs": [
+      "Иак 2:23"
+     ],
+     "kind": "mention",
+     "words": [
+      "Авраам",
+      "вменилось ему в праведность"
+     ],
+     "action": true,
+     "cert": "scripture",
+     "note": "цитата: «исполнилось слово Писания: веровал Авраам Богу…»"
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 15:1",
+     "end": "Быт 15:18",
+     "rule": 4,
+     "human": "видение начинается словами «было слово Господа к Авраму в видении» (15:1); новых слов показа и новой даты до конца главы нет — одно видение (правило 4)"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  },
+  {
+   "id": "e-avraam-i-isaak-na-gore",
+   "level": "story",
+   "kind": "event",
+   "title": {
+    "short": "Авраам и Исаак на горе",
+    "by": "atlas",
+    "common": [
+     "Жертвоприношение Исаака"
+    ]
+   },
+   "accounts": [
+    {
+     "refs": [
+      "Быт 22:1-19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "actors": [
+    {
+     "actor": "god",
+     "label": "Бог",
+     "role": "speaks",
+     "refs": [
+      "Быт 22:1",
+      "Быт 22:2"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "Бог искушал Авраама",
+      "refs": [
+       "Быт 22:1"
+      ]
+     }
+    },
+    {
+     "actor": "p-avraam",
+     "role": "acts",
+     "main": true,
+     "refs": [
+      "Быт 22:1",
+      "Быт 22:3",
+      "Быт 22:10",
+      "Быт 22:13"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "и устроил там Авраам жертвенник",
+      "refs": [
+       "Быт 22:9"
+      ]
+     }
+    },
+    {
+     "actor": "p-isaak",
+     "role": "suffers",
+     "main": true,
+     "refs": [
+      "Быт 22:2",
+      "Быт 22:6",
+      "Быт 22:7",
+      "Быт 22:9"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "вот огонь и дрова, где же агнец для всесожжения?",
+      "refs": [
+       "Быт 22:7"
+      ]
+     }
+    },
+    {
+     "actor": "new:angel-gospoden-byt22",
+     "label": "Ангел Господень",
+     "kind": "angel-of-the-lord",
+     "role": "speaks",
+     "refs": [
+      "Быт 22:11",
+      "Быт 22:15"
+     ],
+     "cert": "scripture",
+     "roleText": {
+      "text": "не поднимай руки твоей на отрока",
+      "refs": [
+       "Быт 22:12"
+      ]
+     }
+    },
+    {
+     "actor": "new:otroki-avraama",
+     "label": "отроков",
+     "kind": "group",
+     "role": "mentioned",
+     "refs": [
+      "Быт 22:3",
+      "Быт 22:5",
+      "Быт 22:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "places": [
+    {
+     "place": "new:moria",
+     "label": "землю Мориа",
+     "role": "to",
+     "refs": [
+      "Быт 22:2"
+     ],
+     "cert": "scripture"
+    },
+    {
+     "place": "new:virsaviya",
+     "label": "Вирсавию",
+     "role": "to",
+     "refs": [
+      "Быт 22:19"
+     ],
+     "cert": "scripture"
+    }
+   ],
+   "links": [
+    {
+     "refs": [
+      "Иак 2:21"
+     ],
+     "kind": "mention",
+     "words": [
+      "Авраам",
+      "возложив на жертвенник Исаака"
+     ],
+     "action": true,
+     "cert": "scripture"
+    },
+    {
+     "refs": [
+      "Евр 11:17"
+     ],
+     "kind": "retelling",
+     "words": [
+      "Авраам",
+      "принес в жертву Исаака"
+     ],
+     "action": true,
+     "cert": "scripture",
+     "note": "пересказ в обзоре: «Верою…»"
+    }
+   ],
+   "hard": [
+    {
+     "topic": "угроза жизни ребёнка",
+     "refs": [
+      "Быт 22:9",
+      "Быт 22:10"
+     ]
+    }
+   ],
+   "boundary": [
+    {
+     "start": "Быт 22:1",
+     "end": "Быт 22:13",
+     "rule": 5,
+     "human": "завязка — «Бог искушал Авраама» (22:1); развязка — овен «вместо [Исаака], сына своего» (22:13); второй зов Ангела (22:15–18) и возвращение (22:19) — следствие, связанное словами «так как ты сделал сие дело» (правило 6); родословие Нахора (22:20–24) — новая история"
+    }
+   ],
+   "source": {
+    "method": "reading"
+   }
+  }
+ ],
+ "classes": [],
+ "parallels": []
+}
