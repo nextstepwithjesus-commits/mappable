@@ -1,170 +1,117 @@
-"""Числа документа 10 «План разработки».
+"""Числа документа 10 «План разработки», редакция 2.
 
 Запуск из корня: python3 -I docs/app/data/10-числа.py
-Читает базу base/ и журнал подписей base/checks.json. Ничего не пишет.
-Ключи записей — как в tools/base/admit.ts (actor:, fact:, origin:, union:, kin:, nodata:, chrono:, membership:, line:, epoch:).
-Считает, сколько записей нужно подписать вторым ключом, чтобы сцены показа владельцу (08 § 10.2) шли на уровне «выпуск».
+1) вызывает npx tsx docs/app/data/10-составитель/опись.ts — опись сцен показа и нагрузка второго ключа через сам
+   допуск tools/base/admit.ts (records, admission, зависимости, карантин, права);
+2) считает места OpenBible в главах пробного справочника 05 § 12 (inputs/openbible/ancient.jsonl);
+3) считает оценки объёма по формулам § 6 документа 10: темп — допущение, записанное до замера, а не факт;
+4) считает встречи проб с людьми по таблицам 08 § 10.4, 03 § 11, 04 § 11, 05 § 12, 06 § 12, 07 § 16, 11 § 15.
+Ничего не пишет.
 """
-import glob, json, os, re, collections
+import json, os, subprocess, sys
 
 ROOT = os.getcwd()
-B = lambda *p: os.path.join(ROOT, 'base', *p)
-load = lambda p: json.load(open(p, encoding='utf-8'))
 
 
 def part(t):
     print(f'\n== {t}')
 
 
-# ---------- записи и ключи ----------
-recs = []  # (key, coll, actors, refs)
-seen = collections.Counter()
+# ---------- 1. опись и нагрузка (TypeScript, через admit.ts) ----------
+out = subprocess.run(['npx', 'tsx', 'docs/app/data/10-составитель/опись.ts'], capture_output=True, text=True)
+if out.returncode:
+    sys.exit(out.stderr)
+print(out.stdout.rstrip())
+verses = {}
+for line in out.stdout.splitlines():
+    s = line.strip()
+    if ': записей ' in s and 'стихов ' in s and not s.startswith('всего'):
+        kind = s.split(':')[0]
+        v = int(s.split('стихов ')[1].split(' ')[0])
+        verses[kind] = v
+
+# ---------- 2. места OpenBible ----------
+part('C. Места пробного справочника 05 § 12 по OpenBible (нумерация английская; в этих главах почти совпадает)')
+path = os.path.join(ROOT, 'inputs', 'openbible', 'ancient.jsonl')
 
 
-def add(coll, key, actors, refs):
-    seen[key] += 1
-    k = key if seen[key] == 1 else f'{key}#{seen[key]}'
-    recs.append((k, coll, set(a for a in actors if a), list(refs or [])))
+def places_in(want):
+    places, mentions = set(), 0
+    for line in open(path, encoding='utf-8'):
+        d = json.loads(line)
+        ex = json.loads(d.get('extra') or '{}')
+        n = 0
+        for o in ex.get('osises', []):
+            p = o.split('.')
+            if len(p) >= 3 and p[0] in want and p[1].isdigit() and p[2].isdigit():
+                c, v = int(p[1]), int(p[2])
+                if any(lo <= (c, v) <= hi for lo, hi in want[p[0]]):
+                    n += 1
+        if n:
+            places.add(d['friendly_id']); mentions += n
+    return len(places), mentions
 
 
-def frefs(v):
-    if isinstance(v, dict):
-        out = list(v.get('refs', []) or [])
-        for x in v.values():
-            if isinstance(x, (dict, list)):
-                out += frefs(x)
-        return out
-    if isinstance(v, list):
-        out = []
-        for x in v:
-            out += frefs(x)
-        return out
-    return []
+ch = lambda a, b: ((a, 1), (b, 999))
+trial = {'Gen': [ch(11, 25)], 'Exod': [ch(12, 15)], 'Num': [ch(21, 21), ch(33, 33)], 'Josh': [ch(13, 13), ch(15, 15)], 'Acts': [ch(13, 14)]}
+n, m = places_in(trial)
+print(f'  пробный справочник (Быт 11–25; Исх 12–15; Чис 21; 33; Нав 13; 15; Деян 13–14): мест {n}; стихов-упоминаний {m}')
+for name, w in (('  из них Нав 15', {'Josh': [ch(15, 15)]}), ('  путь Авраама (Быт 11:27–25:10)', {'Gen': [((11, 27), (25, 10))]}),
+                ('  переход Чермного моря (Исх 13:17–15:21)', {'Exod': [((13, 17), (15, 21))]})):
+    print(f'{name}: мест {places_in(w)[0]}')
+total = sum(1 for _ in open(path, encoding='utf-8'))
+print(f'  всего записей мест OpenBible: {total}')
+TRIAL_PLACES = n
 
+# ---------- 3. оценки объёма ----------
+part('D. Оценки объёма (запуски агентов). Темпы — допущения до замера в первой волне (10 § 6.1)')
+V = (150, 300)   # стихов за запуск сверщика — допущение; первый проход контрольного набора: 95 записей, около 240 стихов
+REWORK = 1.10    # около 10 % расхождений — исправление и повторная подпись (журнал, контрольный набор)
+signable = {k: verses.get(k, 0) for k in ('actor', 'fact', 'origin', 'union', 'kin', 'reading', 'nodata', 'line')}
+later = {k: verses.get(k, 0) for k in ('chrono', 'epoch')}
+sv = sum(signable.values())
+lo, hi = round(sv / V[1] * REWORK), round(sv / V[0] * REWORK)
+print(f'  В13 подпись нынешней базы без времени и членств: стихов {sv}; запусков сверщика {lo}–{hi} (при {V[0]}–{V[1]} стихах за запуск, +10 %)')
+lv = sum(later.values())
+print(f'  время и эпохи — только после окончательной модели Д6: стихов {lv}; запусков {round(lv / V[1] * REWORK)}–{round(lv / V[0] * REWORK)}')
+print('  членства и области без стихов (2 684 + 42) подписать нельзя: им сначала нужен стих (Д4)')
+B13 = (lo + round(lv / V[1] * REWORK), hi + round(lv / V[0] * REWORK))
+print(f'  В13 всего: {B13[0]}–{B13[1]}')
 
-actors = {}
-for f in sorted(glob.glob(B('actors', '*.json'))):
-    for a in load(f)['items']:
-        actors[a['id']] = a
-        add('actor', f"actor:{a['id']}", [a['id']], [r for n in a.get('names', []) for r in n.get('refs', [])])
-        for fa in a.get('facts', []):
-            add('fact', f"fact:{a['id']}|{fa['sec']}|{fa['field']}", [a['id']], frefs(fa.get('value')))
-for o in load(B('origins.json'))['items']:
-    add('origin', f"origin:{o['child']}|{o.get('parent') or '?'}|{o['role']}|{'p' if o.get('primary') else 'o'}",
-        [o['child'], o.get('parent')], o.get('refs'))
-for u in load(B('unions.json'))['items']:
-    add('union', f"union:{u['id']}", [u.get('husband'), u.get('wife')], frefs(u.get('terms')))
-for k in load(B('kin.json'))['items']:
-    add('kin', f"kin:{k['from']}|{k['to']}|{k['rel']}", [k['from'], k['to']], k.get('refs'))
-for n in load(B('nodata.json'))['items']:
-    add('nodata', f"nodata:{n['actor']}|{n['sec']}|{n['kind']}", [n['actor']], n.get('refs'))
-for c in load(B('chrono.json'))['items']:
-    add('chrono', f"chrono:{c['actor']}", [c['actor']], frefs(c.get('chrono')))
-for m in load(B('memberships.json'))['items']:
-    add('membership', f"membership:{m['actor']}|{m['area']}", [m['actor']], m.get('refs'))
-lines = {os.path.basename(f)[:-5]: load(f) for f in glob.glob(B('lines', '*.json'))}
-for k, l in lines.items():
-    add('line', f'line:{k}', [p['id'] for p in l.get('persons', [])], l.get('refs'))
-epochs = load(B('epochs.json'))['items']
-for e in epochs:
-    add('epoch', f"epoch:{e['id']}", [(e.get('startRule') or {}).get('person'), (e.get('endRule') or {}).get('person')], e.get('refs'))
+# разметка историй по 11 § 12.1: около 700 глав; 60–80 составителя, столько же сверщиков, ещё 20–30; И5 — 20 % глав вслепую
+I3 = (60 + 60 + 20, 80 + 80 + 30)
+I5 = (round(700 * 0.2 / 12), round(700 * 0.2 / 8))   # 8–12 глав за запуск второго разметчика — допущение по темпу И3 (700 / 60–80)
+print(f'  И3 = Д4 (11 § 12.1): {I3[0]}–{I3[1]}; И5 (20 % глав вслепую, 140 глав по 8–12 за запуск): {I5[0]}–{I5[1]}')
+# места: темп не измерен; 30–50 мест за запуск составителя и столько же сверщика — допущение до В7
+PL = lambda k: (round(k / 50) * 2, round(k / 30) * 2)
+print(f'  Д5 пробный справочник ({TRIAL_PLACES} мест): {PL(TRIAL_PLACES)[0]}–{PL(TRIAL_PLACES)[1]}; полный (около 1 300 мест, 05 § 10): {PL(1300)[0]}–{PL(1300)[1]}')
+# связи: составляются в проходе Д4; второй ключ — отдельно, 100–150 связей за запуск — допущение до С-2
+REL = (round(3000 / 150), round(5000 / 100))
+print(f'  связи (3 000–5 000, 06 § 9.3), второй ключ: {REL[0]}–{REL[1]}')
+rel_pack3 = ((16 + 6 + 10) * 11, (16 + 6 + 10) * 14)
+print(f'  связи сцен пакета 3 (1 Цар 16–31, 3 Цар 17–22, Есф 1–10 = 32 главы по 11–14 связей, 06 § 9.3): {rel_pack3[0]}–{rel_pack3[1]}')
 
-signed = {c['key'] for c in load(B('checks.json'))['items']}
-
-part('1. База и подписи')
-cnt = collections.Counter(c for _, c, _, _ in recs)
-sig = collections.Counter(c for k, c, _, _ in recs if k in signed)
-print('записей всего (ключей допуска, без областей, прочтений, переадресаций):', len(recs))
-for c in cnt:
-    print(f'  {c}: {cnt[c]}; подписано {sig[c]}')
-print('подписей в журнале:', len(signed))
-
-# ---------- сцены ----------
-origins = load(B('origins.json'))['items']
-
-
-def children(pid):
-    return {o['child'] for o in origins if o.get('parent') == pid}
-
-
-def scope(name, people, colls=None, edges_between=False, touch=False):
-    people = set(people)
-    sel = []
-    for k, c, acts, _ in recs:
-        if colls and c not in colls:
-            continue
-        if not acts:
-            continue
-        if c in ('origin', 'union', 'kin') and edges_between:
-            ok = acts <= people
-        elif c == 'line':
-            ok = False
-        else:
-            ok = bool(acts & people) if (touch or c not in ('origin', 'union', 'kin')) else acts <= people
-        if ok:
-            sel.append((k, c))
-    n = len(sel)
-    s = sum(1 for k, _ in sel if k in signed)
-    by = collections.Counter(c for _, c in sel)
-    print(f'  {name}: лиц {len(people)}; записей {n}; подписано {s}; осталось {n - s}  ({", ".join(f"{c} {by[c]}" for c in by)})')
-    return n - s
-
-
-part('2. Генеалогия — сцены пакета 2 (08 § 10.2): лица, рёбра и союзы между ними, без утверждений карточек')
-G = {'actor', 'origin', 'union', 'kin'}
-avr = {'p-avraam', 'p-sarra', 'p-agar', 'p-khettura'} | children('p-avraam')
-scope('Авраам и три союза', avr, G)
-iak = {'p-iakov'} | children('p-iakov')
-for o in origins:
-    if o['child'] in children('p-iakov') and o.get('role') == 'mother':
-        iak.add(o['parent'])
-scope('Иаков и его дети, их матери', iak, G)
-lp = set()
-for l in lines.values():
-    lp |= {p['id'] for p in l['persons']}
-scope('Линии Мессии (лица обеих линий)', lp, G)
-noy = {'p-noy'} | children('p-noy')
-scope('семья Ноя (проба Т1)', noy, G)
-allg = {a for a in actors if actors[a].get('kind') in ('human', None)}
-scope('весь лес (все люди базы)', allg, G)
-
-part('3. Карточка — сцены пакета 3 и проб 07 § 16: все записи лица (утверждения, «нет сведений», время, рёбра, союзы)')
-for pid in ('p-david', 'p-noy', 'p-sarra', 'p-iliy-syn-matfata', 'p-ila-syn-vaasy', 'p-irad', 'p-uts-syn-nakhora'):
-    if pid in actors:
-        scope(pid, {pid}, None, touch=True)
-    else:
-        print(f'  {pid}: нет в базе')
-zak = [a for a in actors if a.startswith('p-zakhariya')]
-print('  тёзок «Захария» (номера p-zakhariya…):', len(zak))
-
-part('4. Время — пакет 1: Быт 5 и Быт 11 (Адам — Аврам), Ной и сыновья; эпохи; опоры')
-seq = ['p-adam', 'p-sif', 'p-enos', 'p-kainan', 'p-maleleil', 'p-iared', 'p-enokh', 'p-mafusail', 'p-lamekh', 'p-noy']
-jl = [p['id'] for p in lines['joseph']['persons']]
-i = jl.index('p-avraam') if 'p-avraam' in jl else 20
-chain = set(jl[:i + 1]) | children('p-noy')
-scope('Адам — Аврам и сыновья Ноя: лица и время', chain, {'actor', 'chrono'})
-print('  эпох:', len(epochs), '; с подписью:', sum(1 for e in epochs if f"epoch:{e['id']}" in signed))
-anc = load(B('anchors.json'))['anchors']
-print('  опор:', len(anc), '; со страницей источника:', sum(1 for a in anc if a.get('page')))
-chrono = load(B('chrono.json'))['items']
-syn = sum(len((c.get('chrono') or {}).get('synchronisms', []) or []) for c in chrono)
-print('  записей времени:', len(chrono))
-
-part('5. Истории — книги прототипа 11 § 7.4: лица, названные в главах')
-pr = {'Руф': range(1, 5), '1Цар': range(16, 32), 'Мк': range(1, 4), 'Деян': range(1, 6), 'Быт': range(1, 12)}
-chap = sum(len(r) for r in pr.values())
-rx = re.compile(r'^(\S+) (\d+)')
-hit = set()
-for k, c, acts, refs in recs:
-    if c != 'actor':
-        continue
-    for r in refs:
-        m = rx.match(r)
-        if m and m.group(1) in pr and int(m.group(2)) in pr[m.group(1)]:
-            hit |= acts
-            break
-print(f'  глав: {chap}; лиц базы, у которых стих основного или другого имени в этих главах: {len(hit)}')
-scope('эти лица: лица и рёбра между ними', hit, G)
-
-part('6. Связи и География — записей нет')
-print('  связей в базе: 0 (06 § 9.1); мест в базе: 0 (05 § 10); историй в базе: 0 (11 § 11.4)')
+# ---------- 4. встречи с людьми ----------
+part('E. Встречи проб с людьми (одна проба на встречу, 08 § 10.4); без ведущего — отдельно')
+# (проба, человек на круг: мин, макс, кругов, источник)
+P = [
+    ('Т1 знаки людей (бумага)', 10, 12, 2, '08 § 10.4: две группы по 5–6'),
+    ('Т2 знаки и значки (бумага)', 10, 12, 2, '08 § 10.4'),
+    ('Т7 слова (бумага)', 10, 12, 2, '08 § 10.4'),
+    ('Т3 кегль (лист)', 5, 6, 2, 'только взрослые'),
+    ('Т4 касание (лист)', 5, 6, 2, 'только взрослые'),
+    ('Т5 голоса (лист)', 10, 12, 2, 'две группы'),
+    ('Т6 облик (пакет 1)', 11, 12, 2, '6 взрослых + 5–6 специалистов'),
+    ('Пакет 1: Истории П-И1б, П-И2, П-И4', 20, 21, 2, '11 § 15: 6 взрослых, 5–6 специалистов, 6 пар, 3 программы чтения'),
+    ('Пакет 1: Время', 6, 6, 2, '04 § 11: два круга по 6'),
+    ('Пакет 2: Генеалогия', 22, 22, 2, '03 § 11: 6 взрослых, 2 преподавателя, 2 исследователя, 6 П10, 3 П11, 3 П13'),
+    ('Пакет 2: География', 10, 11, 2, '05 § 12: 3 взрослых, 3 специалиста, 2 пары, 2–3 программы чтения'),
+    ('Пакет 3: Связи', 19, 19, 2, '06 § 12: 6 пар, 6 взрослых, 4 специалиста, 3 программы чтения'),
+    ('Пакет 3: Карточка', 27, 27, 1, '07 § 16: 10 взрослых, 3 специалиста, 6 изучающих, 8 программ чтения; кругов не названо'),
+]
+tl = th = 0
+for name, a, b, r, src in P:
+    tl += a * r; th += b * r
+    print(f'  {name}: {a * r}–{b * r} ({src})')
+print(f'  всего встреч: {tl}–{th}; из них бумажные Т1, Т2, Т7: 60–72')
+print('  без ведущего, по ссылке: П-И1а — не меньше 30 на раскладку (11 § 15); П-С1 — не меньше 15 (06 § 12); повтор задачи ниже порога — новые 30')
