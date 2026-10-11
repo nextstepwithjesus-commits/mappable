@@ -1,0 +1,10 @@
+{
+  "name": "probe-pt3-search",
+  "private": true,
+  "type": "module",
+  "description": "Техническая проба П-Т3 (09 § 10.2): поиск",
+  "dependencies": {
+    "minisearch": "7.2.0",
+    "snowball-stemmers": "0.6.0"
+  }
+}

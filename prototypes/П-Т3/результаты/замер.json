@@ -1,0 +1,123 @@
+{
+ "browser": "Chromium 153.0.8010.12",
+ "machine": "arm64",
+ "when": "2026-10-11T01:26:39.214Z",
+ "runs": {
+  "worker-x1": {
+   "cold": {
+    "fetchMs": 204,
+    "parseMs": 17,
+    "indexMs": 70,
+    "firstQueryMs": 4,
+    "afterLoadMs": 91,
+    "totalMs": 294,
+    "worstAfterLoadMs": "93",
+    "worstTotalMs": 310
+   },
+   "query": {
+    "n": 174,
+    "workerP50": 0.3,
+    "workerP95": 1.6,
+    "workerMax": 2.9,
+    "roundP95": 1.9
+   },
+   "suggest": {
+    "p95": 0.7,
+    "max": 0.7
+   },
+   "inp": {
+    "interactions": 13,
+    "p75": 16,
+    "max": 16,
+    "note": "длительности событий ≥ 16 мс (Event Timing); меньшие не попадают — это значит ≤ 16 мс"
+   }
+  },
+  "main-x1": {
+   "cold": {
+    "fetchMs": 199,
+    "parseMs": 17,
+    "indexMs": 73,
+    "firstQueryMs": 4,
+    "afterLoadMs": 94,
+    "totalMs": 293,
+    "worstAfterLoadMs": "97",
+    "worstTotalMs": 306
+   },
+   "query": {
+    "n": 174,
+    "workerP50": 0.2,
+    "workerP95": 1.4,
+    "workerMax": 3.1,
+    "roundP95": 1.4
+   },
+   "suggest": {
+    "p95": 0.4,
+    "max": 0.4
+   },
+   "inp": {
+    "interactions": 13,
+    "p75": 16,
+    "max": 16,
+    "note": "длительности событий ≥ 16 мс (Event Timing); меньшие не попадают — это значит ≤ 16 мс"
+   }
+  },
+  "main-x4": {
+   "cold": {
+    "fetchMs": 258,
+    "parseMs": 71,
+    "indexMs": 361,
+    "firstQueryMs": 10,
+    "afterLoadMs": 442,
+    "totalMs": 699,
+    "worstAfterLoadMs": "469",
+    "worstTotalMs": 718
+   },
+   "query": {
+    "n": 174,
+    "workerP50": 1.3,
+    "workerP95": 5.4,
+    "workerMax": 6.4,
+    "roundP95": 5.4
+   },
+   "suggest": {
+    "p95": 1.5,
+    "max": 1.5
+   },
+   "inp": {
+    "interactions": 12,
+    "p75": 16,
+    "max": 24,
+    "note": "длительности событий ≥ 16 мс (Event Timing); меньшие не попадают — это значит ≤ 16 мс"
+   }
+  },
+  "main-x6": {
+   "cold": {
+    "fetchMs": 409,
+    "parseMs": 120,
+    "indexMs": 646,
+    "firstQueryMs": 15,
+    "afterLoadMs": 781,
+    "totalMs": 1189,
+    "worstAfterLoadMs": "899",
+    "worstTotalMs": 1317
+   },
+   "query": {
+    "n": 174,
+    "workerP50": 1.7,
+    "workerP95": 8.4,
+    "workerMax": 10.3,
+    "roundP95": 8.4
+   },
+   "suggest": {
+    "p95": 2.5,
+    "max": 2.5
+   },
+   "inp": {
+    "interactions": 9,
+    "p75": 16,
+    "max": 24,
+    "note": "длительности событий ≥ 16 мс (Event Timing); меньшие не попадают — это значит ≤ 16 мс"
+   }
+  }
+ }
+}

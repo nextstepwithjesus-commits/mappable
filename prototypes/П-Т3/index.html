@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>П-Т3 Поиск</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fff; --fg: #1a1a1a; --mute: #555; --line: #ccc; --mark: #fff3b0; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161616; --fg: #eee; --mute: #aaa; --line: #444; --mark: #5a4a00; } }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 system-ui, sans-serif; }
+  .banner { background: #444; color: #fff; padding: 4px 16px; font-size: 14px; }
+  main { max-width: 760px; margin: 0 auto; padding: 16px; }
+  label { display: block; font-weight: 600; margin-bottom: 4px; }
+  input { width: 100%; box-sizing: border-box; font: inherit; padding: 10px 12px; border: 1px solid var(--mute); border-radius: 6px; background: var(--bg); color: var(--fg); }
+  #sug { list-style: none; margin: 4px 0 0; padding: 0; border: 1px solid var(--line); border-radius: 6px; }
+  #sug:empty { display: none; }
+  #sug li { padding: 6px 12px; }
+  #sug li[aria-selected="true"] { outline: 2px solid currentColor; outline-offset: -2px; }
+  h2 { font-size: 18px; margin: 20px 0 6px; }
+  .note, .meta { color: var(--mute); font-size: 14px; }
+  ol { padding-left: 20px; }
+  b { font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="banner">Серый макет: проверяет только путь. Данные не проверены: проба.</div>
+<main>
+  <h1>Техническая проба П-Т3: поиск</h1>
+  <search>
+    <label for="q">Поиск</label>
+    <input id="q" type="search" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="sug" aria-autocomplete="list">
+    <ul id="sug" role="listbox" aria-label="Подсказки"></ul>
+  </search>
+  <p id="status" role="status" class="meta"></p>
+  <div id="out"></div>
+</main>
+<script type="module" src="./screen/main.ts"></script>
+</body>
+</html>

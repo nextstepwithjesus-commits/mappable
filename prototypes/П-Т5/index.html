@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>П-Т5 Модель «Назад»</title>
+<style>
+  :root { color-scheme: light dark; --bg: #fff; --fg: #1a1a1a; --mute: #555; --line: #bbb; --sel: #ffe9a8; --focus: #0b57d0; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #161616; --fg: #eee; --mute: #aaa; --line: #555; --sel: #5a4a00; --focus: #8ab4f8; } }
+  :root[data-theme="dark"] { --bg: #161616; --fg: #eee; --mute: #aaa; --line: #555; --sel: #5a4a00; --focus: #8ab4f8; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.45 system-ui, sans-serif; }
+  .banner { background: #444; color: #fff; padding: 4px 16px; font-size: 14px; }
+  header, .bar, main { padding: 8px 16px; }
+  header { border-bottom: 1px solid var(--line); display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; border-bottom: 1px solid var(--line); min-height: 44px; }
+  button, a.btn { font: inherit; min-height: 44px; padding: 0 12px; border: 1px solid var(--mute); border-radius: 6px; background: var(--bg); color: var(--fg); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+  .hidden-keep { visibility: hidden; }
+  nav.crumbs ol { list-style: none; display: flex; gap: 6px; margin: 0; padding: 0; }
+  nav.crumbs li + li::before { content: "›"; margin-right: 6px; color: var(--mute); }
+  .layout { display: flex; gap: 16px; flex-wrap: wrap; }
+  .tool { flex: 1 1 320px; min-width: 0; }
+  .window { height: 320px; overflow: auto; border: 1px solid var(--line); border-radius: 6px; position: relative; }
+  .rows { position: relative; }
+  .mark { position: absolute; left: 8px; right: 8px; height: 36px; text-align: left; }
+  .mark[aria-pressed="true"] { background: var(--sel); }
+  aside.sheet { flex: 0 1 300px; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; }
+  .note { color: var(--mute); font-size: 14px; }
+  dialog { max-width: 420px; }
+  .figure { width: 280px; height: 160px; border: 2px dashed var(--line); display: flex; align-items: center; justify-content: center; text-align: center; }
+  .neighbor { flex: 1 1 320px; border-left: 2px solid var(--line); padding-left: 12px; }
+  @media (prefers-reduced-motion: reduce) { ::view-transition-group(*) { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="banner">Серый макет: проверяет только путь (П-Т5). Данные не проверены: проба.</div>
+<header>
+  <a href="/" data-nav>Библия наглядно</a>
+  <nav class="crumbs" aria-label="Хлебные крошки" id="crumbs"></nav>
+</header>
+<div class="bar" role="toolbar" aria-label="Строка инструмента" id="bar"></div>
+<main id="main"></main>
+<div role="status" id="status" class="note" style="padding: 0 16px"></div>
+<dialog id="help" aria-labelledby="help-h">
+  <h2 id="help-h">Справка</h2>
+  <p>Окно поверх (уровень 4): в историю не пишется; Esc закрывает его и возвращает фокус на кнопку.</p>
+  <button type="button" id="help-close">Закрыть</button>
+</dialog>
+<script type="module" src="./screen/main.ts"></script>
+</body>
+</html>
