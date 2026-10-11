@@ -356,3 +356,27 @@ for n, card, name_, refs_, k in rows:
 print('пар вида (б), у которых по тексту основным стало бы другое имя:', len(changed))
 for x in changed:
     print('  № %s: %s %s — %s %s' % x)
+
+# ---------------------------------------------------------------- 16 (ред. 4.6)
+part('16. Подписи безымянных: значимые слова подписи, которых нет в стихах имени (по основе, вне скобок)')
+STOP16 = {'и', 'в', 'из', 'на', 'с', 'со', 'от', 'до', 'у', 'к', 'по', 'о', 'об'}
+
+
+def stem16(w):
+    w = w.lower().replace('ё', 'е')
+    return w[:len(w) - 2] if len(w) > 5 else (w[:len(w) - 1] if len(w) >= 4 else w)
+
+
+unnamed = [a for a in actors.values() if a['kind'] == 'unnamed']
+miss16 = []
+for a in unnamed:
+    n0 = a['names'][0]
+    vs = refset(n0.get('refs'))
+    text_ = ' '.join(TEXT15.get(v, '') for v in vs).lower().replace('ё', 'е')
+    words = [w for w in re.findall(r'[А-Яа-яЁё-]+', n0['form']) if w.lower() not in STOP16]
+    bad = [w for w in words if stem16(w) not in text_]
+    if bad:
+        miss16.append((a['id'], n0['form'], bad))
+print('безымянных лиц:', len(unnamed), '; подписей, где значимого слова нет в стихах имени:', len(miss16))
+for x in miss16[:30]:
+    print('  ', x[0], '—', x[1], '— нет:', ', '.join(x[2]))
