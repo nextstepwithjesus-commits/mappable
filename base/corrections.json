@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "3d67ab4"
+   "commit": "c2b7534"
   }
  },
  "sources": [
@@ -3246,6 +3246,32 @@
     "nakhor-syn-farry",
     "zakhariya-syn-varakhii",
     "adda"
+   ]
+  },
+  {
+   "id": "D5-4",
+   "what": "Д-5: отношения «возможно, то же лицо» у Елиашива, Нафана, Шупима и Хупима — уровень «толкование» с пометкой needsSources (трудов пока нет)",
+   "why": "Второй ключ, П-1 (02 § 3.11.1: «вывод» у possibly-same значит «весомо», а карточки называют тождество толкованием); решение координатора, Д-р8",
+   "refs": [
+    "Неем 13:4",
+    "Неем 3:1",
+    "1Пар 11:38",
+    "2Цар 23:36",
+    "1Пар 7:12",
+    "1Пар 7:15"
+   ],
+   "actors": [
+    "eliashiv-neem13-4",
+    "eliashiv-pervosvyashchennik",
+    "nafan-1par11-38",
+    "nafan-otets-igala",
+    "shupim-1par7-15",
+    "shupim-syn-ira",
+    "khupim-1par7-15",
+    "khupim-syn-ira"
+   ],
+   "other": [
+    "relations"
    ]
   }
  ]

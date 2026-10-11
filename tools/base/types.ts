@@ -155,9 +155,11 @@ export interface ActorRelation {
   kind: 'not-same' | 'possibly-same';
   /** Стихи обеих сторон. */
   refs: Ref[];
-  /** `not-same`: «Писание» или «вывод»; `possibly-same`: «вывод» или «толкование» с трудами. */
+  /** `not-same`: «Писание» или «вывод»; `possibly-same`: «вывод» или «толкование» с трудами (или с пометкой needsSources). */
   cert: Cert;
   works?: Cite[];
+  /** Толкование без трудов: хранится для совета источников, читателю не показывается (решение координатора, Д-р8). */
+  needsSources?: true;
   note: string;
   prov?: Partial<Prov>;
 }

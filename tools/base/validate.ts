@@ -164,6 +164,9 @@ export function validate(base: Base): Issue[] {
   const verseCount = (ref: string) => parseRef(ref, bible.chapterLength)?.verses.length ?? 0;
 
   /** Обход записи: каждая ссылка и каждая степень достоверности; «вывод» — не меньше двух стихов. */
+  /** Номера историй `e-…`: на них может ссылаться событие расчёта (02 § 3.10.2). */
+  const storyIds = new Set((base.stories ?? []).map((x: { id: string }) => x.id));
+
   const walk = (where: string, v: unknown): string[] => {
     const refs: string[] = [];
     const go = (x: any) => {
@@ -313,7 +316,9 @@ export function validate(base: Base): Issue[] {
     if (!['not-same', 'possibly-same'].includes(r.kind)) err('отношение', w, `вид «${r.kind}» — нужен not-same или possibly-same`);
     const ok = r.kind === 'not-same' ? ['scripture', 'inference'] : ['inference', 'interpretation'];
     if (!ok.includes(r.cert)) err('отношение', w, `уровень «${r.cert}» у вида «${r.kind}» — нужен ${ok.join(' или ')}`);
-    if (r.cert === 'interpretation' && !r.works?.some((c) => c.weight !== 'excluded')) err('отношение', w, '«возможно, то же лицо» уровня «толкование» — с трудами works (R9 Г-4)');
+    // толкование — с трудами works или с пометкой needsSources (трудов ещё нет; решение координатора, Д-р8); пометка — только у толкования
+    if (r.cert === 'interpretation' && !r.works?.some((c) => c.weight !== 'excluded') && !r.needsSources) err('отношение', w, '«возможно, то же лицо» уровня «толкование» — с трудами works или пометкой needsSources (R9 Г-4)');
+    if (r.needsSources && r.cert !== 'interpretation') err('толкование', w, 'пометка «нужен совет источников» — только у толкования');
     if (!r.refs?.length) err('стих', w, 'отношение без стихов');
     if (!r.note?.trim()) err('отношение', w, 'отношение без примечания');
     walk(w, { refs: r.refs ?? [], cert: r.cert });
@@ -508,6 +513,17 @@ export function validate(base: Base): Issue[] {
       if (f.calc) {
         const c = f.calc;
         if (!c.event?.trim()) err('расчёт', w, 'ссылка на расчёт без события');
+        // событие — ссылка (02 § 3.10.2; Д-р8): история `e-…` из базы или стих из стихов самой записи; строка вместо ссылки — ошибка
+        else if (c.event.startsWith('e-')) {
+          if (!storyIds.has(c.event)) err('расчёт', w, `событие расчёта «${c.event}» — нет такой истории`);
+        } else {
+          const pe = parseRef(c.event, bible.chapterLength);
+          if (!pe || pe.chapterOnly || !pe.verses.length) err('расчёт', w, `событие расчёта «${c.event}» — не стих и не история e-…`);
+          else {
+            const own = new Set(rs.flatMap((r) => parseRef(r, bible.chapterLength)?.verses.map(verseId) ?? []));
+            if (!pe.verses.every((v) => own.has(verseId(v)))) err('расчёт', w, `событие расчёта «${c.event}» — не из стихов записи (${rs.join('; ')})`);
+          }
+        }
         if (c.model && !MODELS.includes(c.model)) err('расчёт', w, `модель «${c.model}» не из 04 § 16.1`);
         if (c.scheme && !SCHEMES.includes(c.scheme)) err('расчёт', w, `схема «${c.scheme}» не из 04 § 16.1`);
         if (c.model && c.scheme) err('расчёт', w, 'у ссылки на расчёт — модель или схема, не обе');

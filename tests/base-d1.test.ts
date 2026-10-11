@@ -38,14 +38,28 @@ describe('Д-5: «толкование» у родства и союзов', () 
     const k = (from: string, to: string) => base.kin.find((x) => x.from === from && x.to === to);
     const rel = (a: string, b: string) => base.relations.find((r) => r.a === a && r.b === b && r.kind === 'possibly-same');
     for (const [from, card, known] of [
-      ['p-maaseya-syn-akhaza', 'p-tsar-2par28-7', 'p-akhaz'], ['p-malkhiya-syn-tsarya', 'p-tsar-ier38-6', 'p-sedekiya'],
       ['p-toviya-ammonityanin', 'p-eliashiv-neem13-4', 'p-eliashiv-pervosvyashchennik'], ['p-ioil-brat-nafana', 'p-nafan-1par11-38', 'p-nafan-otets-igala'],
       ['p-maakha-zhena-makhira', 'p-shupim-1par7-15', 'p-shupim-syn-ira'], ['p-maakha-zhena-makhira', 'p-khupim-1par7-15', 'p-khupim-syn-ira'],
     ]) {
       expect([from, k(from, card)?.cert, k(from, card)?.identity, k(from, known)]).toEqual([from, 'scripture', undefined, undefined]);
-      expect([card, rel(card, known)?.cert, rel(card, known)!.refs.length >= 2]).toEqual([card, 'inference', true]);
+      // уровень «толкование» с пометкой needsSources: трудов пока нет (второй ключ, П-1; решение координатора, Д-р8)
+      expect([card, rel(card, known)?.cert, rel(card, known)?.needsSources, rel(card, known)?.works, rel(card, known)!.refs.length >= 2]).toEqual([card, 'interpretation', true, undefined, true]);
+    }
+    // безымянные цари — по-прежнему «вывод»: царь назван в том же рассказе
+    for (const [from, card, known] of [['p-maaseya-syn-akhaza', 'p-tsar-2par28-7', 'p-akhaz'], ['p-malkhiya-syn-tsarya', 'p-tsar-ier38-6', 'p-sedekiya']]) {
+      expect([from, k(from, card)?.cert, k(from, card)?.identity, k(from, known)]).toEqual([from, 'scripture', undefined, undefined]);
+      expect([card, rel(card, known)?.cert, rel(card, known)?.needsSources, rel(card, known)!.refs.length >= 2]).toEqual([card, 'inference', undefined, true]);
     }
     expect(base.kin.find((x) => x.from === 'p-yuniya')!.rel).toBe('сродник');
+  });
+  it('подложенные ошибки отношений ловятся: толкование без трудов и без пометки; пометка не у толкования', () => {
+    const b = copy();
+    const r = b.relations.find((x) => x.a === 'p-shupim-1par7-15')!;
+    delete r.needsSources;
+    const k = b.relations.find((x) => x.a === 'p-tsar-2par28-7')!;
+    k.needsSources = true;
+    expect(errs(b, 'отношение').map((i) => i.msg).join()).toMatch(/с трудами works или пометкой needsSources/);
+    expect(errs(b, 'толкование').map((i) => i.where).join()).toMatch(/p-tsar-2par28-7/);
   });
   it('«сын царя» — вывод, где царь назван в том же рассказе; тождество — когда сомнение в самой записи', () => {
     const k = (from: string) => base.kin.find((x) => x.from === from)!;
@@ -105,6 +119,20 @@ describe('Д-7: год в записи → ссылка на расчёт', () =
     expect(e).toMatch(/модель «m-tiele» не из 04 § 16.1/);
     expect(e).toMatch(/модель или схема, не обе/);
     expect(e).toMatch(/год в записи остался/);
+  });
+  it('событие расчёта — стих записи или история e-…; строка вместо ссылки — ошибка (Д-р8)', () => {
+    const b = copy();
+    const [x, y, z, s, ok] = facts(b).filter(({ f }) => f.calc).map(({ f }) => f);
+    x.calc = { ...x.calc!, event: `конец — ${x.calc!.event}` };
+    y.calc = { ...y.calc!, event: 'Откр 22:21' };
+    z.calc = { ...z.calc!, event: 'e-net-takoy-istorii' };
+    s.calc = { ...s.calc!, event: 'Быт 1' };
+    ok.calc = { ...ok.calc!, event: b.stories![0].id };
+    const e = errs(b, 'расчёт').map((i) => i.msg);
+    expect(e.filter((m) => /не стих и не история/.test(m))).toHaveLength(2);
+    expect(e.filter((m) => /«Откр 22:21» — не из стихов записи/.test(m))).toHaveLength(1);
+    expect(e.filter((m) => /нет такой истории/.test(m))).toHaveLength(1);
+    expect(e).toHaveLength(4);
   });
 });
 
