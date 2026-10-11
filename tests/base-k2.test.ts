@@ -106,10 +106,11 @@ describe('труды w- и ссылки works (К-3)', () => {
     expect(A.rights.get(key)).toEqual(['w-henry-exposition']);
   });
 
-  it('r-lk3-23, рёбра его прочтений и линия Луки остаются в выпуске; те же 101 запись; права не закрывают ни одной', () => {
+  it('r-lk3-23, рёбра его прочтений и линия Луки остаются в выпуске; те же 81 запись; права не закрывают ни одной', () => {
     const A = admission(withoutD1(base), 'release');
     expect(A.okKey('reading:r-lk3-23')).toBe(true);
-    expect(A.counts.all.admitted).toBe(101);
+    // было 101; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−20 записей)
+    expect(A.counts.all.admitted).toBe(81);
     const lk = records(base).filter((r) => r.key === 'reading:r-lk3-23' || r.key === 'line:luke' || r.rec.reading?.set === 'r-lk3-23');
     expect(lk.length).toBeGreaterThan(2);
     expect(lk.filter((r) => A.rights.has(r.key))).toEqual([]);
@@ -154,7 +155,7 @@ describe('труды w- и ссылки works (К-3)', () => {
     const after = { ...b, checks: r.entries };
     expect(admission(after, 'release').okKey('reading:r-lk3-23')).toBe(true);
     expect(admission(after, 'release').okKey('reading:r-lk3-23#works')).toBe(false);
-    expect(admission(after, 'release').counts.all.admitted).toBe(101);
+    expect(admission(after, 'release').counts.all.admitted).toBe(81);
     // без сборки «до шага» подпись не переносится
     expect(rekey(b).moved).toEqual([]);
     // набор изменился не только заменой авторов — подпись не переносится

@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/13-kings-of-judah.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -6527,7 +6527,7 @@
      "form": "Озия",
      "type": "main",
      "refs": [
-      "4Цар 14:21"
+      "2Пар 26:1"
      ]
     },
     {
@@ -7140,7 +7140,7 @@
      "form": "Иоафам",
      "type": "main",
      "refs": [
-      "4Цар 15:5"
+      "4Цар 15:32"
      ]
     },
     {
@@ -10351,7 +10351,7 @@
      "form": "Амон",
      "type": "main",
      "refs": [
-      "4Цар 21:18"
+      "2Пар 33:20"
      ]
     },
     {

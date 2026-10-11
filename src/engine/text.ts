@@ -40,6 +40,22 @@ export function nameMatcher(name: string): RegExp {
   return new RegExp(`(^|[^а-я])${esc}`);
 }
 
+/**
+ * Слова формы имени, которых нет в тексте (пусто — форма стоит в тексте). Первое слово — по `nameMatcher`; остальные
+ * слова многословной формы («Ирод царь», «Иоанн, называемый Марком», «друг Божий») — по основе без окончания: слово до
+ * трёх букв целиком, из четырёх — без последней, длиннее — без трёх последних, но не короче четырёх букв
+ * («царь» — «царя», «Иудейский» — «Иудейского», «провидец» — «провидца»). Порядок слов не проверяется: «Царь Ирод» (Мк 6:14).
+ * Текст — уже нормализованный (`norm`).
+ */
+export function formMissing(form: string, text: string): string[] {
+  const words = norm(form).split(/[\s,]+/).map((w) => w.replace(/[^а-я-]/g, '')).filter(Boolean);
+  return words.filter((w, i) => {
+    if (i === 0) return !nameMatcher(w).test(text);
+    const n = w.length <= 3 ? w.length : w.length === 4 ? 3 : Math.max(4, w.length - 3);
+    return !new RegExp(`(^|[^а-я])${w.slice(0, n)}`).test(text);
+  });
+}
+
 /** Удаляет вставки в квадратных скобках (LXX-вставки и неканонические добавления Синодального текста). */
 export function stripBrackets(s: string): string {
   return s.replace(/\[[^\]]*\]/g, ' ');

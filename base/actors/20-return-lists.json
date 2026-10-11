@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/20-return-lists.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -642,7 +642,7 @@
      "form": "Заффу",
      "type": "main",
      "refs": [
-      "Езд 2:8"
+      "Неем 7:13"
      ]
     },
     {
@@ -912,7 +912,7 @@
      "form": "Бевай",
      "type": "main",
      "refs": [
-      "Езд 2:11"
+      "Неем 7:16"
      ]
     },
     {

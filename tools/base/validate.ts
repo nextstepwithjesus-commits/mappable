@@ -11,7 +11,7 @@ import { pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { loadBible } from '../bible.ts';
 import { parseRef, verseId } from '../../src/engine/books.ts';
-import { norm, nameMatcher } from '../../src/engine/text.ts';
+import { norm, nameMatcher, formMissing } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
 import type { Base } from './migrate.ts';
 import type { Actor, Cert, Prov } from './types.ts';
@@ -553,6 +553,13 @@ export function validate(base: Base): Issue[] {
     }
     const forms = a.names.map((n) => n.form);
     if (!forms.some((f) => nameMatcher(f).test(joined))) err('имя', a.id, `ни одна форма имени (${forms.join(', ')}) не найдена в стихах лица`);
+    // каждая ссылка формы — стих, где эта форма стоит вне скобок, с учётом падежей (Д-р11; 02 § 3.8 п. 4)
+    for (const n of a.names) {
+      for (const r of n.refs) {
+        const miss = formMissing(n.form, norm(mainTexts(a.id, r).join(' ')));
+        if (miss.length) err('имя в стихе', `${a.id} «${n.form}»`, `в ${r} формы нет (${miss.join(', ')}): ссылка формы — стих, где она стоит вне скобок`);
+      }
+    }
   }
 
   // ---------- дословность цитат: изречения (§ 18) — точно по основному тексту, без вставок в скобках ----------

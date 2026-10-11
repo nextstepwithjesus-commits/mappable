@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/05-edom.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -1050,7 +1050,7 @@
      "form": "Ада",
      "type": "main",
      "refs": [
-      "Быт 26:34"
+      "Быт 36:2"
      ]
     },
     {

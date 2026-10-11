@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/18-tribal-leaders.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -8067,7 +8067,7 @@
      "form": "Шешай",
      "type": "main",
      "refs": [
-      "Чис 13:23"
+      "Нав 15:14"
      ]
     },
     {

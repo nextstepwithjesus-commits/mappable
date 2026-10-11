@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/07-judah.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -23,7 +23,7 @@
      "form": "Зимри",
      "type": "main",
      "refs": [
-      "Нав 7:1"
+      "1Пар 2:6"
      ]
     },
     {
@@ -917,7 +917,7 @@
      "form": "Халев",
      "type": "main",
      "refs": [
-      "1Пар 2:9"
+      "1Пар 2:18"
      ]
     },
     {
@@ -8804,7 +8804,7 @@
      "form": "Хур",
      "type": "main",
      "refs": [
-      "Исх 31:2"
+      "1Пар 2:19"
      ]
     },
     {

@@ -318,7 +318,7 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
     expect(admission({ ...b, checks: r.entries }, 'release').okKey('origin:o-avraam--isaak')).toBe(false);
   });
 
-  it('до и после переноса в выпуск допущены одни и те же записи — без исключений (101)', () => {
+  it('до и после переноса в выпуск допущены одни и те же записи — без исключений (81)', () => {
     const before = beforeIds(base);
     const admittedLegacy = (b: Base) => {
       const A = admission(b, 'release');
@@ -327,8 +327,9 @@ describe('перенос подписей base:mark --rekey (К-2)', () => {
     const was = admittedLegacy(withoutD1(before));
     const now = admittedLegacy(withoutD1(base));
     expect(now).toEqual(was);
-    expect(now).toHaveLength(101);
-    expect(admission(withoutD1(base), 'release').counts.all.admitted).toBe(101);
+    // было 101; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−20 записей)
+    expect(now).toHaveLength(81);
+    expect(admission(withoutD1(base), 'release').counts.all.admitted).toBe(81);
     // база до номеров читается прежними ключами (records без id)
     expect(records(before).every((r) => r.key === r.legacy)).toBe(true);
   });

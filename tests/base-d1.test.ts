@@ -174,13 +174,14 @@ describe('Д-2: степень у вида «предок»', () => {
 });
 
 describe('подписи второго ключа (Д-партия-1-второй-ключ.md)', () => {
-  it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 118', () => {
+  it('подписаны Д-5 (23), Д-2 (368), Д-7 (323); отношения ar- и новые карточки — нет; допущено в выпуск 94', () => {
     const d1 = (base.checks ?? []).filter((c) => /Д-партия-1/.test(c.by));
     const n = (re: RegExp) => d1.filter((c) => re.test(c.key)).length;
     expect([n(/^(kin|union|redirect):/), n(/^origin:/), n(/^fact:/), d1.length]).toEqual([23, 368, 323, 714]);
     expect(d1.filter((c) => /^relation:|^actor:/.test(c.key))).toEqual([]);
     expect(d1.every((c) => c.kind === 'agent')).toBe(true);
     // снимок на время подписи: контрольный набор (103) + Д-партия 1; подписи следующих партий не считаются
-    expect(admission(snapshot(base, CONTROL, D1), 'release').counts.all.admitted).toBe(118);
+    // было 118; Д-р11: подписи контрольного набора actor:p-avraam, actor:p-sarra, actor:p-irod-antipa сняты — у форм имён исправлены ссылки (−24 записи: лица и их утверждения)
+    expect(admission(snapshot(base, CONTROL, D1), 'release').counts.all.admitted).toBe(94);
   });
 });

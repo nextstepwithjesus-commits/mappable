@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/12-house-of-david.json",
-   "commit": "8167af0"
+   "commit": "ac38562"
   }
  },
  "sources": [
@@ -10036,7 +10036,7 @@
      "form": "Аммиил",
      "type": "main",
      "refs": [
-      "2Цар 9:4"
+      "2Цар 17:27"
      ]
     },
     {
