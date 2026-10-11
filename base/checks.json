@@ -2975,6 +2975,24 @@
    }
   },
   {
+   "key": "actor:p-raav",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4cbc92e16bbbfed1248d1799c270c84a6a93e04dc12ca942626b8a217eba04a4",
+   "inputs": {
+    "verses": [
+     "Нав 2:1"
+    ],
+    "text": "fca831fe0c23e3091fccfcc9def85683cca0e8412a954f27a932a3beb18d38c3",
+    "brackets": "714553b1d8894a161134d06b3ab039e7b6db7d8cf7dc43c99a2153fdca7d8d39",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "actor:p-ragav",
    "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
    "kind": "agent",
@@ -5163,6 +5181,162 @@
    }
   },
   {
+   "key": "epoch:era-apostolic",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "8b5025f533a3aeee6064f0b9e3291b4e33a1cc75140ca63190d6bb9609c72b1b",
+   "inputs": {
+    "verses": [
+     "Деян 15:6",
+     "Деян 28:30",
+     "Деян 2:1",
+     "Деян 2:2",
+     "Деян 2:3",
+     "Деян 2:4",
+     "Откр 1:9"
+    ],
+    "text": "07f875dc80af038d6a85807857fb078befa6305facb33fcc76b6fff2e2855c14",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-christ",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "87ea7a759558116c3cecdea39323938b5b0220ddb4650e7ebe50d98546762ae3",
+   "inputs": {
+    "verses": [
+     "Деян 2:1",
+     "Лк 1:10",
+     "Лк 1:11",
+     "Лк 1:12",
+     "Лк 1:13",
+     "Лк 1:24",
+     "Лк 1:25",
+     "Лк 1:26",
+     "Лк 1:5",
+     "Лк 1:6",
+     "Лк 1:7",
+     "Лк 1:8",
+     "Лк 1:9",
+     "Лк 2:4",
+     "Лк 2:42",
+     "Лк 2:43",
+     "Лк 2:44",
+     "Лк 2:45",
+     "Лк 2:46",
+     "Лк 2:5",
+     "Лк 2:6",
+     "Лк 2:7",
+     "Лк 3:1",
+     "Лк 3:21",
+     "Лк 3:22",
+     "Лк 3:23",
+     "Мф 27:35",
+     "Мф 28:5",
+     "Мф 28:6",
+     "Мф 2:1"
+    ],
+    "text": "802d972a010a78adf5fc0ec428420592e0d02cbd085f051a1623de77a6ba89d2",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-church",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "8fd96b9bfd6fee5b4a65ebfb0575e34c0c58f2688e480d36d67cb033acbacd08",
+   "inputs": {
+    "verses": [
+     "Откр 22:18",
+     "Откр 22:19"
+    ],
+    "text": "14711076f796f60cbec333a4cf809d66ef4314d9678054dc9a857c548eea01d6",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-conquest",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "c55e575b0d777bc3b1f8536c6bae40afe61e6d5f9ce720c3c4bcf2ebc90e4d95",
+   "inputs": {
+    "verses": [
+     "3Цар 6:1",
+     "Втор 1:3",
+     "Нав 14:10",
+     "Нав 14:7",
+     "Нав 14:8",
+     "Нав 14:9",
+     "Нав 24:29",
+     "Нав 3:14",
+     "Нав 3:15",
+     "Нав 3:16",
+     "Нав 3:17",
+     "Суд 2:8",
+     "Чис 14:33"
+    ],
+    "text": "a155d7ba396c429190707e75a3dce5b9084dc44de2a388d89afec287a1f8cbc2",
+    "brackets": "81072d1d76119a71d7966008089bfe1146c1147bbbcef0bf6d62e67008e9ef11",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-divided",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "d571045282f1ed96fa813b0b2ed1b4a6bd2de04a7ad66973f3d6d5e3da75a7c6",
+   "inputs": {
+    "verses": [
+     "3Цар 11:42",
+     "3Цар 12:16",
+     "3Цар 12:17",
+     "3Цар 12:18",
+     "3Цар 12:19",
+     "3Цар 12:20",
+     "3Цар 6:1",
+     "4Цар 17:5",
+     "4Цар 17:6",
+     "4Цар 9:1",
+     "4Цар 9:10",
+     "4Цар 9:2",
+     "4Цар 9:3",
+     "4Цар 9:4",
+     "4Цар 9:5",
+     "4Цар 9:6",
+     "4Цар 9:7",
+     "4Цар 9:8",
+     "4Цар 9:9"
+    ],
+    "text": "336b4b53349304d12e323e7ed09b67bb2e00ea086e97e5dd15082ea11c589e33",
+    "brackets": "c1cb96dd1e5d4848b7dfd396da891f9ef4d93822ba625dd5ef74cfceb22cd33c",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "epoch:era-egypt",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -5185,6 +5359,37 @@
     ],
     "text": "c0182714e498430a32dcad92258cbb6edb14ae19501dba6762a0621210270704",
     "brackets": "43fc1e642a24109c766041abd807cd05ed0ee0183c908b5d3371c3679b850570",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-exile",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "1dbce0882c20ac3ab7c92cbe609eb980ab3d8c8d1072fbb55e8f9f6b61bf73fa",
+   "inputs": {
+    "verses": [
+     "4Цар 25:27",
+     "4Цар 25:28",
+     "4Цар 25:29",
+     "4Цар 25:30",
+     "4Цар 25:8",
+     "4Цар 25:9",
+     "Дан 5:30",
+     "Дан 5:31",
+     "Дан 9:2",
+     "Езд 1:1",
+     "Зах 1:12",
+     "Иез 40:1",
+     "Иер 25:11",
+     "Иер 29:10"
+    ],
+    "text": "64a59b9adcaa7ff80e8b3c6faef8550f643ee9fd129f8b020aae1e5f8925e654",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -5216,6 +5421,97 @@
     ],
     "text": "8000add84cb6f2e9927ff67407979b854588eaa502bec90afa2262525acccf99",
     "brackets": "7bdb2d78f7f96a87b5f4c059c69b838dee1425259725a365b8c0d51edcba911c",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-intertestamental",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "a8f4ddc4e96ab44d79320a93c5512524c85f4d78f17ea926fec1ee8fb3d35564",
+   "inputs": {
+    "verses": [
+     "Дан 11:2",
+     "Дан 11:3",
+     "Дан 11:4",
+     "Дан 8:20",
+     "Дан 8:21",
+     "Дан 8:22",
+     "Лк 1:5",
+     "Неем 13:6",
+     "Неем 13:7",
+     "Неем 2:1"
+    ],
+    "text": "9e05985cbe4e370249e60ee7c6f64c4795edb516cb6a26fff4de1d847c55a338",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-judah-alone",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "5cd49b08c1bb5c706b8bb49dc870a6ab58a2c7bcce2b674114ffe94f0f7d148e",
+   "inputs": {
+    "verses": [
+     "4Цар 17:6",
+     "4Цар 18:13",
+     "4Цар 22:3",
+     "4Цар 22:4",
+     "4Цар 22:5",
+     "4Цар 22:6",
+     "4Цар 22:7",
+     "4Цар 22:8",
+     "4Цар 24:12",
+     "4Цар 24:13",
+     "4Цар 24:14",
+     "4Цар 24:15",
+     "4Цар 24:17",
+     "4Цар 25:8",
+     "4Цар 25:9",
+     "Дан 1:1",
+     "Дан 1:2",
+     "Дан 1:3",
+     "Дан 1:4",
+     "Дан 1:5",
+     "Дан 1:6"
+    ],
+    "text": "f5dbf8a4cb71728d1bbdc891f29daf6322143623383507d8d131cc26d53db939",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-judges",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "ab4433ddd8a47ec3f8becf4c067a51c7d706db22340db12f07fc78bb9f6e65bf",
+   "inputs": {
+    "verses": [
+     "1Цар 11:15",
+     "3Цар 6:1",
+     "Деян 13:20",
+     "Нав 24:29",
+     "Суд 10:7",
+     "Суд 11:26",
+     "Суд 2:8",
+     "Чис 21:24",
+     "Чис 21:25"
+    ],
+    "text": "0d14a888451920659cf49b00225eff9947f833aba0b20c533008f62002f7f5bc",
+    "brackets": "403252a16bb9a2d399ddeb578cd4d4c39f4bd1aa2ba41b05d71311f857deb22e",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -5285,6 +5581,63 @@
     ],
     "text": "600f50431928bbcc83e9c33758a5273c861ba77a3114a42e59c6bea09f0f5590",
     "brackets": "93184da6046783f131432ecff97e0a5db13c057abef4d2080a4e5db939b2e487",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-return",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "22f7a42a2da55fa8b00c3a53f7c5a001680e6d89859e3a15d704a885ba66a612",
+   "inputs": {
+    "verses": [
+     "Езд 1:1",
+     "Езд 1:2",
+     "Езд 1:3",
+     "Езд 6:15",
+     "Езд 6:16",
+     "Езд 7:7",
+     "Езд 7:8",
+     "Неем 13:6",
+     "Неем 13:7",
+     "Неем 2:1",
+     "Неем 6:15"
+    ],
+    "text": "00b4755e6f3077036bf0aee2af90c7fc1cc72a4e08a0f565c3aecd53414ebe2d",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-united",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "cca358b54c79990969fc5b096b6896f05601290269dbf421631afb7547c1840d",
+   "inputs": {
+    "verses": [
+     "1Цар 11:15",
+     "2Цар 2:4",
+     "2Цар 5:4",
+     "2Цар 5:5",
+     "2Цар 5:6",
+     "2Цар 5:7",
+     "3Цар 11:42",
+     "3Цар 12:20",
+     "3Цар 2:11",
+     "3Цар 6:1",
+     "3Цар 6:37",
+     "3Цар 6:38"
+    ],
+    "text": "08868d96a837a60b1726c34e2ab83601a735356704f7ea8ef49f15f3bcf0d9ff",
+    "brackets": "ab5cab74b49ee13878a75818c2b446872d9fcd563d70b1e143a510a5cca5bb8a",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -28703,6 +29056,116 @@
      "Мф 9:17"
     ],
     "text": "65fa0c6ee5209b3fa283655be8809f97bb7066ea0e77486270d0fd4528f738dd",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "story:e-podat-kesaryu",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "7f44a963c25e4c8b13a5be1bbee7d56a56c57191181de3506ebdd29883bc376a",
+   "inputs": {
+    "verses": [
+     "Лк 20:20",
+     "Лк 20:21",
+     "Лк 20:22",
+     "Лк 20:23",
+     "Лк 20:24",
+     "Лк 20:25",
+     "Лк 20:26",
+     "Мк 12:13",
+     "Мк 12:14",
+     "Мк 12:15",
+     "Мк 12:16",
+     "Мк 12:17",
+     "Мф 22:15",
+     "Мф 22:16",
+     "Мф 22:17",
+     "Мф 22:18",
+     "Мф 22:19",
+     "Мф 22:20",
+     "Мф 22:21",
+     "Мф 22:22"
+    ],
+    "text": "46949b489e68d74eb1cdefed7331973df089ae41d07f6e578aebab768e2da810",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "story:e-pritchi-pervosvyashchennikam-i-fariseyam",
+   "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "ff8dad5c3b269694bea25b614c270729561f799498978a513adb7b85849c3c9e",
+   "inputs": {
+    "verses": [
+     "Лк 20:10",
+     "Лк 20:11",
+     "Лк 20:12",
+     "Лк 20:13",
+     "Лк 20:14",
+     "Лк 20:15",
+     "Лк 20:16",
+     "Лк 20:17",
+     "Лк 20:18",
+     "Лк 20:19",
+     "Лк 20:9",
+     "Мк 12:1",
+     "Мк 12:10",
+     "Мк 12:11",
+     "Мк 12:12",
+     "Мк 12:2",
+     "Мк 12:3",
+     "Мк 12:4",
+     "Мк 12:5",
+     "Мк 12:6",
+     "Мк 12:7",
+     "Мк 12:8",
+     "Мк 12:9",
+     "Мф 21:28",
+     "Мф 21:29",
+     "Мф 21:30",
+     "Мф 21:31",
+     "Мф 21:32",
+     "Мф 21:33",
+     "Мф 21:34",
+     "Мф 21:35",
+     "Мф 21:36",
+     "Мф 21:37",
+     "Мф 21:38",
+     "Мф 21:39",
+     "Мф 21:40",
+     "Мф 21:41",
+     "Мф 21:42",
+     "Мф 21:43",
+     "Мф 21:44",
+     "Мф 21:45",
+     "Мф 21:46",
+     "Мф 22:1",
+     "Мф 22:10",
+     "Мф 22:11",
+     "Мф 22:12",
+     "Мф 22:13",
+     "Мф 22:14",
+     "Мф 22:2",
+     "Мф 22:3",
+     "Мф 22:4",
+     "Мф 22:5",
+     "Мф 22:6",
+     "Мф 22:7",
+     "Мф 22:8",
+     "Мф 22:9"
+    ],
+    "text": "fffd6bad13a969752b17cf5db0af0aa82356787efd2ce3ab03dbf8cd3fb513e8",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
