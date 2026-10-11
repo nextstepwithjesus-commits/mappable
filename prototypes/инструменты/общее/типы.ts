@@ -68,7 +68,19 @@ export interface Epoch {
   startEst?: boolean;
   endEst?: boolean;
 }
-export interface Anchor { id: string; event: string; value: number; verse: string; source: string; alternatives: string[]; layer?: string }
+/** Опора (02 ред. 4.6, В-33): год — промежуток; вид — внешний документ, расчёт или предание; альтернативы — записями с трудом. */
+export interface ГодОпоры { earliest: number; latest: number; words?: string }
+export interface Anchor {
+  id: string;
+  event: string;
+  verse: string;
+  source: string;
+  kind?: 'external' | 'calc' | 'tradition' | string;
+  year?: ГодОпоры;
+  works?: { work: string; page?: string; weight?: string; checkedBy?: string }[];
+  alternatives: { year: ГодОпоры; words?: string; works?: { work: string; page?: string }[] }[];
+  layer?: string;
+}
 export interface Reign { over: string; start: number; end: number; years?: number; ageAtStart?: number; refs: string[]; sync?: { with: string; year: number; refs: string[]; note?: string }[]; note?: string; coregency?: unknown }
 /** Вход хронологии Д6 (02 § 3.15): число текста словами и стихом, вывод с частями, расчёт по модели или схеме. */
 export interface Вход {

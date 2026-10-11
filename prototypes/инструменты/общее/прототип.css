@@ -388,3 +388,12 @@ body:has(.экран-glavnaya) .шапка__поиск { display: none; }
   .правители td, .правители th { padding-inline: var(--otstup-4); overflow-wrap: anywhere; }
   .правители .правитель { white-space: normal; text-align: start; }
 }
+
+/* подсказки при вводе (11 § 3.6 (з); APG Combobox) */
+.поле-подсказок { position: relative; display: block; flex: 1 1 auto; min-width: 0; }
+.поле-подсказок input { width: 100%; }
+.подсказки { position: absolute; left: 0; right: 0; top: calc(100% + 2px); z-index: 40; margin: 0; padding: var(--otstup-4) 0; list-style: none; background: var(--tsvet-list); border: var(--liniya-volosyanaya) solid var(--tsvet-liniya); box-shadow: 0 4px 12px rgb(0 0 0 / 0.12); font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); color: var(--tsvet-chernila); }
+.подсказки[hidden] { display: none; }
+.подсказки__строка { display: flex; justify-content: space-between; gap: var(--otstup-8); min-height: var(--tsel-knopka); align-items: center; padding: 0 var(--otstup-12); cursor: pointer; }
+.подсказки__строка--выбрана, .подсказки__строка:hover { background: var(--tsvet-podlozhka); box-shadow: inset 3px 0 0 var(--tsvet-chernila); }
+@media (forced-colors: active) { .подсказки__строка--выбрана { outline: 2px solid Highlight; } }

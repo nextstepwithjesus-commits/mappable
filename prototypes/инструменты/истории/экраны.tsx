@@ -12,14 +12,14 @@ import { маршрут, href, router } from '../общее/приложение
 import { bookSlug } from '../общее/маршруты.ts';
 import { Значок, ЗнакВида } from '../общее/знаки.tsx';
 import { КнНазад, Хлебные, АдресКн, Эскиз } from '../общее/компоненты.tsx';
+import { ПолеПоиска } from '../общее/поле-поиска.tsx';
 import { видСловом, знакВида, частоВспоминается, строкаТрудного } from './модель.ts';
 import { Синопсис, type Колонка, type Сцена } from './синопсис.tsx';
 import { ЛистКниг } from './каталог.tsx';
 import { ОбразЭпох } from '../время/образ.tsx';
 import { BOOKS, BOOK_BY_CODE } from '../../../core/books.ts';
-import { NameForms } from '../../../core/search/forms.ts';
-import { Searcher, type Group } from '../../../core/search/search.ts';
-import { строкиПоиска, историиПоСловам, историиЛица, рассказВКниге } from './поиск.ts';
+import type { Group } from '../../../core/search/search.ts';
+import { поиск, историиПоСловам, историиЛица, рассказВКниге } from './поиск.ts';
 import type { Story } from '../общее/типы.ts';
 
 const ИСТОРИИ: [string, string, string] = ['история', 'истории', 'историй'];
@@ -174,7 +174,7 @@ function ПоискГлавной() {
         </label>
         <span class="поиск__поле">
           <Значок имя="поиск" />
-          <input id="поиск-главная" type="search" placeholder="Стих, человек, место или история" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+          <ПолеПоиска id="поиск-главная" placeholder="Стих, человек, место или история" q={q} setQ={setQ} />
         </span>
         <button class="кн кн--найти" type="submit">
           Найти
@@ -410,16 +410,6 @@ export function Сравнение() {
 }
 
 // ---------- поиск (11 § 3.6; поиск ядра) ----------
-let искатель: Searcher | null = null;
-function поиск(): Searcher {
-  if (искатель) return искатель;
-  const c = Д.core;
-  // все рассказы истории и места других видов с ролью (рецензия архитектуры, № 1)
-  const stories = строкиПоиска(Д.stories.values());
-  искатель = new Searcher({ names: c.names, exceptions: c.exceptions, persons: c.persons, stories, places: c.places, areas: c.areas }, new NameForms(c.names));
-  искатель.setDisambig(Д.tools.actors);
-  return искатель;
-}
 export function Поиск() {
   const q = маршрут.value.params.q ?? '';
   const res = useMemo(() => (q ? поиск().search(q) : null), [q]);

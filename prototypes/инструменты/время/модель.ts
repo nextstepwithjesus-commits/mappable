@@ -10,8 +10,8 @@
  */
 import { Д, имя } from '../общее/данные.ts';
 import { число } from '../общее/службы.ts';
-import { addYears } from '../../../core/years.ts';
-import type { Chrono, Model, Вход } from '../общее/типы.ts';
+import { addYears, yearLabel } from '../../../core/years.ts';
+import type { Anchor, Chrono, Model, Вход } from '../общее/типы.ts';
 
 export interface Звено { text: string; refs: string[]; cert?: string; цитата?: string; модель?: string; /** Фраза простого слоя (без имени модели, 04 § 2.1). */ простое?: string }
 
@@ -45,6 +45,22 @@ export interface Жизнь {
   нет?: string;
 }
 
+/**
+ * Год опоры (02 ред. 4.6; `anchorYear` в `tools/base/chrono-calc.ts`): опора модели (её `anchors`) — год модели; внешняя
+ * опора — только с трудом, у которого страница сверена; иначе года нет, и экран пишет это словами. Промежуток лет
+ * (538/537) одним годом не берётся.
+ */
+const страницаСверена = (w: { page?: string }) => !!w.page && !/не сверен/.test(w.page);
+export function опора(id: string): Anchor | undefined {
+  return Д.proto.anchors.find((a) => a.id === id);
+}
+export function годОпоры(id: string): number | undefined {
+  const a = опора(id);
+  if (!a?.year || a.year.earliest !== a.year.latest) return undefined;
+  const модельная = Д.proto.models.some((m) => m.type === 'model' && (m as Model & { anchors?: string[] }).anchors?.includes(id));
+  if (модельная || (a.kind === 'external' && (a.works ?? []).some(страницаСверена))) return a.year.earliest;
+  return undefined;
+}
 export const модель = (): Model | undefined => Д.proto.models.find((m) => m.type === 'model' && m.default);
 export const схема = (id: string): Model | undefined => Д.proto.models.find((m) => m.id === id);
 /**
@@ -62,11 +78,11 @@ export function адам(): number | null {
   // в цепочку Иакова без своих чисел, и год Адама вышел бы пустым
   кэш.clear();
   const м = модель();
-  const опора = Д.proto.anchors.find((a) => a.id === 'an-solomon-4');
+  const год4 = годОпоры('an-solomon-4');
   const н479 = м?.choices?.find((c) => c.number === 479)?.number;
   const н430 = м?.choices?.find((c) => c.number === 430)?.number;
   const иаков = жизнь('p-iakov');
-  адамBC = опора && н479 && н430 && иаков.am ? addYears(addYears(опора.value, -н479), -(иаков.am[0] + 130 + н430)) : null;
+  адамBC = год4 !== undefined && н479 && н430 && иаков.am ? addYears(addYears(год4, -н479), -(иаков.am[0] + 130 + н430)) : null;
   считается = false;
   кэш.clear(); // лица, посчитанные без года Адама, пересчитываются уже с ним
   return адамBC;
@@ -78,8 +94,8 @@ export function годЭпохи(e: { start: unknown; end: unknown }, край: 
   const r = v?.rule;
   if (!r) return undefined;
   if (r.anchor) {
-    const a = Д.proto.anchors.find((x) => x.id === r.anchor);
-    return a ? addYears(a.value, -(r.yearsBefore ?? 0) + (r.plus ?? 0)) : undefined;
+    const г = годОпоры(r.anchor);
+    return г !== undefined ? addYears(г, -(r.yearsBefore ?? 0) + (r.plus ?? 0)) : undefined;
   }
   if (r.person) {
     const ж = жизнь(r.person);
@@ -182,14 +198,19 @@ export function жизнь(id: string): Жизнь {
     out.звенья.push({ text: `${приСобытии.event?.text ?? 'Событие'}: возраст — ${число(приСобытии.number!, ['год', 'года', 'лет'])}`, refs: приСобытии.refs, cert: приСобытии.cert });
     const выбор = м.choices?.find((c) => c.refs.some((r) => приСобытии.refs.includes(r)));
     const лет479 = м.choices?.find((c) => c.number === 479);
-    const опора = Д.proto.anchors.find((a) => a.id === 'an-solomon-4');
-    if (выбор && лет479 && опора) {
-      const исход = addYears(опора.value, -лет479.number!);
-      const от = addYears(исход, -приСобытии.number!);
-      out.bc = [от, addYears(от, out.лет?.n ?? 0)];
+    const оп = опора('an-solomon-4');
+    const год = годОпоры('an-solomon-4');
+    if (выбор && лет479 && оп) {
       out.опора = true;
       out.звенья.push({ text: `Выбор модели «${м.name}»: ${выбор.what}`, refs: выбор.refs, cert: 'model', модель: м.id });
-      out.звенья.push({ text: `Опора модели: ${опора.event} — ${Math.abs(опора.value)} г. до Р. Х.; от Исхода — ${лет479.number} лет`, refs: [опора.verse, ...лет479.refs], cert: 'model', модель: м.id });
+      if (год !== undefined) {
+        const исход = addYears(год, -лет479.number!);
+        const от = addYears(исход, -приСобытии.number!);
+        out.bc = [от, addYears(от, out.лет?.n ?? 0)];
+        out.звенья.push({ text: `Опора модели: ${оп.event} — ${оп.year?.words ?? yearLabel(год)}; от Исхода — ${лет479.number} лет`, refs: [оп.verse, ...лет479.refs], cert: 'model', модель: м.id });
+      } else
+        // года опоры в пакете нет (нет труда со сверенной страницей) — честная строка без года (В-33)
+        out.звенья.push({ text: `Опора модели: ${оп.event} — года в пакете нет: у опоры нет труда со сверенной страницей; годов до Р. Х. не показываем`, refs: [оп.verse], cert: 'model', модель: м.id });
     }
   }
   if (!out.am && !out.bc) out.нет = out.лет ? 'Возраст Библия называет, а после кого он родился по счёту лет — нет' : 'Годы жизни по числам Библии не посчитать';

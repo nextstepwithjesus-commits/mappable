@@ -12,6 +12,7 @@ import { настройки, изменить, слой2 } from './настро�
 import { объявить, открыто, вБуфер, NB } from './службы.ts';
 import { router, кнопкаНазад, снимок, href, маршрут } from './приложение.ts';
 import type { VerseView } from '../../../core/verses.ts';
+import { ПолеПоиска } from './поле-поиска.tsx';
 
 // ---------- шапка (08 § 7.1) и плашка пробы (09 § 4.6) ----------
 export function Шапка() {
@@ -19,6 +20,11 @@ export function Шапка() {
   const кн = useRef<HTMLButtonElement>(null);
   const [q, setQ] = useState('');
   useEffect(() => (меню ? открыто(() => setМеню(false), кн.current) : undefined), [меню]);
+  // на странице результатов запрос остаётся в поле — его можно поправить (рецензия архитектуры, № 9)
+  const r = маршрут.value;
+  useEffect(() => {
+    if (r.screen === 'poisk') setQ(r.params.q ?? '');
+  }, [r.screen, r.params.q]);
   const пункт = (имя: string, адр: string, зн?: string) => (
     <a class="кн" href={адр} aria-current={маршрут.value.screen === адр.split('/').filter(Boolean).pop() ? 'page' : undefined}>
       {зн && <Значок имя={зн} />}
@@ -46,7 +52,7 @@ export function Шапка() {
             </label>
             <span class="поиск__поле">
               <Значок имя="поиск" />
-              <input id="поиск-шапка" type="search" placeholder="Стих, слово, имя, место" autocomplete="off" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+              <ПолеПоиска id="поиск-шапка" placeholder="Стих, слово, имя, место" q={q} setQ={setQ} />
             </span>
           </form>
         </search>

@@ -225,7 +225,8 @@ describe('простой слой «Времени» без годов расч�
     const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
     await открыть(p, 'vremya?view=lives&sel=p-moisey&layer=2');
     const текст = await p.evaluate(() => document.querySelector('main')?.textContent ?? '');
-    expect(текст).toMatch(/г\. до Р\. Х\./);
+    // год из yearLabel — с неразрывными пробелами («1526 г. до Р. Х.»)
+    expect(текст).toMatch(/\d\sг\.\sдо\sР\.\sХ\./);
     expect(текст).toMatch(/Долгое пребывание/);
     await p.close();
   });
@@ -316,6 +317,27 @@ describe('пути и поиск (рецензия архитектуры пак
     await p.locator('#лицо-p-sim').click();
     await p.waitForSelector('#h1:text("Сим")');
     expect(await p.locator('main').innerText()).toContain('Ной и потоп');
+    await p.close();
+  });
+});
+
+describe('подсказки при вводе (11 § 3.6 (з); архитектура № 9)', () => {
+  it('«пять х» в шапке → подсказка истории → стрелка и Enter открывают её', async () => {
+    const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await открыть(p, 'kniga/byt');
+    await p.locator('#поиск-шапка').pressSequentially('пять х');
+    await p.waitForSelector('#поиск-шапка-подсказки:not([hidden]) [role="option"]');
+    expect(await p.locator('#поиск-шапка').getAttribute('aria-expanded')).toBe('true');
+    await p.keyboard.press('ArrowDown');
+    expect(await p.locator('#поиск-шапка').getAttribute('aria-activedescendant')).toBe('поиск-шапка-подсказки-0');
+    await p.keyboard.press('Enter');
+    await p.waitForSelector('#h1:text("Пять хлебов и две рыбы")');
+    await p.close();
+  });
+  it('на странице результатов запрос остаётся в поле шапки', async () => {
+    const p = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    await открыть(p, `poisk?q=${encodeURIComponent('Мк 2:3')}`);
+    expect(await p.locator('#поиск-шапка').inputValue()).toBe('Мк 2:3');
     await p.close();
   });
 });

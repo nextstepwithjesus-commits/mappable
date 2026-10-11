@@ -9,6 +9,9 @@
 import type { Story } from '../общее/типы.ts';
 import { книгаСсылки } from '../общее/адреса.ts';
 import { norm, words } from '../../../core/search/norm.ts';
+import { Searcher } from '../../../core/search/search.ts';
+import { NameForms } from '../../../core/search/forms.ts';
+import { Д } from '../общее/данные.ts';
 
 export interface СтрокаПоиска { id: string; t: string; main: string; roles: Record<string, string[]>; common?: string[] }
 
@@ -59,4 +62,32 @@ export const историиЛица = (stories: Iterable<Story>, id: string) => 
 /** Рассказ истории в книге найденного адреса: параметр `rasskaz` нужен, если книга — не первая по канону. */
 export function рассказВКниге(s: Story, книга: string): boolean {
   return s.accounts.some((a) => книгаСсылки(a.refs[0] ?? '') === книга);
+}
+
+// ---------- искатель приложения (11 § 3.6; поиск ядра) ----------
+let искатель: Searcher | null = null;
+export function поиск(): Searcher {
+  if (искатель) return искатель;
+  const c = Д.core;
+  // все рассказы истории и места других видов с ролью (рецензия архитектуры, № 1)
+  искатель = new Searcher({ names: c.names, exceptions: c.exceptions, persons: c.persons, stories: строкиПоиска(Д.stories.values()), places: c.places, areas: c.areas }, new NameForms(c.names));
+  искатель.setDisambig(Д.tools.actors);
+  return искатель;
+}
+
+export interface Подсказка { id: string; title: string; kind: string }
+/** Подсказки при вводе (11 § 3.6 (з)): с двух букв, до 8 строк — истории по словам названия и записи ядра поиска. */
+export function подсказки(q: string): Подсказка[] {
+  const t = q.trim();
+  if (t.length < 2) return [];
+  const out: Подсказка[] = [];
+  const seen = new Set<string>();
+  const add = (x: Подсказка) => {
+    if (seen.has(x.id) || out.length >= 8) return;
+    seen.add(x.id);
+    out.push(x);
+  };
+  for (const s of историиПоСловам(Д.stories.values(), t).slice(0, 4)) add({ id: `s:${s.id}`, title: s.title.short, kind: 'история' });
+  for (const h of поиск().suggest(t)) add(h);
+  return out;
 }
