@@ -1,0 +1,353 @@
+# запись OpenBible	номер	имя (синодальная форма)	вид	образец формы в стихе	пометки
+Abarim	l-gory-avarimskie	горы Аваримские	mountain-range	гор\w* Аваримск\w+
+Abel-shittim	l-ave-sittim	Аве-Ситтим	campsite	Аве-Ситтим\w*
+Abronah	l-avrona	Аврона	campsite	Аврон[аеы]
+Achzib 1	l-akhziv	Ахзив	settlement	Ахзив\w*
+Adadah	l-adada	Адада	settlement	Адад[аыеу]
+Addar	l-addar	Аддар	settlement	Аддар\w*
+Adithaim	l-adifaim	Адифаим	settlement	Адифаим\w*
+Admah	l-adma	Адма	settlement	Адм[аыеу]
+Adullam	l-odollam	Одоллам	settlement	Одоллам\w*
+Adummim	l-adummim	возвышенность Адуммим	hill	возвышенности Адуммима
+Ai 1	l-gay	Гай	settlement	Га(й|я|ем|ю|е)
+Ain 2	l-ain	Аин	settlement	Аин\w*
+Akrabbim	l-vozvyshennost-akravvimskaya	возвышенность Акраввимская	hill	возвышенност\w* Акраввимск\w+
+Almon-diblathaim	l-almon-divlafaim	Алмон-Дивлафаим	campsite	Алмон-Дивлафаим\w*|Алмон Дивлафаим\w*
+Alush	l-alush	Алуш	campsite	Алуш\w*
+Amam	l-amam	Амам	settlement	Амам\w*
+Ammon	l-zemlya-synov-ammonovykh	земля сынов Аммоновых	land	земли сынов Аммоновых|пределов Аммонитских
+Anab	l-anaf	Анаф	settlement	Анаф\w*
+Anim	l-anim	Аним	settlement	Аним\w*
+Antioch 1	l-antiokhiya	Антиохия	settlement	Антиохи\w+
+Antioch 2	l-antiokhiya-pisidiyskaya	Антиохия Писидийская	settlement	Антиохи\w+ Писидийск\w+|Антиохи\w+
+Aphek 4	l-afek-sever	Афек	settlement	Афек\w*
+Aphekah	l-afeka	Афека	settlement	Афек[аиеу]
+Ar	l-ar-moav	Ар-Моав	settlement	Ар-Моав\w*|Шебет-Ар\w*
+Arab	l-arav	Арав	settlement	Арав\w*
+Arad 1	l-arad	Арад	settlement	Арад\w*
+Arnon	l-arnon	Арнон	river	Арнон\w*
+Aroer 1	l-aroer-na-arnone	Ароер	settlement	Ароер\w*
+Aroer 2	l-aroer-pred-ravvoyu	Ароер	settlement	Ароер\w*
+Ashan	l-ashan	Ашан	settlement	Ашан\w*
+Ashdod	l-azot	Азот	settlement	Азот\w*
+Ashkelon	l-askalon	Аскалонский	settlement	Аскалонск\w+
+Ashnah 1	l-ashna-1	Ашна	settlement	Ашн[аыеу]
+Ashnah 2	l-ashna-2	Ашна	settlement	Ашн[аыеу]
+Ashtaroth	l-astarof	Астароф	settlement	Астароф\w*
+Ashteroth-karnaim	l-ashterof-karnaim	Аштероф-Карнаим	settlement	Аштероф-Карнаим\w*
+Assyria	l-assiriya	Ассирия	land	Ассири\w+
+Atharim	l-afarim	Афарим	road	Афарим\w*
+Attalia	l-attaliya	Атталия	settlement	Атталию|Атталии|Атталия
+Azekah	l-azeka	Азека	settlement	Азек[аиеу]
+Azmon	l-atsmon	Ацмон	settlement	Ацмон\w*
+Baalah 1	l-vaala-simeon	Ваала	settlement	Ваал[аыеу]
+Baalah 2	l-vaala	Ваал	settlement	Ваал[аыеу]?	слить:Kiriath-jearim:that-is
+Baal-gad	l-vaal-gad	Ваал-Гад	settlement	Ваал-Гад\w*
+Baal-meon	l-bef-vaal-meon	Беф-Ваал-Меон	settlement	Беф-Ваал-Меон\w*
+Baal-zephon	l-vaal-tsefon	Ваал-Цефон	campsite	Ваал-Цефон\w*
+Babel	l-vavilon	Вавилон	settlement	Вавилон\w*
+Bamoth	l-vamof	Вамоф	campsite	Вамоф[а-я]*
+Bamoth-baal	l-vamof-vaal	Вамоф-Ваал	settlement	Вамоф-Ваал\w*
+Bashan	l-vasan	Васан	land	Васан[аеу]?|Васанск\w+
+Bealoth 1	l-valof	Валоф	settlement	Валоф\w*
+Beer 1	l-beer	Беэр	campsite	Беэр
+Beer-lahai-roi	l-beer-lakhay-roi	Беэр-лахай-рои	well	Беэр-лахай-рои
+Beersheba 1	l-virsaviya-nav	Вирсавия	settlement	Вирсави\w+
+Beersheba 2	l-virsaviya	Вирсавия	settlement	Вирсави\w+
+Bene-jaakan	l-bene-yaakan	Бене-Яакан	campsite	Бене-Яакан\w*
+Bered	l-bared	Баред	settlement	Баред\w*
+Beth-anoth	l-bef-anof	Беф-Аноф	settlement	Беф-Аноф\w*
+Beth-arabah	l-bef-arava	Беф-Арава	settlement	Беф-Арав\w+
+Beth-dagon 1	l-bef-dagon	Беф-Дагон	settlement	Беф-Дагон\w*
+Bethel 1	l-vefil	Вефиль	settlement	Вефил\w+
+Beth-haram	l-bef-garam	Беф-Гарам	settlement	Беф-Гарам\w*
+Beth-hoglah	l-bef-khogla	Беф-Хогла	settlement	Беф-Хогл\w+
+Beth-jeshimoth	l-bef-ieshimof	Беф-Иешимоф	settlement	Беф-Иешимоф\w*
+Beth-nimrah	l-bef-nimra	Беф-Нимра	settlement	Беф-Нимр\w+
+Beth-pelet	l-vef-palet	Веф-Палет	settlement	Веф-Палет\w*
+Beth-peor	l-bef-fegor	Беф-Фегор	settlement	Беф-Фегор\w*
+Beth-shemesh 1	l-vefsamis	Вефсамис	settlement	Вефсамис\w*
+Beth-tappuah	l-bef-tappuakh	Беф-Таппуах	settlement	Беф-Таппуах\w*
+Beth-zur	l-bef-tsur	Беф-Цур	settlement	Беф-Цур\w*
+Betonim	l-vetonim	Ветоним	settlement	Ветоним\w*
+Biziothiah	l-viziofeya	Визиофея	settlement	Визиофе\w+	не имя: лучшее предложение сводки «not a proper name (suburbs of Beersheba)», 689 (05 § 3.3, правило 0а); в синодальном — «Визиофея» (Нав 15:28): вопрос второму ключу
+Bozkath	l-votskaf	Воцкаф	settlement	Воцкаф\w*
+Brook of Egypt	l-potok-egipetskiy	поток Египетский	stream	поток\w* Египетск\w+
+Cabbon	l-khabbon	Хаббон	settlement	Хаббон\w*
+Canaan	l-zemlya-khanaanskaya	земля Ханаанская	land	земл\w+ Ханаанск\w+|Ханаан[аеу]?
+Carmel 1	l-karmil	Кармил	settlement	Кармил\w*
+Chaldea	l-khaldeya	Халдейский	land	Халдейск\w+
+Chesalon	l-kesalon	Кесалон	settlement	Кесалон\w*	слить:Mount Jearim:that-is
+Chesil	l-kesil	Кесил	settlement	Кесил\w*
+Chitlish	l-khiflis	Хифлис	settlement	Хифлис\w*
+City of Salt	l-ir-melakh	Ир-Мелах	settlement	Ир-Мелах\w*
+Cyprus	l-kipr	Кипр	region	Кипр\w*
+Cyrene	l-kirena	Киринеянин	region	Киринеянин	не имя: город назван только словом о человеке «Киринеянин»
+Damascus	l-damask	Дамаск	settlement	Дамаск\w*
+Dan	l-dan	Дан	settlement	Дан[аеу]?
+Dannah	l-danna	Данна	settlement	Данн[аыеу]
+Debir 1	l-davir	Давир	settlement	Давир\w*|Кириаф-Сефер\w*|Кириаф-Санн\w+
+Debir 2	l-davir-na-granitse	Давир	settlement	Давир\w*
+Debir 3	l-davir-gad	Давир	settlement	Давир\w*
+Derbe	l-derviya	Дервия	settlement	Дерви\w+
+Dibon 1	l-divon	Дивон	settlement	Дивон-Гад\w*|Дивон\w*
+Dilean	l-dilean	Дилеан	settlement	Дилеан\w*
+Dimonah	l-dimona	Димона	settlement	Димон[аыеу]
+Dophkah	l-dofka	Дофка	campsite	Дофк[аиеу]
+Dumah 1	l-duma	Дума	settlement	Дум[аыеу]
+East	l-vostok	земля восточная	land	земл\w+ восточн\w+	не имя: «на восток, в землю восточную» — слова по смыслу (05 § 3.3, правило 0а)
+Eder 2	l-eder	Едер	settlement	Едер\w*
+Edom	l-edom	Едом	land	Едом\w*|Идуме\w+
+Edrei 1	l-edrei	Едрея	settlement	Едре[ия]
+Eglon	l-eglon	Еглон	settlement	Еглон\w*
+Egypt	l-egipet	Египет	land	Египет|Египт[аеуо]м?|земл\w+ Египетск\w+|Египетск\w+
+Ekron	l-ekron	Екрон	settlement	Екрон\w*
+Elam	l-elam	Еламский	land	Еламск\w+
+Elim	l-elim	Елим	campsite	Елим\w*
+Ellasar	l-ellasar	Елласарский	land	Елласарск\w+
+El-paran	l-el-faran	Эл-Фаран	settlement	Эл-Фаран\w*
+Eltekon	l-eltekon	Елтекон	settlement	Елтекон\w*
+Eltolad	l-elfolad	Елфолад	settlement	Елфолад\w*
+Enam	l-gaenam	Гаенам	settlement	Гаенам\w*
+En-gannim 1	l-en-gannim	Ен-Ганним	settlement	Ен-Ганним\w*
+Engedi	l-en-gedi	Ен-Геди	settlement	Ен-Геди
+En-rogel	l-en-rogel	Ен-Рогел	spring	Ен-Рогел\w*
+En-shemesh	l-en-shemesh	Ен-Шемеш	spring	Ен-Шемеш\w*
+Eshan	l-eshan	Ешан	settlement	Ешан\w*
+Eshtaol	l-eshtaol	Ештаол	settlement	Ештаол\w*
+Eshtemoa	l-eshtemo	Ештемо	settlement	Ештемо
+Etham	l-efam	Ефам	campsite	Ефам\w*
+Ether 1	l-efer	Ефер	settlement	Ефер\w*
+Euphrates	l-evfrat	Евфрат	river	Евфрат\w*
+Ezem	l-atsem	Ацем	settlement	Ацем\w*
+Ezion-geber	l-etsion-gaver	Ецион-Гавер	campsite	Ецион-Гавер\w*|Ецион Гавер\w*
+Galilee 1	l-galileya	Галилея	region	Галиле\w+
+Gath 1	l-gef	Гефский	settlement	Гефск\w+
+Gaza	l-gaza	Газа	settlement	Газ[аыеу]|Газск\w+
+Gebal 1	l-gevl	Гевл	land	земл\w+ Гевла|Гевл\w*
+Gederah 1	l-gedera	Гедера	settlement	Гедер[аыеу]
+Gederoth	l-gederof	Гедероф	settlement	Гедероф
+Gederothaim	l-gederofaim	Гедерофаим	settlement	Гедерофаим\w*
+Gedor 1	l-gedor	Гедор	settlement	Гедор\w*
+Gerar	l-gerar	Герар	settlement	Герар\w*
+Geshur	l-gessur	Гессур	land	Гессур\w*
+Gibeah 2	l-giva-iud	Гива	settlement	Гив[аыеу]
+Gilead 1	l-galaad	Галаад	land	Галаад\w*
+Gilgal 3	l-galgal-na-granitse	Галгал	settlement	Галгал\w*
+Giloh	l-gilo	Гило	settlement	Гило
+Goiim 1	l-goim	Гоимский	land	Гоимск\w+	не имя: лучшее предложение сводки «not a place (group of nations)», 346 (05 § 3.3, правило 0а); в синодальном — «царь Гоимский» (Быт 14:1, 9)
+Gomorrah	l-gomorra	Гоморра	settlement	Гоморр\w+
+Goshen 3	l-goshen	Гошен	settlement	Гошен\w*
+Great Sea	l-velikoe-more	великое море	sea	велик\w+ мор\w+	доп:Нав 15:4=есть море
+Gulloth-mayim	l-istochniki-vod	источники вод	spring	источники вод	не имя: «источники вод», «источники верхние и источники нижние» — слова по смыслу (05 § 3.3, правило 0а)
+Hadashah	l-khadasha	Хадаша	settlement	Хадаш[аыеу]
+Halhul	l-khalkhul	Халхул	settlement	Халхул\w*
+Ham 1	l-gam	Гам	settlement	Гам[аеу]?
+Haradah	l-kharada	Харада	campsite	Харад[аыеу]
+Haran	l-kharran	Харран	settlement	Харран\w*
+Hashmonah	l-khashmona	Хашмона	campsite	Хашмон[аыеу]
+Havilah 2	l-khavila	Хавила	land	Хавил[аыеу]
+Havvoth-jair	l-seleniya-iairovy	селения Иаировы	region	селения Иаировы
+Hazar-gaddah	l-khatsar-gadda	Хацар-Гадда	settlement	Хацар-Гадд\w+
+Hazar-shual	l-khatsar-shual	Хацар-Шуал	settlement	Хацар-Шуал\w*
+Hazazon-tamar 1	l-khatsatson-famar	Хацацон-Фамар	settlement	Хацацон-Фамар\w*
+Hazeroth	l-asirof	Асироф	campsite	Асироф\w*
+Hazor 2	l-asor-iud	Асор	settlement	Асор\w*
+Hazor 3	l-khetsron-inache-gatsor	Хецрон	settlement	Гацор|Хецрон
+Hazor-hadattah	l-gatsor-khadafa	Гацор-Хадафа	settlement	Гацор-Хадаф\w+
+Hebron	l-khevron	Хеврон	settlement	Хеврон\w*|Кириаф-Арб\w+
+Heshbon	l-esevon	Есевон	settlement	Есевон\w*
+Heshmon	l-kheshmon	Хешмон	settlement	Хешмон\w*
+Hezron	l-khetsron	Хецрон	settlement	Хецрон\w*
+Hobah	l-khova	Хова	settlement	Хов[аыеу]
+Holon 1	l-kholon	Холон	settlement	Холон\w*
+Hor-haggidgad	l-khor-agidgad	Хор-Агидгад	campsite	Хор-Агидгад\w*
+Hormah	l-khorma	Хорма	settlement	Хорм[аыеу]
+Humtah	l-khumta	Хумта	settlement	Хумт[аыеу]
+Iconium	l-ikoniya	Икония	settlement	Иконию|Иконии|Икония
+Iim	l-iim	Иим	settlement	Иим
+Iphtah	l-iffakh	Иффах	settlement	Иффах\w*
+Ithnan	l-ifnan	Ифнан	settlement	Ифнан\w*
+Iye-abarim	l-iye-avarim	Ийе-Аварим	campsite	Ийе-Аварим\w*|Ийм-Аварим\w*|Ийм[аеу]?
+Jabbok	l-iavok	Иавок	river	Иавок\w*
+Jabneel 1	l-iavneil	Иавнеил	settlement	Иавнеил\w*
+Jagur	l-iagur	Иагур	settlement	Иагур\w*
+Jahaz	l-iaatsa	Иааца	settlement	Иаац[аыеу]
+Janim	l-ianum	Ианум	settlement	Ианум\w*
+Jarmuth 1	l-iarmuf	Иармуф	settlement	Иармуф\w*
+Jattir	l-iattir	Иаттир	settlement	Иаттир\w*
+Jazer	l-iazer	Иазер	settlement	Иазер\w*
+Jebus	l-ievus	Иевус	settlement	Иевус[аеу]?	слить:Jerusalem:that-is
+Jericho 1	l-ierikhon	Иерихон	settlement	Иерихон\w*
+Jerusalem	l-ierusalim	Иерусалим	settlement	Иерусалим\w*
+Jeshimon	l-ieshimon	пустыня	desert	пустын\w+	не имя: «обращенной лицем к пустыне» — слово по смыслу (05 § 3.3, правило 0а)
+Jezreel 1	l-izreel-iud	Изреель	settlement	Изреел\w+
+Jokdeam	l-iokdam	Иокдам	settlement	Иокдам\w*
+Joktheel 1	l-iokfeil	Иокфеил	settlement	Иокфеил\w*
+Jordan	l-iordan	Иордан	river	Иордан\w*
+Jordan Valley	l-okrestnost-iordanskaya	окрестность Иорданская	region	окрестност\w* Иорданск\w+
+Jotbathah	l-iotvafa	Иотвафа	campsite	Иотваф\w+
+Juttah	l-yuta	Юта	settlement	Ют[аыеу]
+Kabzeel	l-kavtseil	Кавцеил	settlement	Кавцеил\w*
+Kadesh-barnea	l-kades	Кадес	settlement	Кадес-Варн\w+|Кадес\w*|Мишпат
+Kain	l-kain	Каин	settlement	Каин
+Karka	l-karkaya	Каркая	settlement	Каркае|Каркая|Каркаи
+Kedemoth	l-kedemof	Кедемоф	settlement	Кедемоф\w*
+Kedesh 2	l-kedes-iud	Кедес	settlement	Кедес\w*
+Kehelathah	l-kegelafa	Кегелафа	campsite	Кегелаф\w+
+Keilah	l-keila	Кеила	settlement	Кеил[аыеу]
+Kerioth-hezron	l-kiriaf-iud	Кириаф	settlement	Кириаф
+Kibroth-hattaavah	l-kibrot-gattaava	Киброт-Гаттаава	campsite	Киброт-Гаттаав\w+
+Kinah	l-kina	Кина	settlement	Кин[аыеу]
+King’s Highway	l-put-tsarskiy	путь царский	road	пут\w+ царск\w+
+King’s Valley	l-dolina-tsarskaya	долина царская	valley	долина царская	слить:Valley of Shaveh:now
+Kiriathaim 1	l-kiriafaim	Кириафаим	settlement	Кириафаим\w*
+Kiriath-jearim	l-kiriaf-iarim	Кириаф-Иарим	settlement	Кириаф-Иарим\w*|Кириаф-Ваал\w*
+Lachish	l-lakhis	Лахис	settlement	Лахис\w*
+Lahmam	l-lakhmas	Лахмас	settlement	Лахмас\w*
+Lebanon	l-livan	Ливан	land	Ливан\w*
+Lebaoth	l-levaof	Леваоф	settlement	Леваоф\w*
+Lebo-hamath	l-vkhod-v-emaf	вход в Емаф	settlement	входа в Емаф
+Libnah 1	l-livna	Ливна	settlement	Ливн[аыеу]
+Libnah 2	l-livna-stan	Ливна	campsite	Ливн[аыеу]
+Lower Gulloth	l-istochniki-nizhnie	источники нижние	spring	источники нижние	не имя: «источники нижние» — слова по смыслу (05 § 3.3, правило 0а)
+Lycaonia	l-likaoniya	Ликаонские города	region	Ликаонск\w+ город\w*
+Lystra	l-listra	Листра	settlement	Листр[аыеу]
+Maacah	l-maakha	Мааха	land	Маахск\w+|Маах[аиеу]
+Maarath	l-maaraf	Маараф	settlement	Маараф\w*
+Machpelah	l-makhpela	Махпела	cave	Махпел\w+
+Madmannah	l-madmana	Мадмана	settlement	Мадман[аыеу]
+Mahanaim	l-makhanaim	Маханаим	settlement	Маханаим\w*
+Makheloth	l-makelof	Макелоф	campsite	Макелоф\w*
+Makkedah	l-maked	Макед	settlement	Макед\w*
+Mamre	l-mamre	Мамре	settlement	Мамре	доп:Быт 13:18=дубравы Мамре; доп:Быт 18:1=у дубравы Мамре
+Maon	l-maon	Маон	settlement	Маон\w*
+Marah	l-merra	Мерра	campsite	Мерр[аыеу]
+Mareshah	l-maresha	Мареша	settlement	Мареш[аыеу]
+Mattanah	l-matanna	Матанна	campsite	Матанн[аыеу]
+Mearah	l-meara	Меара	settlement	Меар[аыеу]
+Medeba	l-medeva	Медева	settlement	Медев[аыеу]
+Mephaath	l-mefaaf	Мефааф	settlement	Мефааф\w*
+Mesopotamia	l-mesopotamiya	Месопотамия	land	Месопотами\w+
+Middin	l-middin	Миддин	settlement	Миддин\w*
+Midian	l-madiam	Мадиамский	land	Мадиамск\w+
+Migdal-gad	l-migdal-gad	Мигдал-Гад	settlement	Мигдал-Гад\w*
+Migdol 1	l-migdol	Мигдол	campsite	Мигдол\w*
+Misrephoth-maim	l-misrefof-maim	Мисрефоф-Маим	settlement	Мисрефоф-Маим\w*
+Mithkah	l-mifka	Мифка	campsite	Мифк[аиеу]
+Mizpeh 2	l-mitsfe	Мицфе	settlement	Мицфе
+Moab 1	l-moav	Моав	land	Моав(а|ом|у|е)?|Моавитск\w+
+Moab 2	l-ravniny-moavitskie	равнины Моавитские	region	равнин\w+ Моавитск\w+
+Moladah	l-molada	Молада	settlement	Молад[аыеу]
+Moreh 1	l-dubrava-more	дубрава Море	tree	дубравы Море
+Moriah	l-zemlya-moria	земля Мориа	land	земл\w+ Мориа
+Moseroth	l-moserof	Мосероф	campsite	Мосероф\w*
+Mount Baalah	l-gora-vaal	гора Ваал	mountain	гор\w* Ваал
+Mount Ephron	l-gora-efron	гора Ефрон	mountain	гор\w* Ефрон\w*
+Mount Hermon	l-gora-ermon	гора Ермон	mountain	гор\w* Ермон\w*|Ермон\w*
+Mount Hor 1	l-gora-or	гора Ор	mountain	гор\w* Ор
+Mount Jearim	l-gora-iearim	гора Иеарим	mountain	гор\w* Иеарим
+Mount Seir 1	l-gora-seir	гора Сеир	mountain-range	гор\w* их Сеире|Сеир\w*
+Mount Seir 2	l-gora-seir-iud	гора Сеир	mountain	гор\w* Сеир\w*
+Mount Shepher	l-gora-shafer	гора Шафер	campsite	гор\w* Шафер
+Naamah 1	l-naema	Наема	settlement	Наем[аыеу]
+Nahaliel	l-nagaliil	Нагалиил	campsite	Нагалиил\w*
+Nahor	l-gorod-nakhora	город Нахора	settlement	город Нахора
+Nebo 1	l-nevo	Нево	settlement	Нево
+Negeb	l-yug	юг	region	юг\w*|полуденн\w+	не имя: «к югу», «земля полуденная» — слова по смыслу (05 § 3.3, правило 0а)
+Nephtoah	l-neftoakh	Нефтоах	spring	источник\w* вод Нефтоах|Нефтоах
+Nezib	l-netsiv	Нецив	settlement	Нецив\w*
+Nibshan	l-nivshan	Нившан	settlement	Нившан\w*
+Nophah	l-nofa	Нофа	settlement	Ноф[аыеу]
+Oboth	l-ovof	Овоф	campsite	Овоф\w*
+Paddan-aram	l-mesopotamiya-25	Месопотамия	land	Месопотами\w+
+Pamphylia	l-pamfiliya	Памфилия	region	Памфили\w+
+Paphos	l-paf	Паф	settlement	Паф[аеу]?
+Paran	l-pustynya-faran	пустыня Фаран	desert	пустын\w+ Фаран
+Perga	l-pergiya	Пергия	settlement	Перги\w+
+Philistia	l-zemlya-filistimskaya	земля Филистимская	land	Филистимск\w+
+Pi-hahiroth	l-pi-gakhirof	Пи-Гахироф	campsite	Пи-Гахироф\w*|Гахироф\w*
+Pisgah	l-gora-fasga	гора Фасга	mountain	гор\w* Фасги|Фасги
+Pisidia	l-pisidiya	Писидия	region	Писиди\w+
+Punon	l-punon	Пунон	campsite	Пунон\w*
+Rabbah 1	l-ravva	Равва	settlement	Равв\w+
+Rabbah 2	l-aravva	Аравва	settlement	Аравв[аыеу]
+Ramath-mizpeh	l-ramaf-mitsfa	Рамаф-Мицфа	settlement	Рамаф-Мицф\w+
+Rameses	l-raamses	Раамсес	settlement	Раамсес\w*
+Red Sea 1	l-chermnoe-more	Чермное море	sea	Чермн\w+ мор\w+	переход моря (Исх 14–15); доп:Чис 33:8=среди моря; доп:Исх 14:22=среди моря=inference:Исх 15:4
+Red Sea 3	l-chermnoe-more-stan	Чермное море	sea	Чермн\w+ мор\w+	стан у Чермного моря (Чис 33:10–11)
+Rephidim	l-refidim	Рефидим	campsite	Рефидим\w*
+Rimmon 2	l-rimmon	Риммон	settlement	Риммон\w*
+Rimmon-perez	l-rimnon-farets	Римнон-Фарец	campsite	Римнон-Фарец\w*|Римнон Фарец\w*|Римнон
+Rissah	l-rissa	Рисса	campsite	Рисс[аыеу]
+Rithmah	l-rifma	Рифма	campsite	Рифм[аыеу]
+Salamis	l-salamin	Саламин	settlement	Саламин\w*
+Salecah	l-salkha	Салха	settlement	Салх[аиеу]
+Salem	l-salim	Салимский	settlement	Салимск\w+
+Salt Sea	l-more-solenoe	море Соленое	sea	мор\w+ Солен\w+|Солен\w+
+Sansannah	l-sansana	Сансана	settlement	Сансан[аыеу]
+Sea of Galilee	l-more-khinnerefskoe	море Хиннерефское	lake	мор\w+ Хиннерефск\w+
+Secacah	l-sekakha	Секаха	settlement	Секах[аиеу]
+Seleucia	l-selevkiya	Селевкия	settlement	Селевки\w+
+Shaaraim 1	l-shaaraim	Шаараим	settlement	Шаараим\w*
+Shamir 1	l-shamir	Шамир	settlement	Шамир\w*
+Shaveh-kiriathaim	l-shave-kiriafaim	Шаве-Кириафаим	field	Шаве-Кириафаим\w*|Шаве Кириафаим\w*
+Shechem	l-sikhem	Сихем	settlement	Сихем\w*
+Shema	l-shema	Шема	settlement	Шем[аыеу]
+Shephelah	l-nizmennye-mesta	низменные места	region	низменных местах	не имя: «на низменных местах» — слова по смыслу (05 § 3.3, правило 0а)
+Shihor 1	l-sikhor	Сихор	river	Сихор\w*
+Shikkeron	l-shikaron	Шикарон	settlement	Шикарон\w*
+Shilhim	l-shelikhim	Шелихим	settlement	Шелихим\w*
+Shinar	l-sennaar	Сеннаар	land	Сеннаар|Сеннаарск\w+
+Shur	l-pustynya-sur	Сур	desert	пустын\w+ Сур|Сур[аеу]?|Суром
+Sibmah	l-sivma	Сивма	settlement	Сивм[аыеу]
+Sidon	l-sidon	Сидонская	settlement	Сидонск\w+
+Sin	l-pustynya-sin	пустыня Син	desert	пустын\w+ Син
+Socoh 1	l-sokho-shefela	Сохо	settlement	Сохо
+Socoh 2	l-sokho-gory	Сохо	settlement	Сохо
+Sodom	l-sodom	Содом	settlement	Содом\w*
+Succoth 1	l-sokkhof-zaiordanskiy	Сокхоф	settlement	Сокхоф\w*
+Succoth 2	l-sokkhof	Сокхоф	campsite	Сокхоф\w*
+Suphah	l-sufa	Суфа	region	Суф[аеу]
+Tahath	l-takhaf	Тахаф	campsite	Тахаф\w*
+Tappuah 2	l-tappuakh	Таппуах	settlement	Таппуах\w*
+Telem	l-telem	Телем	settlement	Телем\w*
+Terah	l-tarakh	Тарах	campsite	Тарах\w*
+The Lord Will Provide	l-iegova-ire	Иегова-ире	mountain	Иегова-ире
+Timnah 1	l-fimna	Фимна	settlement	Фимн[аыеу]
+Timnah 2	l-fimna-gory	Фимна	settlement	Фимн[аыеу]
+Upper Gulloth	l-istochniki-verkhnie	источники верхние	spring	источники верхние	не имя: «источники верхние» — слова по смыслу (05 § 3.3, правило 0а)
+Ur 1	l-ur-khaldeyskiy	Ур Халдейский	settlement	Ур[аеу]? Халдейск\w+
+Valley of Achor	l-dolina-akhor	долина Ахор	valley	долин\w+ Ахор
+Valley of Hinnom	l-dolina-ennomova	долина сына Енномова	valley	долин\w+ сына Енномова|долин\w+ Енномов\w+
+Valley of Rephaim	l-dolina-refaimov	долина Рефаимов	valley	долин\w+ Рефаимов
+Valley of Shaveh	l-dolina-shave	долина Шаве	valley	долин\w+ Шаве|долина царская
+Valley of Siddim	l-dolina-siddim	долина Сиддим	valley	долин\w+(?: же)? Сиддим
+Valley of the Arnon	l-potok-arnon	поток Арнон	valley	поток\w* Арнона
+Valley of Zered	l-dolina-zared	долина Заред	valley	долин\w+ Заред
+Waheb	l-vageb	Вагеб	settlement	Вагеб\w*
+Way of the Red Sea	l-put-chermnogo-morya	путь Чермного моря	road	пут\w+ Чермного моря
+Wilderness of Sinai	l-pustynya-sinayskaya	пустыня Синайская	desert	пустын\w+ Синайск\w+
+Zalmonah	l-salmona	Салмона	campsite	Салмон[аыеу]
+Zanoah 1	l-zanoakh-shefela	Заноах	settlement	Заноах\w*
+Zanoah 2	l-zanoakh-gory	Заноах	settlement	Заноах\w*
+Zaphon 1	l-tsafon	Цафон	settlement	Цафон\w*
+Zeboiim	l-sevoim	Севоимский	settlement	Севоимск\w+
+Zenan	l-tsenan	Ценан	settlement	Ценан\w*
+Zereth-shahar	l-tsere-shakhar	Цереф-Шахар	settlement	Цереф-Шахар\w*
+Ziklag	l-tsiklag	Циклаг	settlement	Циклаг\w*
+Zin 1	l-pustynya-sin-kades	пустыня Син	desert	пустын\w+ Син
+Zin 2	l-tsin	Цин	settlement	Цин
+Zior	l-tsigor	Цигор	settlement	Цигор\w*
+Ziph 1	l-zif-gory	Зиф	settlement	Зиф\w*
+Ziph 2	l-zif-yug	Зиф	settlement	Зиф\w*
+Zoar	l-sigor	Сигор	settlement	Сигор\w*|Бел[аыеу]
+Zorah	l-tsora	Цора	settlement	Цор[аыеу]
+# цели связей сводки вне глав пробного справочника: место нужно, чтобы указатель «другое имя» вёл на существующую запись (02 § 3.13.4)
+Shittim	l-sittim	Ситтим	campsite	Ситтим\w*	цель:Чис 25:1
+Babylon 1	l-vavilon-gorod	Вавилон	settlement	Вавилон\w*	цель:4Цар 17:24
+Elath	l-elaf	Елаф	settlement	Елаф\w*	цель:Втор 2:8
+Tamar 2	l-tamara	Тамара	settlement	Тамар[аыеу]	цель:Иез 47:19
+Beth-biri	l-bef-birei	Беф-Биреи	settlement	Беф-Биреи	цель:1Пар 4:31
+Mount Moriah	l-gora-moria	гора Мориа	mountain	гор\w* Мориа	цель:2Пар 3:1
+Mount Sinai	l-gora-sinay	гора Синай	mountain	гор\w* Синай	цель:Исх 19:11

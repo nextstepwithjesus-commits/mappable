@@ -37,8 +37,8 @@ export const PROBE_BANNER = 'Данные не проверены: проба';
 
 export type Coll =
   | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'cite' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
-  | 'line' | 'epoch' | 'anchor' | 'model' | 'place' | 'relation' | 'story' | 'vclass' | 'textparallel';
-export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'model', 'place', 'relation', 'story', 'vclass', 'textparallel'];
+  | 'line' | 'epoch' | 'anchor' | 'model' | 'place' | 'placemention' | 'route' | 'relation' | 'story' | 'vclass' | 'textparallel';
+export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'model', 'place', 'placemention', 'route', 'relation', 'story', 'vclass', 'textparallel'];
 
 /**
  * Файлы base/ по коллекциям допуска (02 § 3.17 [4.1]; К-10): каждый файл базы принадлежит коллекции допуска или списку
@@ -48,7 +48,7 @@ export const COLL_FILES: Record<Coll, RegExp> = {
   actor: /^actors\/[^/]+\.json$/, fact: /^actors\/[^/]+\.json$/, origin: /^origins\.json$/, union: /^unions\.json$/, kin: /^kin\.json$/,
   reading: /^readings\.json$/, cite: /^readings\.json$/, area: /^areas\.json$/, membership: /^memberships\.json$/, nodata: /^nodata\.json$/,
   chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/, model: /^models\.json$/,
-  place: /^places\.json$/, relation: /^relations\.json$/,
+  place: /^places\.json$/, placemention: /^place-mentions\.json$/, route: /^routes\.json$/, relation: /^relations\.json$/,
   story: /^stories\.json$/, vclass: /^verse-classes\.json$/, textparallel: /^text-parallels\.json$/,
 };
 /**
@@ -182,6 +182,10 @@ export function records(base: Base): Rec[] {
   for (const m of base.models ?? []) add('model', `model:${m.id}`, m, 'models.json', []);
   // места (02 § 3.13; К-11): связи с другими местами — ссылки, а не зависимости (§ 3.17)
   for (const p of base.places ?? []) add('place', `place:${p.id}`, p, 'places.json', []);
+  // упоминания мест и пути (02 § 3.13.5, § 3.13.8): место для них — ссылка, а не зависимость (§ 3.17; путь без стоянки
+  // рисуется с разрывом); у пути зависимости — путники, как лица у истории
+  for (const m of base.placeMentions ?? []) add('placemention', `placemention:${m.id}`, m, 'place-mentions.json', []);
+  for (const r of base.routes ?? []) add('route', `route:${r.id}`, r, 'routes.json', r.travellers.filter((x) => x.startsWith('p-')).map(A));
   // истории (02 § 3.12): зависимости — лица-участники и тот, кто пересказывает; связанные истории, повествование и
   // места — ссылки, а не зависимости (§ 3.17); `god` и `new:` — не записи базы
   for (const st of base.stories ?? []) {

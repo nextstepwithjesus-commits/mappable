@@ -1,0 +1,6735 @@
+{
+ "schema": 1,
+ "title": "Упоминания мест (02 § 3.13.5): главы пробного справочника",
+ "prov": {
+  "by": "составитель мест (пакет 2)",
+  "at": "2026-10-12",
+  "status": "draft",
+  "from": {
+   "vol": "tools/places/pilot.py; data/places; inputs/openbible (коммит 7eb18a5)"
+  }
+ },
+ "sources": [
+  "src-synodal"
+ ],
+ "items": [
+  {
+   "id": "lm-1",
+   "ref": "Быт 11:2",
+   "n": 1,
+   "form": "Сеннаар",
+   "place": "l-sennaar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-2",
+   "ref": "Быт 11:9",
+   "n": 1,
+   "form": "Вавилон",
+   "place": "l-vavilon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-3",
+   "ref": "Быт 11:28",
+   "n": 1,
+   "form": "Уре Халдейском",
+   "place": "l-ur-khaldeyskiy",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-4",
+   "ref": "Быт 11:28",
+   "n": 1,
+   "form": "Халдейском",
+   "place": "l-khaldeya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-5",
+   "ref": "Быт 11:31",
+   "n": 1,
+   "form": "Ура Халдейского",
+   "place": "l-ur-khaldeyskiy",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-6",
+   "ref": "Быт 11:31",
+   "n": 1,
+   "form": "Халдейского",
+   "place": "l-khaldeya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-7",
+   "ref": "Быт 11:31",
+   "n": 1,
+   "form": "землю Ханаанскую",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-8",
+   "ref": "Быт 11:31",
+   "n": 1,
+   "form": "Харрана",
+   "place": "l-kharran",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-9",
+   "ref": "Быт 11:32",
+   "n": 1,
+   "form": "Харране",
+   "place": "l-kharran",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-10",
+   "ref": "Быт 12:4",
+   "n": 1,
+   "form": "Харрана",
+   "place": "l-kharran",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-11",
+   "ref": "Быт 12:5",
+   "n": 1,
+   "form": "Харране",
+   "place": "l-kharran",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-12",
+   "ref": "Быт 12:5",
+   "n": 1,
+   "form": "землю Ханаанскую",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "via",
+   "status": "linked"
+  },
+  {
+   "id": "lm-13",
+   "ref": "Быт 12:5",
+   "n": 2,
+   "form": "землю Ханаанскую",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "via",
+   "status": "linked"
+  },
+  {
+   "id": "lm-14",
+   "ref": "Быт 12:6",
+   "n": 1,
+   "form": "Сихема",
+   "place": "l-sikhem",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-15",
+   "ref": "Быт 12:6",
+   "n": 1,
+   "form": "дубравы Море",
+   "place": "l-dubrava-more",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-16",
+   "ref": "Быт 12:8",
+   "n": 1,
+   "form": "Вефиля",
+   "place": "l-vefil",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-17",
+   "ref": "Быт 12:8",
+   "n": 1,
+   "form": "Вефиль",
+   "place": "l-vefil",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-18",
+   "ref": "Быт 12:8",
+   "n": 1,
+   "form": "Гай",
+   "place": "l-gay",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-19",
+   "ref": "Быт 12:10",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-20",
+   "ref": "Быт 12:11",
+   "n": 1,
+   "form": "Египту",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-21",
+   "ref": "Быт 12:14",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-22",
+   "ref": "Быт 13:1",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-23",
+   "ref": "Быт 13:3",
+   "n": 1,
+   "form": "Вефиля",
+   "place": "l-vefil",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-24",
+   "ref": "Быт 13:3",
+   "n": 1,
+   "form": "Вефилем",
+   "place": "l-vefil",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-25",
+   "ref": "Быт 13:3",
+   "n": 1,
+   "form": "Гаем",
+   "place": "l-gay",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-26",
+   "ref": "Быт 13:10",
+   "n": 1,
+   "form": "окрестность Иорданскую",
+   "place": "l-okrestnost-iordanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-27",
+   "ref": "Быт 13:10",
+   "n": 1,
+   "form": "Содом",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-28",
+   "ref": "Быт 13:10",
+   "n": 1,
+   "form": "Гоморру",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-29",
+   "ref": "Быт 13:10",
+   "n": 1,
+   "form": "Сигора",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-30",
+   "ref": "Быт 13:10",
+   "n": 1,
+   "form": "земля Египетская",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-31",
+   "ref": "Быт 13:11",
+   "n": 1,
+   "form": "окрестность Иорданскую",
+   "place": "l-okrestnost-iordanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-32",
+   "ref": "Быт 13:12",
+   "n": 1,
+   "form": "земле Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-33",
+   "ref": "Быт 13:12",
+   "n": 1,
+   "form": "Содома",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-34",
+   "ref": "Быт 13:13",
+   "n": 1,
+   "form": "Содомские",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-35",
+   "ref": "Быт 13:18",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-mamre",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-36",
+   "ref": "Быт 13:18",
+   "n": 1,
+   "form": "Хевроне",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-37",
+   "ref": "Быт 14:1",
+   "n": 1,
+   "form": "Сеннаарского",
+   "place": "l-sennaar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-38",
+   "ref": "Быт 14:1",
+   "n": 1,
+   "form": "Елласарского",
+   "place": "l-ellasar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-39",
+   "ref": "Быт 14:1",
+   "n": 1,
+   "form": "Еламского",
+   "place": "l-elam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-40",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Содомского",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-41",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Гоморрского",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-42",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Адмы",
+   "place": "l-adma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-43",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Севоимского",
+   "place": "l-sevoim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-44",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Белы",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-45",
+   "ref": "Быт 14:2",
+   "n": 1,
+   "form": "Сигор",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-46",
+   "ref": "Быт 14:3",
+   "n": 1,
+   "form": "долине Сиддим",
+   "place": "l-dolina-siddim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-47",
+   "ref": "Быт 14:3",
+   "n": 1,
+   "form": "море Соленое",
+   "place": "l-more-solenoe",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-48",
+   "ref": "Быт 14:5",
+   "n": 1,
+   "form": "Аштероф—Карнаиме",
+   "place": "l-ashterof-karnaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-49",
+   "ref": "Быт 14:5",
+   "n": 1,
+   "form": "Гаме",
+   "place": "l-gam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-50",
+   "ref": "Быт 14:5",
+   "n": 1,
+   "form": "Шаве—Кириафаиме",
+   "place": "l-shave-kiriafaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-51",
+   "ref": "Быт 14:6",
+   "n": 1,
+   "form": "горе их Сеире",
+   "place": "l-gora-seir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-52",
+   "ref": "Быт 14:6",
+   "n": 1,
+   "form": "Эл—Фарана",
+   "place": "l-el-faran",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-53",
+   "ref": "Быт 14:7",
+   "n": 1,
+   "form": "Мишпат",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-54",
+   "ref": "Быт 14:7",
+   "n": 1,
+   "form": "Кадес",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-55",
+   "ref": "Быт 14:7",
+   "n": 1,
+   "form": "Хацацон—Фамаре",
+   "place": "l-khatsatson-famar",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-56",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Содомский",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-57",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Гоморрский",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-58",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Адмы",
+   "place": "l-adma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-59",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Севоимский",
+   "place": "l-sevoim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-60",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Белы",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-61",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "Сигор",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-62",
+   "ref": "Быт 14:8",
+   "n": 1,
+   "form": "долине Сиддим",
+   "place": "l-dolina-siddim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-63",
+   "ref": "Быт 14:9",
+   "n": 1,
+   "form": "Еламским",
+   "place": "l-elam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-64",
+   "ref": "Быт 14:9",
+   "n": 1,
+   "form": "Сеннаарским",
+   "place": "l-sennaar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-65",
+   "ref": "Быт 14:9",
+   "n": 1,
+   "form": "Елласарским",
+   "place": "l-ellasar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-66",
+   "ref": "Быт 14:10",
+   "n": 1,
+   "form": "долине же Сиддим",
+   "place": "l-dolina-siddim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-67",
+   "ref": "Быт 14:10",
+   "n": 1,
+   "form": "Содомский",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-68",
+   "ref": "Быт 14:10",
+   "n": 1,
+   "form": "Гоморрский",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-69",
+   "ref": "Быт 14:11",
+   "n": 1,
+   "form": "Содома",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-70",
+   "ref": "Быт 14:11",
+   "n": 1,
+   "form": "Гоморры",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-71",
+   "ref": "Быт 14:12",
+   "n": 1,
+   "form": "Содоме",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-72",
+   "ref": "Быт 14:14",
+   "n": 1,
+   "form": "Дана",
+   "place": "l-dan",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-73",
+   "ref": "Быт 14:15",
+   "n": 1,
+   "form": "Ховы",
+   "place": "l-khova",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-74",
+   "ref": "Быт 14:15",
+   "n": 1,
+   "form": "Дамаска",
+   "place": "l-damask",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-75",
+   "ref": "Быт 14:17",
+   "n": 1,
+   "form": "Содомский",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-76",
+   "ref": "Быт 14:17",
+   "n": 1,
+   "form": "долину Шаве",
+   "place": "l-dolina-shave",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-77",
+   "ref": "Быт 14:17",
+   "n": 1,
+   "form": "долина царская",
+   "place": "l-dolina-shave",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-78",
+   "ref": "Быт 14:18",
+   "n": 1,
+   "form": "Салимский",
+   "place": "l-salim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-79",
+   "ref": "Быт 14:21",
+   "n": 1,
+   "form": "Содомский",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-80",
+   "ref": "Быт 14:22",
+   "n": 1,
+   "form": "Содомскому",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-81",
+   "ref": "Быт 15:2",
+   "n": 1,
+   "form": "Дамаска",
+   "place": "l-damask",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-82",
+   "ref": "Быт 15:7",
+   "n": 1,
+   "form": "Ура Халдейского",
+   "place": "l-ur-khaldeyskiy",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-83",
+   "ref": "Быт 15:7",
+   "n": 1,
+   "form": "Халдейского",
+   "place": "l-khaldeya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-84",
+   "ref": "Быт 15:18",
+   "n": 1,
+   "form": "Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-85",
+   "ref": "Быт 15:18",
+   "n": 1,
+   "form": "Евфрата",
+   "place": "l-evfrat",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-86",
+   "ref": "Быт 16:3",
+   "n": 1,
+   "form": "земле Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-87",
+   "ref": "Быт 16:7",
+   "n": 1,
+   "form": "Суру",
+   "place": "l-pustynya-sur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-88",
+   "ref": "Быт 16:14",
+   "n": 1,
+   "form": "Беэр—лахай—рои",
+   "place": "l-beer-lakhay-roi",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-89",
+   "ref": "Быт 16:14",
+   "n": 1,
+   "form": "Кадесом",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-90",
+   "ref": "Быт 16:14",
+   "n": 1,
+   "form": "Баредом",
+   "place": "l-bared",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-91",
+   "ref": "Быт 17:8",
+   "n": 1,
+   "form": "землю Ханаанскую",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-92",
+   "ref": "Быт 18:1",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-mamre",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-93",
+   "ref": "Быт 18:16",
+   "n": 1,
+   "form": "Содому",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-94",
+   "ref": "Быт 18:20",
+   "n": 1,
+   "form": "Содомский",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-95",
+   "ref": "Быт 18:20",
+   "n": 1,
+   "form": "Гоморрский",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-96",
+   "ref": "Быт 18:22",
+   "n": 1,
+   "form": "Содом",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-97",
+   "ref": "Быт 18:26",
+   "n": 1,
+   "form": "Содоме",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-98",
+   "ref": "Быт 19:1",
+   "n": 1,
+   "form": "Содом",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-99",
+   "ref": "Быт 19:1",
+   "n": 1,
+   "form": "Содома",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-100",
+   "ref": "Быт 19:4",
+   "n": 1,
+   "form": "Содомляне",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-101",
+   "ref": "Быт 19:22",
+   "n": 1,
+   "form": "Сигор",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-102",
+   "ref": "Быт 19:23",
+   "n": 1,
+   "form": "Сигор",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-103",
+   "ref": "Быт 19:24",
+   "n": 1,
+   "form": "Содом",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-104",
+   "ref": "Быт 19:24",
+   "n": 1,
+   "form": "Гоморру",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-105",
+   "ref": "Быт 19:28",
+   "n": 1,
+   "form": "Содому",
+   "place": "l-sodom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-106",
+   "ref": "Быт 19:28",
+   "n": 1,
+   "form": "Гоморре",
+   "place": "l-gomorra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-107",
+   "ref": "Быт 19:30",
+   "n": 1,
+   "form": "Сигора",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-108",
+   "ref": "Быт 19:30",
+   "n": 1,
+   "form": "Сигоре",
+   "place": "l-sigor",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-109",
+   "ref": "Быт 20:1",
+   "n": 1,
+   "form": "Кадесом",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-110",
+   "ref": "Быт 20:1",
+   "n": 1,
+   "form": "Суром",
+   "place": "l-pustynya-sur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-111",
+   "ref": "Быт 20:1",
+   "n": 1,
+   "form": "Гераре",
+   "place": "l-gerar",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-112",
+   "ref": "Быт 20:2",
+   "n": 1,
+   "form": "Герарский",
+   "place": "l-gerar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-113",
+   "ref": "Быт 21:14",
+   "n": 1,
+   "form": "Вирсавии",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-114",
+   "ref": "Быт 21:21",
+   "n": 1,
+   "form": "пустыне Фаран",
+   "place": "l-pustynya-faran",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-115",
+   "ref": "Быт 21:21",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-116",
+   "ref": "Быт 21:31",
+   "n": 1,
+   "form": "Вирсавия",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-117",
+   "ref": "Быт 21:32",
+   "n": 1,
+   "form": "Вирсавии",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-118",
+   "ref": "Быт 21:33",
+   "n": 1,
+   "form": "Вирсавии",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-119",
+   "ref": "Быт 22:2",
+   "n": 1,
+   "form": "землю Мориа",
+   "place": "l-zemlya-moria",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-120",
+   "ref": "Быт 22:14",
+   "n": 1,
+   "form": "Иегова—ире",
+   "place": "l-iegova-ire",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-121",
+   "ref": "Быт 22:19",
+   "n": 1,
+   "form": "Вирсавию",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-122",
+   "ref": "Быт 22:19",
+   "n": 1,
+   "form": "Вирсавии",
+   "place": "l-virsaviya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-123",
+   "ref": "Быт 23:2",
+   "n": 1,
+   "form": "Кириаф—Арбе",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-124",
+   "ref": "Быт 23:2",
+   "n": 1,
+   "form": "Хеврон",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-125",
+   "ref": "Быт 23:2",
+   "n": 1,
+   "form": "земле Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-126",
+   "ref": "Быт 23:9",
+   "n": 1,
+   "form": "Махпелу",
+   "place": "l-makhpela",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-127",
+   "ref": "Быт 23:17",
+   "n": 1,
+   "form": "Махпеле",
+   "place": "l-makhpela",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-128",
+   "ref": "Быт 23:17",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-mamre",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-129",
+   "ref": "Быт 23:19",
+   "n": 1,
+   "form": "Махпеле",
+   "place": "l-makhpela",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-130",
+   "ref": "Быт 23:19",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-mamre",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-131",
+   "ref": "Быт 23:19",
+   "n": 1,
+   "form": "Хеврон",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-132",
+   "ref": "Быт 23:19",
+   "n": 1,
+   "form": "земле Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-133",
+   "ref": "Быт 24:10",
+   "n": 1,
+   "form": "Месопотамию",
+   "place": "l-mesopotamiya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-134",
+   "ref": "Быт 24:10",
+   "n": 1,
+   "form": "город Нахора",
+   "place": "l-gorod-nakhora",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-135",
+   "ref": "Быт 24:62",
+   "n": 1,
+   "form": "Беэр—лахай—рои",
+   "place": "l-beer-lakhay-roi",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-136",
+   "ref": "Быт 25:9",
+   "n": 1,
+   "form": "Махпеле",
+   "place": "l-makhpela",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-137",
+   "ref": "Быт 25:9",
+   "n": 1,
+   "form": "Мамре",
+   "place": "l-mamre",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-138",
+   "ref": "Быт 25:11",
+   "n": 1,
+   "form": "Беэр—лахай—рои",
+   "place": "l-beer-lakhay-roi",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-139",
+   "ref": "Быт 25:18",
+   "n": 1,
+   "form": "Хавилы",
+   "place": "l-khavila",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-140",
+   "ref": "Быт 25:18",
+   "n": 1,
+   "form": "Сура",
+   "place": "l-pustynya-sur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-141",
+   "ref": "Быт 25:18",
+   "n": 1,
+   "form": "Египтом",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-142",
+   "ref": "Быт 25:18",
+   "n": 1,
+   "form": "Ассирии",
+   "place": "l-assiriya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-143",
+   "ref": "Быт 25:20",
+   "n": 1,
+   "form": "Месопотамии",
+   "place": "l-mesopotamiya-25",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-144",
+   "ref": "Исх 12:1",
+   "n": 1,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-145",
+   "ref": "Исх 12:12",
+   "n": 1,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-146",
+   "ref": "Исх 12:12",
+   "n": 2,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-147",
+   "ref": "Исх 12:12",
+   "n": 1,
+   "form": "Египетскими",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-148",
+   "ref": "Исх 12:13",
+   "n": 1,
+   "form": "землю Египетскую",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-149",
+   "ref": "Исх 12:17",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-150",
+   "ref": "Исх 12:23",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-151",
+   "ref": "Исх 12:27",
+   "n": 1,
+   "form": "Египте",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-152",
+   "ref": "Исх 12:29",
+   "n": 1,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-153",
+   "ref": "Исх 12:30",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-154",
+   "ref": "Исх 12:30",
+   "n": 1,
+   "form": "Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-155",
+   "ref": "Исх 12:37",
+   "n": 1,
+   "form": "Раамсеса",
+   "place": "l-raamses",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-156",
+   "ref": "Исх 12:37",
+   "n": 1,
+   "form": "Сокхоф",
+   "place": "l-sokkhof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-157",
+   "ref": "Исх 12:39",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-158",
+   "ref": "Исх 12:39",
+   "n": 2,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-159",
+   "ref": "Исх 12:40",
+   "n": 1,
+   "form": "Египте",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-160",
+   "ref": "Исх 12:41",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-161",
+   "ref": "Исх 12:42",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-162",
+   "ref": "Исх 12:51",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-163",
+   "ref": "Исх 13:3",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-164",
+   "ref": "Исх 13:8",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-165",
+   "ref": "Исх 13:9",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-166",
+   "ref": "Исх 13:14",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-167",
+   "ref": "Исх 13:15",
+   "n": 1,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-168",
+   "ref": "Исх 13:16",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-169",
+   "ref": "Исх 13:17",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-170",
+   "ref": "Исх 13:18",
+   "n": 1,
+   "form": "Чермному морю",
+   "place": "l-chermnoe-more",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-171",
+   "ref": "Исх 13:18",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-172",
+   "ref": "Исх 13:20",
+   "n": 1,
+   "form": "Сокхофа",
+   "place": "l-sokkhof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-173",
+   "ref": "Исх 13:20",
+   "n": 1,
+   "form": "Ефаме",
+   "place": "l-efam",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-174",
+   "ref": "Исх 14:2",
+   "n": 1,
+   "form": "Пи-Гахирофом",
+   "place": "l-pi-gakhirof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-175",
+   "ref": "Исх 14:2",
+   "n": 1,
+   "form": "Мигдолом",
+   "place": "l-migdol",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-176",
+   "ref": "Исх 14:2",
+   "n": 1,
+   "form": "Ваал-Цефоном",
+   "place": "l-vaal-tsefon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-177",
+   "ref": "Исх 14:5",
+   "n": 1,
+   "form": "Египетскому",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-178",
+   "ref": "Исх 14:7",
+   "n": 1,
+   "form": "Египетские",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-179",
+   "ref": "Исх 14:8",
+   "n": 1,
+   "form": "Египетского",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-180",
+   "ref": "Исх 14:9",
+   "n": 1,
+   "form": "Пи-Гахирофе",
+   "place": "l-pi-gakhirof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-181",
+   "ref": "Исх 14:9",
+   "n": 1,
+   "form": "Ваал-Цефоном",
+   "place": "l-vaal-tsefon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-182",
+   "ref": "Исх 14:11",
+   "n": 1,
+   "form": "Египте",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-183",
+   "ref": "Исх 14:11",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-184",
+   "ref": "Исх 14:12",
+   "n": 1,
+   "form": "Египте",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-185",
+   "ref": "Исх 14:20",
+   "n": 1,
+   "form": "Египетским",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-186",
+   "ref": "Исх 14:22",
+   "n": 1,
+   "form": "моря",
+   "place": "l-chermnoe-more",
+   "cert": "inference",
+   "role": "via",
+   "status": "linked",
+   "refs": [
+    "Исх 15:4"
+   ],
+   "note": "место названо в Исх 15:4; связь по соседнему стиху (05 § 3.2, уровень «выв.»)"
+  },
+  {
+   "id": "lm-187",
+   "ref": "Исх 15:4",
+   "n": 1,
+   "form": "Чермном море",
+   "place": "l-chermnoe-more",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-188",
+   "ref": "Исх 15:14",
+   "n": 1,
+   "form": "Филистимских",
+   "place": "l-zemlya-filistimskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-189",
+   "ref": "Исх 15:15",
+   "n": 1,
+   "form": "Едомовы",
+   "place": "l-edom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-190",
+   "ref": "Исх 15:15",
+   "n": 1,
+   "form": "Моавитских",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-191",
+   "ref": "Исх 15:15",
+   "n": 1,
+   "form": "Ханаана",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-192",
+   "ref": "Исх 15:22",
+   "n": 1,
+   "form": "Чермного моря",
+   "place": "l-chermnoe-more",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-193",
+   "ref": "Исх 15:22",
+   "n": 1,
+   "form": "пустыню Сур",
+   "place": "l-pustynya-sur",
+   "cert": "reference",
+   "role": "via",
+   "status": "linked"
+  },
+  {
+   "id": "lm-194",
+   "ref": "Исх 15:23",
+   "n": 1,
+   "form": "Мерру",
+   "place": "l-merra",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-195",
+   "ref": "Исх 15:23",
+   "n": 1,
+   "form": "Мерре",
+   "place": "l-merra",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-196",
+   "ref": "Исх 15:23",
+   "n": 1,
+   "form": "Мерра",
+   "place": "l-merra",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-197",
+   "ref": "Исх 15:26",
+   "n": 1,
+   "form": "Египет",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-198",
+   "ref": "Исх 15:27",
+   "n": 1,
+   "form": "Елим",
+   "place": "l-elim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-199",
+   "ref": "Исх 19:11",
+   "n": 1,
+   "form": "гору Синай",
+   "place": "l-gora-sinay",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-200",
+   "ref": "Чис 21:1",
+   "n": 1,
+   "form": "Арада",
+   "place": "l-arad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-201",
+   "ref": "Чис 21:1",
+   "n": 1,
+   "form": "Афарима",
+   "place": "l-afarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-202",
+   "ref": "Чис 21:3",
+   "n": 1,
+   "form": "Хорма",
+   "place": "l-khorma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-203",
+   "ref": "Чис 21:4",
+   "n": 1,
+   "form": "горы Ор",
+   "place": "l-gora-or",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-204",
+   "ref": "Чис 21:4",
+   "n": 1,
+   "form": "путем Чермного моря",
+   "place": "l-put-chermnogo-morya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-205",
+   "ref": "Чис 21:4",
+   "n": 1,
+   "form": "Едома",
+   "place": "l-edom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-206",
+   "ref": "Чис 21:5",
+   "n": 1,
+   "form": "Египта",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-207",
+   "ref": "Чис 21:10",
+   "n": 1,
+   "form": "Овофе",
+   "place": "l-ovof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-208",
+   "ref": "Чис 21:11",
+   "n": 1,
+   "form": "Овофа",
+   "place": "l-ovof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-209",
+   "ref": "Чис 21:11",
+   "n": 1,
+   "form": "Ийе-Авариме",
+   "place": "l-iye-avarim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-210",
+   "ref": "Чис 21:11",
+   "n": 1,
+   "form": "Моава",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-211",
+   "ref": "Чис 21:12",
+   "n": 1,
+   "form": "долине Заред",
+   "place": "l-dolina-zared",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-212",
+   "ref": "Чис 21:13",
+   "n": 1,
+   "form": "Арнона",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-213",
+   "ref": "Чис 21:13",
+   "n": 1,
+   "form": "Арнон",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-214",
+   "ref": "Чис 21:13",
+   "n": 1,
+   "form": "Моава",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-215",
+   "ref": "Чис 21:13",
+   "n": 1,
+   "form": "Моавом",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-216",
+   "ref": "Чис 21:15",
+   "n": 1,
+   "form": "Вагеб",
+   "place": "l-vageb",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked",
+   "note": "у сводки стих Чис 21:14: в синодальном делении форма в соседнем стихе"
+  },
+  {
+   "id": "lm-217",
+   "ref": "Чис 21:15",
+   "n": 1,
+   "form": "Суфе",
+   "place": "l-sufa",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked",
+   "note": "у сводки стих Чис 21:14: в синодальном делении форма в соседнем стихе"
+  },
+  {
+   "id": "lm-218",
+   "ref": "Чис 21:15",
+   "n": 1,
+   "form": "Арнона",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked",
+   "note": "у сводки стих Чис 21:14: в синодальном делении форма в соседнем стихе"
+  },
+  {
+   "id": "lm-219",
+   "ref": "Чис 21:15",
+   "n": 1,
+   "form": "Шебет-Ару",
+   "place": "l-ar-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-220",
+   "ref": "Чис 21:15",
+   "n": 1,
+   "form": "Моава",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-221",
+   "ref": "Чис 21:16",
+   "n": 1,
+   "form": "Беэр",
+   "place": "l-beer",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-222",
+   "ref": "Чис 21:18",
+   "n": 1,
+   "form": "Матанну",
+   "place": "l-matanna",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-223",
+   "ref": "Чис 21:19",
+   "n": 1,
+   "form": "Матанны",
+   "place": "l-matanna",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-224",
+   "ref": "Чис 21:19",
+   "n": 1,
+   "form": "Нагалиил",
+   "place": "l-nagaliil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-225",
+   "ref": "Чис 21:19",
+   "n": 1,
+   "form": "Нагалиила",
+   "place": "l-nagaliil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-226",
+   "ref": "Чис 21:19",
+   "n": 1,
+   "form": "Вамоф",
+   "place": "l-vamof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-227",
+   "ref": "Чис 21:20",
+   "n": 1,
+   "form": "Вамофа",
+   "place": "l-vamof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-228",
+   "ref": "Чис 21:20",
+   "n": 1,
+   "form": "Моава",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-229",
+   "ref": "Чис 21:20",
+   "n": 1,
+   "form": "горы Фасги",
+   "place": "l-gora-fasga",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-230",
+   "ref": "Чис 21:22",
+   "n": 1,
+   "form": "путем царским",
+   "place": "l-put-tsarskiy",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-231",
+   "ref": "Чис 21:23",
+   "n": 1,
+   "form": "Иаацы",
+   "place": "l-iaatsa",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-232",
+   "ref": "Чис 21:24",
+   "n": 1,
+   "form": "Арнона",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-233",
+   "ref": "Чис 21:24",
+   "n": 1,
+   "form": "Иавока",
+   "place": "l-iavok",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-234",
+   "ref": "Чис 21:24",
+   "n": 1,
+   "form": "пределов Аммонитских",
+   "place": "l-zemlya-synov-ammonovykh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-235",
+   "ref": "Чис 21:25",
+   "n": 1,
+   "form": "Есевоне",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-236",
+   "ref": "Чис 21:26",
+   "n": 1,
+   "form": "Есевон",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-237",
+   "ref": "Чис 21:26",
+   "n": 1,
+   "form": "Моавитским",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-238",
+   "ref": "Чис 21:26",
+   "n": 1,
+   "form": "Арнона",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-239",
+   "ref": "Чис 21:27",
+   "n": 1,
+   "form": "Есевон",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-240",
+   "ref": "Чис 21:28",
+   "n": 1,
+   "form": "Есевона",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-241",
+   "ref": "Чис 21:28",
+   "n": 1,
+   "form": "Ар-Моав",
+   "place": "l-ar-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-242",
+   "ref": "Чис 21:28",
+   "n": 1,
+   "form": "Арнона",
+   "place": "l-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-243",
+   "ref": "Чис 21:29",
+   "n": 1,
+   "form": "Моав",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked",
+   "note": "у сводки стих Чис 21:28: в синодальном делении форма в соседнем стихе"
+  },
+  {
+   "id": "lm-244",
+   "ref": "Чис 21:30",
+   "n": 1,
+   "form": "Есевон",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-245",
+   "ref": "Чис 21:30",
+   "n": 1,
+   "form": "Дивона",
+   "place": "l-divon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-246",
+   "ref": "Чис 21:30",
+   "n": 1,
+   "form": "Нофы",
+   "place": "l-nofa",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-247",
+   "ref": "Чис 21:30",
+   "n": 1,
+   "form": "Медевы",
+   "place": "l-medeva",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-248",
+   "ref": "Чис 21:32",
+   "n": 1,
+   "form": "Иазер",
+   "place": "l-iazer",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-249",
+   "ref": "Чис 21:33",
+   "n": 1,
+   "form": "Васану",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-250",
+   "ref": "Чис 21:33",
+   "n": 1,
+   "form": "Васанский",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-251",
+   "ref": "Чис 21:33",
+   "n": 1,
+   "form": "Едреи",
+   "place": "l-edrei",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-252",
+   "ref": "Чис 21:34",
+   "n": 1,
+   "form": "Есевоне",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-253",
+   "ref": "Чис 25:1",
+   "n": 1,
+   "form": "Ситтиме",
+   "place": "l-sittim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-254",
+   "ref": "Чис 33:1",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-255",
+   "ref": "Чис 33:3",
+   "n": 1,
+   "form": "Раамсеса",
+   "place": "l-raamses",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-256",
+   "ref": "Чис 33:5",
+   "n": 1,
+   "form": "Раамсеса",
+   "place": "l-raamses",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-257",
+   "ref": "Чис 33:5",
+   "n": 1,
+   "form": "Сокхофе",
+   "place": "l-sokkhof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-258",
+   "ref": "Чис 33:6",
+   "n": 1,
+   "form": "Сокхофа",
+   "place": "l-sokkhof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-259",
+   "ref": "Чис 33:6",
+   "n": 1,
+   "form": "Ефаме",
+   "place": "l-efam",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-260",
+   "ref": "Чис 33:7",
+   "n": 1,
+   "form": "Ефама",
+   "place": "l-efam",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-261",
+   "ref": "Чис 33:7",
+   "n": 1,
+   "form": "Пи-Гахирофу",
+   "place": "l-pi-gakhirof",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-262",
+   "ref": "Чис 33:7",
+   "n": 1,
+   "form": "Ваал-Цефоном",
+   "place": "l-vaal-tsefon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-263",
+   "ref": "Чис 33:7",
+   "n": 1,
+   "form": "Мигдолом",
+   "place": "l-migdol",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-264",
+   "ref": "Чис 33:8",
+   "n": 1,
+   "form": "Гахирофа",
+   "place": "l-pi-gakhirof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-265",
+   "ref": "Чис 33:8",
+   "n": 1,
+   "form": "моря",
+   "place": "l-chermnoe-more",
+   "cert": "reference",
+   "role": "via",
+   "status": "linked"
+  },
+  {
+   "id": "lm-266",
+   "ref": "Чис 33:8",
+   "n": 1,
+   "form": "Ефам",
+   "place": "l-efam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-267",
+   "ref": "Чис 33:8",
+   "n": 1,
+   "form": "Мерре",
+   "place": "l-merra",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-268",
+   "ref": "Чис 33:9",
+   "n": 1,
+   "form": "Мерры",
+   "place": "l-merra",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-269",
+   "ref": "Чис 33:9",
+   "n": 1,
+   "form": "Елим",
+   "place": "l-elim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-270",
+   "ref": "Чис 33:9",
+   "n": 1,
+   "form": "Елиме",
+   "place": "l-elim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-271",
+   "ref": "Чис 33:10",
+   "n": 1,
+   "form": "Елима",
+   "place": "l-elim",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-272",
+   "ref": "Чис 33:10",
+   "n": 1,
+   "form": "Чермного моря",
+   "place": "l-chermnoe-more-stan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-273",
+   "ref": "Чис 33:11",
+   "n": 1,
+   "form": "Чермного моря",
+   "place": "l-chermnoe-more-stan",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-274",
+   "ref": "Чис 33:11",
+   "n": 1,
+   "form": "пустыне Син",
+   "place": "l-pustynya-sin",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-275",
+   "ref": "Чис 33:12",
+   "n": 1,
+   "form": "пустыни Син",
+   "place": "l-pustynya-sin",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-276",
+   "ref": "Чис 33:12",
+   "n": 1,
+   "form": "Дофке",
+   "place": "l-dofka",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-277",
+   "ref": "Чис 33:13",
+   "n": 1,
+   "form": "Дофки",
+   "place": "l-dofka",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-278",
+   "ref": "Чис 33:13",
+   "n": 1,
+   "form": "Алуше",
+   "place": "l-alush",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-279",
+   "ref": "Чис 33:14",
+   "n": 1,
+   "form": "Алуша",
+   "place": "l-alush",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-280",
+   "ref": "Чис 33:14",
+   "n": 1,
+   "form": "Рефидиме",
+   "place": "l-refidim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-281",
+   "ref": "Чис 33:15",
+   "n": 1,
+   "form": "Рефидима",
+   "place": "l-refidim",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-282",
+   "ref": "Чис 33:15",
+   "n": 1,
+   "form": "пустыне Синайской",
+   "place": "l-pustynya-sinayskaya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-283",
+   "ref": "Чис 33:16",
+   "n": 1,
+   "form": "пустыни Синайской",
+   "place": "l-pustynya-sinayskaya",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-284",
+   "ref": "Чис 33:16",
+   "n": 1,
+   "form": "Киброт-Гаттааве",
+   "place": "l-kibrot-gattaava",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-285",
+   "ref": "Чис 33:17",
+   "n": 1,
+   "form": "Киброт-Гаттаавы",
+   "place": "l-kibrot-gattaava",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-286",
+   "ref": "Чис 33:17",
+   "n": 1,
+   "form": "Асирофе",
+   "place": "l-asirof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-287",
+   "ref": "Чис 33:18",
+   "n": 1,
+   "form": "Асирофа",
+   "place": "l-asirof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-288",
+   "ref": "Чис 33:18",
+   "n": 1,
+   "form": "Рифме",
+   "place": "l-rifma",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-289",
+   "ref": "Чис 33:19",
+   "n": 1,
+   "form": "Рифмы",
+   "place": "l-rifma",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-290",
+   "ref": "Чис 33:19",
+   "n": 1,
+   "form": "Римнон— Фареце",
+   "place": "l-rimnon-farets",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-291",
+   "ref": "Чис 33:20",
+   "n": 1,
+   "form": "Римнон-Фареца",
+   "place": "l-rimnon-farets",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-292",
+   "ref": "Чис 33:20",
+   "n": 1,
+   "form": "Ливне",
+   "place": "l-livna-stan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-293",
+   "ref": "Чис 33:21",
+   "n": 1,
+   "form": "Ливны",
+   "place": "l-livna-stan",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-294",
+   "ref": "Чис 33:21",
+   "n": 1,
+   "form": "Риссе",
+   "place": "l-rissa",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-295",
+   "ref": "Чис 33:22",
+   "n": 1,
+   "form": "Риссы",
+   "place": "l-rissa",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-296",
+   "ref": "Чис 33:22",
+   "n": 1,
+   "form": "Кегелафе",
+   "place": "l-kegelafa",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-297",
+   "ref": "Чис 33:23",
+   "n": 1,
+   "form": "Кегелафы",
+   "place": "l-kegelafa",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-298",
+   "ref": "Чис 33:23",
+   "n": 1,
+   "form": "горе Шафер",
+   "place": "l-gora-shafer",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-299",
+   "ref": "Чис 33:24",
+   "n": 1,
+   "form": "горы Шафер",
+   "place": "l-gora-shafer",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-300",
+   "ref": "Чис 33:24",
+   "n": 1,
+   "form": "Хараде",
+   "place": "l-kharada",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-301",
+   "ref": "Чис 33:25",
+   "n": 1,
+   "form": "Харады",
+   "place": "l-kharada",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-302",
+   "ref": "Чис 33:25",
+   "n": 1,
+   "form": "Макелофе",
+   "place": "l-makelof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-303",
+   "ref": "Чис 33:26",
+   "n": 1,
+   "form": "Макелофа",
+   "place": "l-makelof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-304",
+   "ref": "Чис 33:26",
+   "n": 1,
+   "form": "Тахафе",
+   "place": "l-takhaf",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-305",
+   "ref": "Чис 33:27",
+   "n": 1,
+   "form": "Тахафа",
+   "place": "l-takhaf",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-306",
+   "ref": "Чис 33:27",
+   "n": 1,
+   "form": "Тарахе",
+   "place": "l-tarakh",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-307",
+   "ref": "Чис 33:28",
+   "n": 1,
+   "form": "Тараха",
+   "place": "l-tarakh",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-308",
+   "ref": "Чис 33:28",
+   "n": 1,
+   "form": "Мифке",
+   "place": "l-mifka",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-309",
+   "ref": "Чис 33:29",
+   "n": 1,
+   "form": "Мифки",
+   "place": "l-mifka",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-310",
+   "ref": "Чис 33:29",
+   "n": 1,
+   "form": "Хашмоне",
+   "place": "l-khashmona",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-311",
+   "ref": "Чис 33:30",
+   "n": 1,
+   "form": "Хашмоны",
+   "place": "l-khashmona",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-312",
+   "ref": "Чис 33:30",
+   "n": 1,
+   "form": "Мосерофе",
+   "place": "l-moserof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-313",
+   "ref": "Чис 33:31",
+   "n": 1,
+   "form": "Мосерофа",
+   "place": "l-moserof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-314",
+   "ref": "Чис 33:31",
+   "n": 1,
+   "form": "Бене-Яакане",
+   "place": "l-bene-yaakan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-315",
+   "ref": "Чис 33:32",
+   "n": 1,
+   "form": "Бене-Яакана",
+   "place": "l-bene-yaakan",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-316",
+   "ref": "Чис 33:32",
+   "n": 1,
+   "form": "Хор— Агидгаде",
+   "place": "l-khor-agidgad",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-317",
+   "ref": "Чис 33:33",
+   "n": 1,
+   "form": "Хор-Агидгада",
+   "place": "l-khor-agidgad",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-318",
+   "ref": "Чис 33:33",
+   "n": 1,
+   "form": "Иотвафе",
+   "place": "l-iotvafa",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-319",
+   "ref": "Чис 33:34",
+   "n": 1,
+   "form": "Иотвафы",
+   "place": "l-iotvafa",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-320",
+   "ref": "Чис 33:34",
+   "n": 1,
+   "form": "Авроне",
+   "place": "l-avrona",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-321",
+   "ref": "Чис 33:35",
+   "n": 1,
+   "form": "Аврона",
+   "place": "l-avrona",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-322",
+   "ref": "Чис 33:35",
+   "n": 1,
+   "form": "Ецион— Гавере",
+   "place": "l-etsion-gaver",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-323",
+   "ref": "Чис 33:36",
+   "n": 1,
+   "form": "Ецион-Гавера",
+   "place": "l-etsion-gaver",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-324",
+   "ref": "Чис 33:36",
+   "n": 1,
+   "form": "пустыне Син",
+   "place": "l-pustynya-sin-kades",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-325",
+   "ref": "Чис 33:36",
+   "n": 1,
+   "form": "Кадес",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-326",
+   "ref": "Чис 33:37",
+   "n": 1,
+   "form": "Кадеса",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-327",
+   "ref": "Чис 33:37",
+   "n": 1,
+   "form": "горе Ор",
+   "place": "l-gora-or",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-328",
+   "ref": "Чис 33:37",
+   "n": 1,
+   "form": "Едомской",
+   "place": "l-edom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-329",
+   "ref": "Чис 33:38",
+   "n": 1,
+   "form": "гору Ор",
+   "place": "l-gora-or",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-330",
+   "ref": "Чис 33:38",
+   "n": 1,
+   "form": "земли Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-331",
+   "ref": "Чис 33:39",
+   "n": 1,
+   "form": "горе Ор",
+   "place": "l-gora-or",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-332",
+   "ref": "Чис 33:40",
+   "n": 1,
+   "form": "Арада",
+   "place": "l-arad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-333",
+   "ref": "Чис 33:40",
+   "n": 1,
+   "form": "земли Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-334",
+   "ref": "Чис 33:41",
+   "n": 1,
+   "form": "горы Ор",
+   "place": "l-gora-or",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-335",
+   "ref": "Чис 33:41",
+   "n": 1,
+   "form": "Салмоне",
+   "place": "l-salmona",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-336",
+   "ref": "Чис 33:42",
+   "n": 1,
+   "form": "Салмона",
+   "place": "l-salmona",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-337",
+   "ref": "Чис 33:42",
+   "n": 1,
+   "form": "Пуноне",
+   "place": "l-punon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-338",
+   "ref": "Чис 33:43",
+   "n": 1,
+   "form": "Пунона",
+   "place": "l-punon",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-339",
+   "ref": "Чис 33:43",
+   "n": 1,
+   "form": "Овофе",
+   "place": "l-ovof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-340",
+   "ref": "Чис 33:44",
+   "n": 1,
+   "form": "Овофа",
+   "place": "l-ovof",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-341",
+   "ref": "Чис 33:44",
+   "n": 1,
+   "form": "Ийм-Авариме",
+   "place": "l-iye-avarim",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-342",
+   "ref": "Чис 33:44",
+   "n": 1,
+   "form": "Моава",
+   "place": "l-moav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-343",
+   "ref": "Чис 33:45",
+   "n": 1,
+   "form": "Ийма",
+   "place": "l-iye-avarim",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-344",
+   "ref": "Чис 33:45",
+   "n": 1,
+   "form": "Дивон-Гаде",
+   "place": "l-divon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-345",
+   "ref": "Чис 33:46",
+   "n": 1,
+   "form": "Дивон-Гада",
+   "place": "l-divon",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-346",
+   "ref": "Чис 33:46",
+   "n": 1,
+   "form": "Алмон— Дивлафаиме",
+   "place": "l-almon-divlafaim",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-347",
+   "ref": "Чис 33:47",
+   "n": 1,
+   "form": "Алмон-Дивлафаима",
+   "place": "l-almon-divlafaim",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-348",
+   "ref": "Чис 33:47",
+   "n": 1,
+   "form": "горах Аваримских",
+   "place": "l-gory-avarimskie",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-349",
+   "ref": "Чис 33:47",
+   "n": 1,
+   "form": "Нево",
+   "place": "l-nevo",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-350",
+   "ref": "Чис 33:48",
+   "n": 1,
+   "form": "гор Аваримских",
+   "place": "l-gory-avarimskie",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-351",
+   "ref": "Чис 33:48",
+   "n": 1,
+   "form": "равнинах Моавитских",
+   "place": "l-ravniny-moavitskie",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-352",
+   "ref": "Чис 33:48",
+   "n": 1,
+   "form": "Иордана",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-353",
+   "ref": "Чис 33:48",
+   "n": 1,
+   "form": "Иерихона",
+   "place": "l-ierikhon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-354",
+   "ref": "Чис 33:49",
+   "n": 1,
+   "form": "Иордана",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-355",
+   "ref": "Чис 33:49",
+   "n": 1,
+   "form": "Беф-Иешимофа",
+   "place": "l-bef-ieshimof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-356",
+   "ref": "Чис 33:49",
+   "n": 1,
+   "form": "Аве— Ситтима",
+   "place": "l-ave-sittim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-357",
+   "ref": "Чис 33:49",
+   "n": 1,
+   "form": "равнинах Моавитских",
+   "place": "l-ravniny-moavitskie",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-358",
+   "ref": "Чис 33:50",
+   "n": 1,
+   "form": "равнинах Моавитских",
+   "place": "l-ravniny-moavitskie",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-359",
+   "ref": "Чис 33:50",
+   "n": 1,
+   "form": "Иордана",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-360",
+   "ref": "Чис 33:50",
+   "n": 1,
+   "form": "Иерихона",
+   "place": "l-ierikhon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-361",
+   "ref": "Чис 33:51",
+   "n": 1,
+   "form": "Иордан",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-362",
+   "ref": "Чис 33:51",
+   "n": 1,
+   "form": "землю Ханаанскую",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-363",
+   "ref": "Втор 2:8",
+   "n": 1,
+   "form": "Елафа",
+   "place": "l-elaf",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-364",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Сихора",
+   "place": "l-sikhor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-365",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Египтом",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-366",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Екрона",
+   "place": "l-ekron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-367",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Газский",
+   "place": "l-gaza",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-368",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Азотский",
+   "place": "l-azot",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-369",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Аскалонский",
+   "place": "l-askalon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-370",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Гефский",
+   "place": "l-gef",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-371",
+   "ref": "Нав 13:3",
+   "n": 1,
+   "form": "Екронский",
+   "place": "l-ekron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-372",
+   "ref": "Нав 13:4",
+   "n": 1,
+   "form": "Меары",
+   "place": "l-meara",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-373",
+   "ref": "Нав 13:4",
+   "n": 1,
+   "form": "Сидонской",
+   "place": "l-sidon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-374",
+   "ref": "Нав 13:4",
+   "n": 1,
+   "form": "Афека",
+   "place": "l-afek-sever",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-375",
+   "ref": "Нав 13:5",
+   "n": 1,
+   "form": "земля Гевла",
+   "place": "l-gevl",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-376",
+   "ref": "Нав 13:5",
+   "n": 1,
+   "form": "Ливан",
+   "place": "l-livan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-377",
+   "ref": "Нав 13:5",
+   "n": 1,
+   "form": "Ваал-Гада",
+   "place": "l-vaal-gad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-378",
+   "ref": "Нав 13:5",
+   "n": 1,
+   "form": "горы Ермона",
+   "place": "l-gora-ermon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-379",
+   "ref": "Нав 13:5",
+   "n": 1,
+   "form": "входа в Емаф",
+   "place": "l-vkhod-v-emaf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-380",
+   "ref": "Нав 13:6",
+   "n": 1,
+   "form": "Ливана",
+   "place": "l-livan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-381",
+   "ref": "Нав 13:6",
+   "n": 1,
+   "form": "Мисрефоф-Маима",
+   "place": "l-misrefof-maim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-382",
+   "ref": "Нав 13:8",
+   "n": 1,
+   "form": "Иорданом",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-383",
+   "ref": "Нав 13:9",
+   "n": 1,
+   "form": "Ароера",
+   "place": "l-aroer-na-arnone",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-384",
+   "ref": "Нав 13:9",
+   "n": 1,
+   "form": "потока Арнона",
+   "place": "l-potok-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-385",
+   "ref": "Нав 13:9",
+   "n": 1,
+   "form": "Медеву",
+   "place": "l-medeva",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-386",
+   "ref": "Нав 13:9",
+   "n": 1,
+   "form": "Дивона",
+   "place": "l-divon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-387",
+   "ref": "Нав 13:10",
+   "n": 1,
+   "form": "Есевоне",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-388",
+   "ref": "Нав 13:10",
+   "n": 1,
+   "form": "пределов Аммонитских",
+   "place": "l-zemlya-synov-ammonovykh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-389",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "Галаад",
+   "place": "l-galaad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-390",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "Гессурскую",
+   "place": "l-gessur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-391",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "Маахскую",
+   "place": "l-maakha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-392",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "гору Ермон",
+   "place": "l-gora-ermon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-393",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "Васан",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-394",
+   "ref": "Нав 13:11",
+   "n": 1,
+   "form": "Салхи",
+   "place": "l-salkha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-395",
+   "ref": "Нав 13:12",
+   "n": 1,
+   "form": "Васанского",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-396",
+   "ref": "Нав 13:12",
+   "n": 1,
+   "form": "Астарофе",
+   "place": "l-astarof",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-397",
+   "ref": "Нав 13:12",
+   "n": 1,
+   "form": "Едреи",
+   "place": "l-edrei",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-398",
+   "ref": "Нав 13:13",
+   "n": 1,
+   "form": "Гессура",
+   "place": "l-gessur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-399",
+   "ref": "Нав 13:13",
+   "n": 1,
+   "form": "Маахи",
+   "place": "l-maakha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-400",
+   "ref": "Нав 13:13",
+   "n": 1,
+   "form": "Гессур",
+   "place": "l-gessur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-401",
+   "ref": "Нав 13:13",
+   "n": 1,
+   "form": "Мааха",
+   "place": "l-maakha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-402",
+   "ref": "Нав 13:16",
+   "n": 1,
+   "form": "Ароер",
+   "place": "l-aroer-na-arnone",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-403",
+   "ref": "Нав 13:16",
+   "n": 1,
+   "form": "потока Арнона",
+   "place": "l-potok-arnon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-404",
+   "ref": "Нав 13:16",
+   "n": 1,
+   "form": "Медеве",
+   "place": "l-medeva",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-405",
+   "ref": "Нав 13:17",
+   "n": 1,
+   "form": "Есевон",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-406",
+   "ref": "Нав 13:17",
+   "n": 1,
+   "form": "Дивон",
+   "place": "l-divon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-407",
+   "ref": "Нав 13:17",
+   "n": 1,
+   "form": "Вамоф-Ваали",
+   "place": "l-vamof-vaal",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-408",
+   "ref": "Нав 13:17",
+   "n": 1,
+   "form": "Беф-Ваал-Меон",
+   "place": "l-bef-vaal-meon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-409",
+   "ref": "Нав 13:18",
+   "n": 1,
+   "form": "Иааца",
+   "place": "l-iaatsa",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-410",
+   "ref": "Нав 13:18",
+   "n": 1,
+   "form": "Кедемоф",
+   "place": "l-kedemof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-411",
+   "ref": "Нав 13:18",
+   "n": 1,
+   "form": "Мефааф",
+   "place": "l-mefaaf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-412",
+   "ref": "Нав 13:19",
+   "n": 1,
+   "form": "Кириафаим",
+   "place": "l-kiriafaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-413",
+   "ref": "Нав 13:19",
+   "n": 1,
+   "form": "Сивма",
+   "place": "l-sivma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-414",
+   "ref": "Нав 13:19",
+   "n": 1,
+   "form": "Цереф-Шахар",
+   "place": "l-tsere-shakhar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-415",
+   "ref": "Нав 13:20",
+   "n": 1,
+   "form": "Беф-Фегор",
+   "place": "l-bef-fegor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-416",
+   "ref": "Нав 13:20",
+   "n": 1,
+   "form": "Фасги",
+   "place": "l-gora-fasga",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-417",
+   "ref": "Нав 13:20",
+   "n": 1,
+   "form": "Беф-Иешимоф",
+   "place": "l-bef-ieshimof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-418",
+   "ref": "Нав 13:21",
+   "n": 1,
+   "form": "Есевоне",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-419",
+   "ref": "Нав 13:21",
+   "n": 1,
+   "form": "Мадиамских",
+   "place": "l-madiam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-420",
+   "ref": "Нав 13:23",
+   "n": 1,
+   "form": "Иордан",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-421",
+   "ref": "Нав 13:25",
+   "n": 1,
+   "form": "Иазер",
+   "place": "l-iazer",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-422",
+   "ref": "Нав 13:25",
+   "n": 1,
+   "form": "Галаадские",
+   "place": "l-galaad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-423",
+   "ref": "Нав 13:25",
+   "n": 1,
+   "form": "земли сынов Аммоновых",
+   "place": "l-zemlya-synov-ammonovykh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-424",
+   "ref": "Нав 13:25",
+   "n": 1,
+   "form": "Ароера",
+   "place": "l-aroer-pred-ravvoyu",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-425",
+   "ref": "Нав 13:25",
+   "n": 1,
+   "form": "Раввою",
+   "place": "l-ravva",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-426",
+   "ref": "Нав 13:26",
+   "n": 1,
+   "form": "Есевона",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-427",
+   "ref": "Нав 13:26",
+   "n": 1,
+   "form": "Рамаф-Мицфы",
+   "place": "l-ramaf-mitsfa",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-428",
+   "ref": "Нав 13:26",
+   "n": 1,
+   "form": "Ветонима",
+   "place": "l-vetonim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-429",
+   "ref": "Нав 13:26",
+   "n": 1,
+   "form": "Маханаима",
+   "place": "l-makhanaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-430",
+   "ref": "Нав 13:26",
+   "n": 1,
+   "form": "Давира",
+   "place": "l-davir-gad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-431",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Беф-Гарам",
+   "place": "l-bef-garam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-432",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Беф-Нимра",
+   "place": "l-bef-nimra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-433",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Сокхоф",
+   "place": "l-sokkhof-zaiordanskiy",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-434",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Цафон",
+   "place": "l-tsafon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-435",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Есевонского",
+   "place": "l-esevon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-436",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Иордан",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-437",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "моря Хиннерефского",
+   "place": "l-more-khinnerefskoe",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-438",
+   "ref": "Нав 13:27",
+   "n": 1,
+   "form": "Иорданом",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-439",
+   "ref": "Нав 13:30",
+   "n": 1,
+   "form": "Маханаима",
+   "place": "l-makhanaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-440",
+   "ref": "Нав 13:30",
+   "n": 1,
+   "form": "Васан",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-441",
+   "ref": "Нав 13:30",
+   "n": 1,
+   "form": "Васанского",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-442",
+   "ref": "Нав 13:30",
+   "n": 1,
+   "form": "селения Иаировы",
+   "place": "l-seleniya-iairovy",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-443",
+   "ref": "Нав 13:30",
+   "n": 1,
+   "form": "Васане",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-444",
+   "ref": "Нав 13:31",
+   "n": 1,
+   "form": "Галаада",
+   "place": "l-galaad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-445",
+   "ref": "Нав 13:31",
+   "n": 1,
+   "form": "Астароф",
+   "place": "l-astarof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-446",
+   "ref": "Нав 13:31",
+   "n": 1,
+   "form": "Едрея",
+   "place": "l-edrei",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-447",
+   "ref": "Нав 13:31",
+   "n": 1,
+   "form": "Васанского",
+   "place": "l-vasan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-448",
+   "ref": "Нав 13:32",
+   "n": 1,
+   "form": "равнинах Моавитских",
+   "place": "l-ravniny-moavitskie",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-449",
+   "ref": "Нав 13:32",
+   "n": 1,
+   "form": "Иорданом",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-450",
+   "ref": "Нав 13:32",
+   "n": 1,
+   "form": "Иерихона",
+   "place": "l-ierikhon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-451",
+   "ref": "Нав 15:1",
+   "n": 1,
+   "form": "Идумеею",
+   "place": "l-edom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-452",
+   "ref": "Нав 15:1",
+   "n": 1,
+   "form": "пустыня Син",
+   "place": "l-pustynya-sin-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-453",
+   "ref": "Нав 15:2",
+   "n": 1,
+   "form": "моря Соленого",
+   "place": "l-more-solenoe",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-454",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "возвышенности Акраввимской",
+   "place": "l-vozvyshennost-akravvimskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-455",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "Цин",
+   "place": "l-tsin",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-456",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "Кадес-Варне",
+   "place": "l-kades",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-457",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "Хецрон",
+   "place": "l-khetsron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-458",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "Аддара",
+   "place": "l-addar",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-459",
+   "ref": "Нав 15:3",
+   "n": 1,
+   "form": "Каркае",
+   "place": "l-karkaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-460",
+   "ref": "Нав 15:4",
+   "n": 1,
+   "form": "Ацмон",
+   "place": "l-atsmon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-461",
+   "ref": "Нав 15:4",
+   "n": 1,
+   "form": "потоку Египетскому",
+   "place": "l-potok-egipetskiy",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-462",
+   "ref": "Нав 15:4",
+   "n": 1,
+   "form": "море",
+   "place": "l-velikoe-more",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-463",
+   "ref": "Нав 15:5",
+   "n": 1,
+   "form": "море Соленое",
+   "place": "l-more-solenoe",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-464",
+   "ref": "Нав 15:5",
+   "n": 1,
+   "form": "Иордана",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-465",
+   "ref": "Нав 15:5",
+   "n": 2,
+   "form": "Иордана",
+   "place": "l-iordan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-466",
+   "ref": "Нав 15:6",
+   "n": 1,
+   "form": "Беф-Хогле",
+   "place": "l-bef-khogla",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-467",
+   "ref": "Нав 15:6",
+   "n": 1,
+   "form": "Беф-Араве",
+   "place": "l-bef-arava",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-468",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "Давиру",
+   "place": "l-davir-na-granitse",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-469",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "долины Ахор",
+   "place": "l-dolina-akhor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-470",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "Галгалу",
+   "place": "l-galgal-na-granitse",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-471",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "возвышенности Адуммима",
+   "place": "l-adummim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-472",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "Ен-Шемеша",
+   "place": "l-en-shemesh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-473",
+   "ref": "Нав 15:7",
+   "n": 1,
+   "form": "Ен-Рогела",
+   "place": "l-en-rogel",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-474",
+   "ref": "Нав 15:8",
+   "n": 1,
+   "form": "долине сына Енномова",
+   "place": "l-dolina-ennomova",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-475",
+   "ref": "Нав 15:8",
+   "n": 1,
+   "form": "Иевуса",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-476",
+   "ref": "Нав 15:8",
+   "n": 1,
+   "form": "Иерусалим",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-477",
+   "ref": "Нав 15:8",
+   "n": 1,
+   "form": "долины Енномовой",
+   "place": "l-dolina-ennomova",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-478",
+   "ref": "Нав 15:8",
+   "n": 1,
+   "form": "долины Рефаимов",
+   "place": "l-dolina-refaimov",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-479",
+   "ref": "Нав 15:9",
+   "n": 1,
+   "form": "источнику вод Нефтоах",
+   "place": "l-neftoakh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-480",
+   "ref": "Нав 15:9",
+   "n": 1,
+   "form": "горы Ефрона",
+   "place": "l-gora-efron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-481",
+   "ref": "Нав 15:9",
+   "n": 1,
+   "form": "Ваалу",
+   "place": "l-kiriaf-iarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-482",
+   "ref": "Нав 15:9",
+   "n": 1,
+   "form": "Кириаф-Иарим",
+   "place": "l-kiriaf-iarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-483",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "Ваала",
+   "place": "l-kiriaf-iarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-484",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "горе Сеиру",
+   "place": "l-gora-seir-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-485",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "горы Иеарим",
+   "place": "l-gora-iearim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-486",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "Кесалон",
+   "place": "l-gora-iearim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-487",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "Вефсамису",
+   "place": "l-vefsamis",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-488",
+   "ref": "Нав 15:10",
+   "n": 1,
+   "form": "Фимну",
+   "place": "l-fimna",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-489",
+   "ref": "Нав 15:11",
+   "n": 1,
+   "form": "Екрона",
+   "place": "l-ekron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-490",
+   "ref": "Нав 15:11",
+   "n": 1,
+   "form": "Шикарону",
+   "place": "l-shikaron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-491",
+   "ref": "Нав 15:11",
+   "n": 1,
+   "form": "гору Ваал",
+   "place": "l-gora-vaal",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-492",
+   "ref": "Нав 15:11",
+   "n": 1,
+   "form": "Иавнеила",
+   "place": "l-iavneil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-493",
+   "ref": "Нав 15:11",
+   "n": 1,
+   "form": "великое море",
+   "place": "l-velikoe-more",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-494",
+   "ref": "Нав 15:13",
+   "n": 1,
+   "form": "Кириаф— Арбы",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-495",
+   "ref": "Нав 15:13",
+   "n": 1,
+   "form": "Хеврон",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-496",
+   "ref": "Нав 15:15",
+   "n": 1,
+   "form": "Давира",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-497",
+   "ref": "Нав 15:15",
+   "n": 1,
+   "form": "Давиру",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-498",
+   "ref": "Нав 15:15",
+   "n": 1,
+   "form": "Кириаф-Сефер",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-499",
+   "ref": "Нав 15:16",
+   "n": 1,
+   "form": "Кириаф-Сефер",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-500",
+   "ref": "Нав 15:21",
+   "n": 1,
+   "form": "Идумеею",
+   "place": "l-edom",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-501",
+   "ref": "Нав 15:21",
+   "n": 1,
+   "form": "Кавцеил",
+   "place": "l-kavtseil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-502",
+   "ref": "Нав 15:21",
+   "n": 1,
+   "form": "Едер",
+   "place": "l-eder",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-503",
+   "ref": "Нав 15:21",
+   "n": 1,
+   "form": "Иагур",
+   "place": "l-iagur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-504",
+   "ref": "Нав 15:22",
+   "n": 1,
+   "form": "Кина",
+   "place": "l-kina",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-505",
+   "ref": "Нав 15:22",
+   "n": 1,
+   "form": "Димона",
+   "place": "l-dimona",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-506",
+   "ref": "Нав 15:22",
+   "n": 1,
+   "form": "Адада",
+   "place": "l-adada",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-507",
+   "ref": "Нав 15:23",
+   "n": 1,
+   "form": "Кедес",
+   "place": "l-kedes-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-508",
+   "ref": "Нав 15:23",
+   "n": 1,
+   "form": "Асор",
+   "place": "l-asor-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-509",
+   "ref": "Нав 15:23",
+   "n": 1,
+   "form": "Ифнан",
+   "place": "l-ifnan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-510",
+   "ref": "Нав 15:24",
+   "n": 1,
+   "form": "Зиф",
+   "place": "l-zif-yug",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-511",
+   "ref": "Нав 15:24",
+   "n": 1,
+   "form": "Телем",
+   "place": "l-telem",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-512",
+   "ref": "Нав 15:24",
+   "n": 1,
+   "form": "Валоф",
+   "place": "l-valof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-513",
+   "ref": "Нав 15:25",
+   "n": 1,
+   "form": "Гацор-Хадафа",
+   "place": "l-gatsor-khadafa",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-514",
+   "ref": "Нав 15:25",
+   "n": 1,
+   "form": "Кириаф",
+   "place": "l-kiriaf-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-515",
+   "ref": "Нав 15:25",
+   "n": 1,
+   "form": "Хецрон",
+   "place": "l-khetsron-inache-gatsor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-516",
+   "ref": "Нав 15:25",
+   "n": 1,
+   "form": "Гацор",
+   "place": "l-khetsron-inache-gatsor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-517",
+   "ref": "Нав 15:26",
+   "n": 1,
+   "form": "Амам",
+   "place": "l-amam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-518",
+   "ref": "Нав 15:26",
+   "n": 1,
+   "form": "Шема",
+   "place": "l-shema",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-519",
+   "ref": "Нав 15:26",
+   "n": 1,
+   "form": "Молада",
+   "place": "l-molada",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-520",
+   "ref": "Нав 15:27",
+   "n": 1,
+   "form": "Хацар-Гадда",
+   "place": "l-khatsar-gadda",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-521",
+   "ref": "Нав 15:27",
+   "n": 1,
+   "form": "Хешмон",
+   "place": "l-kheshmon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-522",
+   "ref": "Нав 15:27",
+   "n": 1,
+   "form": "Веф-Палет",
+   "place": "l-vef-palet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-523",
+   "ref": "Нав 15:28",
+   "n": 1,
+   "form": "Хацар-Шуал",
+   "place": "l-khatsar-shual",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-524",
+   "ref": "Нав 15:28",
+   "n": 1,
+   "form": "Вирсавия",
+   "place": "l-virsaviya-nav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-525",
+   "ref": "Нав 15:29",
+   "n": 1,
+   "form": "Ваала",
+   "place": "l-vaala-simeon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-526",
+   "ref": "Нав 15:29",
+   "n": 1,
+   "form": "Иим",
+   "place": "l-iim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-527",
+   "ref": "Нав 15:29",
+   "n": 1,
+   "form": "Ацем",
+   "place": "l-atsem",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-528",
+   "ref": "Нав 15:30",
+   "n": 1,
+   "form": "Елфолад",
+   "place": "l-elfolad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-529",
+   "ref": "Нав 15:30",
+   "n": 1,
+   "form": "Кесил",
+   "place": "l-kesil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-530",
+   "ref": "Нав 15:30",
+   "n": 1,
+   "form": "Хорма",
+   "place": "l-khorma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-531",
+   "ref": "Нав 15:31",
+   "n": 1,
+   "form": "Циклаг",
+   "place": "l-tsiklag",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-532",
+   "ref": "Нав 15:31",
+   "n": 1,
+   "form": "Мадмана",
+   "place": "l-madmana",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-533",
+   "ref": "Нав 15:31",
+   "n": 1,
+   "form": "Сансана",
+   "place": "l-sansana",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-534",
+   "ref": "Нав 15:32",
+   "n": 1,
+   "form": "Леваоф",
+   "place": "l-levaof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-535",
+   "ref": "Нав 15:32",
+   "n": 1,
+   "form": "Шелихим",
+   "place": "l-shelikhim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-536",
+   "ref": "Нав 15:32",
+   "n": 1,
+   "form": "Аин",
+   "place": "l-ain",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-537",
+   "ref": "Нав 15:32",
+   "n": 1,
+   "form": "Риммон",
+   "place": "l-rimmon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-538",
+   "ref": "Нав 15:33",
+   "n": 1,
+   "form": "Ештаол",
+   "place": "l-eshtaol",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-539",
+   "ref": "Нав 15:33",
+   "n": 1,
+   "form": "Цора",
+   "place": "l-tsora",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-540",
+   "ref": "Нав 15:33",
+   "n": 1,
+   "form": "Ашна",
+   "place": "l-ashna-1",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-541",
+   "ref": "Нав 15:34",
+   "n": 1,
+   "form": "Заноах",
+   "place": "l-zanoakh-shefela",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-542",
+   "ref": "Нав 15:34",
+   "n": 1,
+   "form": "Ен-Ганним",
+   "place": "l-en-gannim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-543",
+   "ref": "Нав 15:34",
+   "n": 1,
+   "form": "Таппуах",
+   "place": "l-tappuakh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-544",
+   "ref": "Нав 15:34",
+   "n": 1,
+   "form": "Гаенам",
+   "place": "l-gaenam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-545",
+   "ref": "Нав 15:35",
+   "n": 1,
+   "form": "Иармуф",
+   "place": "l-iarmuf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-546",
+   "ref": "Нав 15:35",
+   "n": 1,
+   "form": "Одоллам",
+   "place": "l-odollam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-547",
+   "ref": "Нав 15:35",
+   "n": 1,
+   "form": "Сохо",
+   "place": "l-sokho-shefela",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-548",
+   "ref": "Нав 15:35",
+   "n": 1,
+   "form": "Азека",
+   "place": "l-azeka",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-549",
+   "ref": "Нав 15:36",
+   "n": 1,
+   "form": "Шаараим",
+   "place": "l-shaaraim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-550",
+   "ref": "Нав 15:36",
+   "n": 1,
+   "form": "Адифаим",
+   "place": "l-adifaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-551",
+   "ref": "Нав 15:36",
+   "n": 1,
+   "form": "Гедера",
+   "place": "l-gedera",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-552",
+   "ref": "Нав 15:36",
+   "n": 1,
+   "form": "Гедерофаим",
+   "place": "l-gederofaim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-553",
+   "ref": "Нав 15:37",
+   "n": 1,
+   "form": "Ценан",
+   "place": "l-tsenan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-554",
+   "ref": "Нав 15:37",
+   "n": 1,
+   "form": "Хадаша",
+   "place": "l-khadasha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-555",
+   "ref": "Нав 15:37",
+   "n": 1,
+   "form": "Мигдал-Гад",
+   "place": "l-migdal-gad",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-556",
+   "ref": "Нав 15:38",
+   "n": 1,
+   "form": "Дилеан",
+   "place": "l-dilean",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-557",
+   "ref": "Нав 15:38",
+   "n": 1,
+   "form": "Мицфе",
+   "place": "l-mitsfe",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-558",
+   "ref": "Нав 15:38",
+   "n": 1,
+   "form": "Иокфеил",
+   "place": "l-iokfeil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-559",
+   "ref": "Нав 15:39",
+   "n": 1,
+   "form": "Лахис",
+   "place": "l-lakhis",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-560",
+   "ref": "Нав 15:39",
+   "n": 1,
+   "form": "Воцкаф",
+   "place": "l-votskaf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-561",
+   "ref": "Нав 15:39",
+   "n": 1,
+   "form": "Еглон",
+   "place": "l-eglon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-562",
+   "ref": "Нав 15:40",
+   "n": 1,
+   "form": "Хаббон",
+   "place": "l-khabbon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-563",
+   "ref": "Нав 15:40",
+   "n": 1,
+   "form": "Лахмас",
+   "place": "l-lakhmas",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-564",
+   "ref": "Нав 15:40",
+   "n": 1,
+   "form": "Хифлис",
+   "place": "l-khiflis",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-565",
+   "ref": "Нав 15:41",
+   "n": 1,
+   "form": "Гедероф",
+   "place": "l-gederof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-566",
+   "ref": "Нав 15:41",
+   "n": 1,
+   "form": "Беф-Дагон",
+   "place": "l-bef-dagon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-567",
+   "ref": "Нав 15:41",
+   "n": 1,
+   "form": "Наема",
+   "place": "l-naema",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-568",
+   "ref": "Нав 15:41",
+   "n": 1,
+   "form": "Макед",
+   "place": "l-maked",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-569",
+   "ref": "Нав 15:42",
+   "n": 1,
+   "form": "Ливна",
+   "place": "l-livna",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-570",
+   "ref": "Нав 15:42",
+   "n": 1,
+   "form": "Ефер",
+   "place": "l-efer",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-571",
+   "ref": "Нав 15:42",
+   "n": 1,
+   "form": "Ашан",
+   "place": "l-ashan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-572",
+   "ref": "Нав 15:43",
+   "n": 1,
+   "form": "Иффах",
+   "place": "l-iffakh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-573",
+   "ref": "Нав 15:43",
+   "n": 1,
+   "form": "Ашна",
+   "place": "l-ashna-2",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-574",
+   "ref": "Нав 15:43",
+   "n": 1,
+   "form": "Нецив",
+   "place": "l-netsiv",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-575",
+   "ref": "Нав 15:44",
+   "n": 1,
+   "form": "Кеила",
+   "place": "l-keila",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-576",
+   "ref": "Нав 15:44",
+   "n": 1,
+   "form": "Ахзив",
+   "place": "l-akhziv",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-577",
+   "ref": "Нав 15:44",
+   "n": 1,
+   "form": "Мареша",
+   "place": "l-maresha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-578",
+   "ref": "Нав 15:45",
+   "n": 1,
+   "form": "Екрон",
+   "place": "l-ekron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-579",
+   "ref": "Нав 15:46",
+   "n": 1,
+   "form": "Екрона",
+   "place": "l-ekron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-580",
+   "ref": "Нав 15:46",
+   "n": 1,
+   "form": "Азота",
+   "place": "l-azot",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-581",
+   "ref": "Нав 15:47",
+   "n": 1,
+   "form": "Азот",
+   "place": "l-azot",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-582",
+   "ref": "Нав 15:47",
+   "n": 1,
+   "form": "Газа",
+   "place": "l-gaza",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-583",
+   "ref": "Нав 15:47",
+   "n": 1,
+   "form": "потока Египетского",
+   "place": "l-potok-egipetskiy",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-584",
+   "ref": "Нав 15:47",
+   "n": 1,
+   "form": "великого моря",
+   "place": "l-velikoe-more",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-585",
+   "ref": "Нав 15:48",
+   "n": 1,
+   "form": "Шамир",
+   "place": "l-shamir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-586",
+   "ref": "Нав 15:48",
+   "n": 1,
+   "form": "Иаттир",
+   "place": "l-iattir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-587",
+   "ref": "Нав 15:48",
+   "n": 1,
+   "form": "Сохо",
+   "place": "l-sokho-gory",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-588",
+   "ref": "Нав 15:49",
+   "n": 1,
+   "form": "Данна",
+   "place": "l-danna",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-589",
+   "ref": "Нав 15:49",
+   "n": 1,
+   "form": "Кириаф-Санна",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-590",
+   "ref": "Нав 15:49",
+   "n": 1,
+   "form": "Давир",
+   "place": "l-davir",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-591",
+   "ref": "Нав 15:50",
+   "n": 1,
+   "form": "Анаф",
+   "place": "l-anaf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-592",
+   "ref": "Нав 15:50",
+   "n": 1,
+   "form": "Ештемо",
+   "place": "l-eshtemo",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-593",
+   "ref": "Нав 15:50",
+   "n": 1,
+   "form": "Аним",
+   "place": "l-anim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-594",
+   "ref": "Нав 15:51",
+   "n": 1,
+   "form": "Гошен",
+   "place": "l-goshen",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-595",
+   "ref": "Нав 15:51",
+   "n": 1,
+   "form": "Холон",
+   "place": "l-kholon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-596",
+   "ref": "Нав 15:51",
+   "n": 1,
+   "form": "Гило",
+   "place": "l-gilo",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-597",
+   "ref": "Нав 15:52",
+   "n": 1,
+   "form": "Арав",
+   "place": "l-arav",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-598",
+   "ref": "Нав 15:52",
+   "n": 1,
+   "form": "Дума",
+   "place": "l-duma",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-599",
+   "ref": "Нав 15:52",
+   "n": 1,
+   "form": "Ешан",
+   "place": "l-eshan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-600",
+   "ref": "Нав 15:53",
+   "n": 1,
+   "form": "Ианум",
+   "place": "l-ianum",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-601",
+   "ref": "Нав 15:53",
+   "n": 1,
+   "form": "Беф-Таппуах",
+   "place": "l-bef-tappuakh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-602",
+   "ref": "Нав 15:53",
+   "n": 1,
+   "form": "Афека",
+   "place": "l-afeka",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-603",
+   "ref": "Нав 15:54",
+   "n": 1,
+   "form": "Хумта",
+   "place": "l-khumta",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-604",
+   "ref": "Нав 15:54",
+   "n": 1,
+   "form": "Кириаф-Арбы",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-605",
+   "ref": "Нав 15:54",
+   "n": 1,
+   "form": "Хеврон",
+   "place": "l-khevron",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-606",
+   "ref": "Нав 15:54",
+   "n": 1,
+   "form": "Цигор",
+   "place": "l-tsigor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-607",
+   "ref": "Нав 15:55",
+   "n": 1,
+   "form": "Маон",
+   "place": "l-maon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-608",
+   "ref": "Нав 15:55",
+   "n": 1,
+   "form": "Кармил",
+   "place": "l-karmil",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-609",
+   "ref": "Нав 15:55",
+   "n": 1,
+   "form": "Зиф",
+   "place": "l-zif-gory",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-610",
+   "ref": "Нав 15:55",
+   "n": 1,
+   "form": "Юта",
+   "place": "l-yuta",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-611",
+   "ref": "Нав 15:56",
+   "n": 1,
+   "form": "Изреель",
+   "place": "l-izreel-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-612",
+   "ref": "Нав 15:56",
+   "n": 1,
+   "form": "Иокдам",
+   "place": "l-iokdam",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-613",
+   "ref": "Нав 15:56",
+   "n": 1,
+   "form": "Заноах",
+   "place": "l-zanoakh-gory",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-614",
+   "ref": "Нав 15:57",
+   "n": 1,
+   "form": "Каин",
+   "place": "l-kain",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-615",
+   "ref": "Нав 15:57",
+   "n": 1,
+   "form": "Гива",
+   "place": "l-giva-iud",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-616",
+   "ref": "Нав 15:57",
+   "n": 1,
+   "form": "Фимна",
+   "place": "l-fimna-gory",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-617",
+   "ref": "Нав 15:58",
+   "n": 1,
+   "form": "Халхул",
+   "place": "l-khalkhul",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-618",
+   "ref": "Нав 15:58",
+   "n": 1,
+   "form": "Беф-Цур",
+   "place": "l-bef-tsur",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-619",
+   "ref": "Нав 15:58",
+   "n": 1,
+   "form": "Гедор",
+   "place": "l-gedor",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-620",
+   "ref": "Нав 15:59",
+   "n": 1,
+   "form": "Маараф",
+   "place": "l-maaraf",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-621",
+   "ref": "Нав 15:59",
+   "n": 1,
+   "form": "Беф-Аноф",
+   "place": "l-bef-anof",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-622",
+   "ref": "Нав 15:59",
+   "n": 1,
+   "form": "Елтекон",
+   "place": "l-eltekon",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-623",
+   "ref": "Нав 15:60",
+   "n": 1,
+   "form": "Кириаф-Ваал",
+   "place": "l-kiriaf-iarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-624",
+   "ref": "Нав 15:60",
+   "n": 1,
+   "form": "Кириаф-Иарим",
+   "place": "l-kiriaf-iarim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-625",
+   "ref": "Нав 15:60",
+   "n": 1,
+   "form": "Аравва",
+   "place": "l-aravva",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-626",
+   "ref": "Нав 15:61",
+   "n": 1,
+   "form": "Беф-Арава",
+   "place": "l-bef-arava",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-627",
+   "ref": "Нав 15:61",
+   "n": 1,
+   "form": "Миддин",
+   "place": "l-middin",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-628",
+   "ref": "Нав 15:61",
+   "n": 1,
+   "form": "Секаха",
+   "place": "l-sekakha",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-629",
+   "ref": "Нав 15:62",
+   "n": 1,
+   "form": "Нившан",
+   "place": "l-nivshan",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-630",
+   "ref": "Нав 15:62",
+   "n": 1,
+   "form": "Ир-Мелах",
+   "place": "l-ir-melakh",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-631",
+   "ref": "Нав 15:62",
+   "n": 1,
+   "form": "Ен-Геди",
+   "place": "l-en-gedi",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-632",
+   "ref": "Нав 15:63",
+   "n": 1,
+   "form": "Иерусалима",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-633",
+   "ref": "Нав 15:63",
+   "n": 1,
+   "form": "Иерусалиме",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-634",
+   "ref": "4Цар 17:24",
+   "n": 1,
+   "form": "Вавилона",
+   "place": "l-vavilon-gorod",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-635",
+   "ref": "1Пар 4:31",
+   "n": 1,
+   "form": "Беф-Биреи",
+   "place": "l-bef-birei",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-636",
+   "ref": "2Пар 3:1",
+   "n": 1,
+   "form": "горе Мориа",
+   "place": "l-gora-moria",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-637",
+   "ref": "Иез 47:19",
+   "n": 1,
+   "form": "Тамары",
+   "place": "l-tamara",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-638",
+   "ref": "Деян 13:1",
+   "n": 1,
+   "form": "Антиохии",
+   "place": "l-antiokhiya",
+   "cert": "reference",
+   "role": "where",
+   "status": "linked"
+  },
+  {
+   "id": "lm-639",
+   "ref": "Деян 13:4",
+   "n": 1,
+   "form": "Селевкию",
+   "place": "l-selevkiya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-640",
+   "ref": "Деян 13:4",
+   "n": 1,
+   "form": "Кипр",
+   "place": "l-kipr",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-641",
+   "ref": "Деян 13:5",
+   "n": 1,
+   "form": "Саламине",
+   "place": "l-salamin",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-642",
+   "ref": "Деян 13:6",
+   "n": 1,
+   "form": "Пафа",
+   "place": "l-paf",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-643",
+   "ref": "Деян 13:13",
+   "n": 1,
+   "form": "Пафа",
+   "place": "l-paf",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-644",
+   "ref": "Деян 13:13",
+   "n": 1,
+   "form": "Пергию",
+   "place": "l-pergiya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-645",
+   "ref": "Деян 13:13",
+   "n": 1,
+   "form": "Памфилии",
+   "place": "l-pamfiliya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-646",
+   "ref": "Деян 13:13",
+   "n": 1,
+   "form": "Иерусалим",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-647",
+   "ref": "Деян 13:14",
+   "n": 1,
+   "form": "Пергии",
+   "place": "l-pergiya",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-648",
+   "ref": "Деян 13:14",
+   "n": 1,
+   "form": "Антиохию Писидийскую",
+   "place": "l-antiokhiya-pisidiyskaya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-649",
+   "ref": "Деян 13:14",
+   "n": 1,
+   "form": "Писидийскую",
+   "place": "l-pisidiya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-650",
+   "ref": "Деян 13:17",
+   "n": 1,
+   "form": "земле Египетской",
+   "place": "l-egipet",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-651",
+   "ref": "Деян 13:19",
+   "n": 1,
+   "form": "земле Ханаанской",
+   "place": "l-zemlya-khanaanskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-652",
+   "ref": "Деян 13:27",
+   "n": 1,
+   "form": "Иерусалима",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-653",
+   "ref": "Деян 13:31",
+   "n": 1,
+   "form": "Галилеи",
+   "place": "l-galileya",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-654",
+   "ref": "Деян 13:31",
+   "n": 1,
+   "form": "Иерусалим",
+   "place": "l-ierusalim",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-655",
+   "ref": "Деян 13:51",
+   "n": 1,
+   "form": "Иконию",
+   "place": "l-ikoniya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-656",
+   "ref": "Деян 14:1",
+   "n": 1,
+   "form": "Иконии",
+   "place": "l-ikoniya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-657",
+   "ref": "Деян 14:6",
+   "n": 1,
+   "form": "Ликаонские города",
+   "place": "l-likaoniya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-658",
+   "ref": "Деян 14:6",
+   "n": 1,
+   "form": "Листру",
+   "place": "l-listra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-659",
+   "ref": "Деян 14:6",
+   "n": 1,
+   "form": "Дервию",
+   "place": "l-derviya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-660",
+   "ref": "Деян 14:8",
+   "n": 1,
+   "form": "Листре",
+   "place": "l-listra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-661",
+   "ref": "Деян 14:19",
+   "n": 1,
+   "form": "Антиохии",
+   "place": "l-antiokhiya-pisidiyskaya",
+   "cert": "reference",
+   "role": "from",
+   "status": "linked"
+  },
+  {
+   "id": "lm-662",
+   "ref": "Деян 14:19",
+   "n": 1,
+   "form": "Иконии",
+   "place": "l-ikoniya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-663",
+   "ref": "Деян 14:20",
+   "n": 1,
+   "form": "Дервию",
+   "place": "l-derviya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-664",
+   "ref": "Деян 14:21",
+   "n": 1,
+   "form": "Листру",
+   "place": "l-listra",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-665",
+   "ref": "Деян 14:21",
+   "n": 1,
+   "form": "Иконию",
+   "place": "l-ikoniya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-666",
+   "ref": "Деян 14:21",
+   "n": 1,
+   "form": "Антиохию",
+   "place": "l-antiokhiya-pisidiyskaya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-667",
+   "ref": "Деян 14:24",
+   "n": 1,
+   "form": "Писидию",
+   "place": "l-pisidiya",
+   "cert": "reference",
+   "role": "via",
+   "status": "linked"
+  },
+  {
+   "id": "lm-668",
+   "ref": "Деян 14:24",
+   "n": 1,
+   "form": "Памфилию",
+   "place": "l-pamfiliya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-669",
+   "ref": "Деян 14:25",
+   "n": 1,
+   "form": "Пергии",
+   "place": "l-pergiya",
+   "cert": "reference",
+   "role": "mentioned",
+   "status": "linked"
+  },
+  {
+   "id": "lm-670",
+   "ref": "Деян 14:25",
+   "n": 1,
+   "form": "Атталию",
+   "place": "l-attaliya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  },
+  {
+   "id": "lm-671",
+   "ref": "Деян 14:26",
+   "n": 1,
+   "form": "Антиохию",
+   "place": "l-antiokhiya",
+   "cert": "reference",
+   "role": "to",
+   "status": "linked"
+  }
+ ]
+}

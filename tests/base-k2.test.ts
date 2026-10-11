@@ -364,9 +364,59 @@ describe('места: тип, допуск, проверки до первой �
     ],
   });
 
-  it('коллекция есть и пуста: файл base/places.json, записей 0, проверка без ошибок', () => {
-    expect(base.places).toEqual([]);
-    expect(errs(base, 'место')).toEqual([]);
+  it('пробный справочник пакета 2 (10 § 4.2.3): места, упоминания и пути — проверка без ошибок', () => {
+    // коллекция зарегистрирована до первой записи (К-11); первые записи — tools/places/pilot.py, черновик без подписей
+    expect(base.places!.length).toBeGreaterThan(300);
+    expect(base.placeMentions!.length).toBeGreaterThan(600);
+    expect(base.routes!.map((r) => r.id).sort()).toEqual(['rt-iskhod-do-chermnogo-morya', 'rt-put-avrama']);
+    for (const c of ['место', 'упоминание места', 'путь']) expect(errs(base, c)).toEqual([]);
+    // у каждого внесённого положения источник координат — в реестре (Р-10; Д-10): остальные точки ждут записи реестра
+    const r = reg();
+    for (const p of base.places!) for (const x of p.positions ?? []) expect([p.id, r.has(x.coordSource.source)]).toEqual([p.id, true]);
+    // подписей нет: записи — черновик до второго ключа
+    expect(base.places!.every((p) => p.prov?.status === 'draft')).toBe(true);
+  });
+
+  it('упоминания и пути: подложенные ошибки ловятся (02 § 3.13.5, § 3.13.8; 05 § 3.5)', () => {
+    const b = copy();
+    const m0 = b.placeMentions!.find((m) => m.place === 'l-kharran' && m.ref === 'Быт 11:31')!;
+    b.placeMentions = [
+      { ...m0, id: 'lm-x1' },
+      { ...m0, form: 'Харрана', n: 2 },
+      { ...m0, id: m0.id, form: 'Ханаан', n: 1 },
+      { ...m0, id: 'lm-900001', place: 'l-nowhere' },
+      { ...m0, id: 'lm-900002', cert: 'interpretation' as any },
+      { ...m0, id: 'lm-900003', cert: 'inference' },
+      { ...m0, id: 'lm-900004', role: 'born' as any },
+      { ...m0, id: 'lm-900005', ref: 'Быт 12:6', form: 'Сихема', n: 1, place: undefined, candidates: [] },
+    ];
+    const e = errs(b, 'упоминание места').map((i) => `${i.where}: ${i.msg}`).join('\n');
+    for (const x of [
+      /lm-x1: номер упоминания — вида «lm-<число>»/, /номер упоминания повторяется/, /формы «Харрана» нет среди слов-оснований стиха Быт 11:31 \(вхождение 2\)/,
+      /формы «Ханаан» нет среди слов-оснований/, /нет места «l-nowhere»/, /уровень связи «interpretation»/, /связь «вывод» — со стихами вывода/,
+      /роль «born» не из словаря/, /нет ни места, ни кандидатов/, /у имени «Харран» стих Быт 12:4 без упоминания места/,
+    ]) expect(e).toMatch(x);
+    // слово в скобках вида «в» — не основание: «[жили]» (Быт 12:6)
+    const c = copy();
+    c.placeMentions = [{ ...m0, id: 'lm-900006', ref: 'Быт 12:6', form: 'жили', n: 1 }];
+    expect(errs(c, 'упоминание места').map((i) => i.msg).join('\n')).toMatch(/формы «жили» нет среди слов-оснований стиха Быт 12:6/);
+
+    const d = copy();
+    const rt = structuredClone(d.routes!.find((r) => r.id === 'rt-put-avrama')!);
+    const v = rt.variants[0];
+    v.stops.push({ n: 13, place: 'l-nowhere', ref: 'Быт 23:2', words: 'Хеврон', kind: 'stop' });
+    v.stops.push({ n: 14, land: 'l-kharran', ref: 'Быт 11:31', words: 'Харрана', kind: 'stop' });
+    v.stops.push({ n: 15, place: 'l-sikhem', ref: 'Быт 12:6', words: 'жили Хананеи', kind: 'stop' });
+    v.stops.push({ n: 3, place: 'l-sikhem', ref: 'Быт 12:6', words: 'Сихема', kind: 'camp' as any });
+    v.segments.push({ from: 3, to: 99, mode: 'land', words: 'прошел', ref: 'Быт 12:6' });
+    v.segments.push({ from: 4, to: 5, mode: 'land', words: 'был голод в той земле', ref: 'Быт 12:10' });
+    d.routes = [rt, { ...rt, id: 'RT-bad' }];
+    const f = errs(d, 'путь').map((i) => `${i.where}: ${i.msg}`).join('\n');
+    for (const x of [
+      /нет места «l-nowhere»/, /«l-kharran» — не земля и не вода/, /слов «жили Хананеи» нет среди слов-оснований Быт 12:6/,
+      /номер стоянки 3 повторяется/, /вид стоянки «camp» не из словаря/, /отрезок 3 → 99: нет такой стоянки/,
+      /отрезок 4 → 5 \(Быт 12:10\): нет слов перехода/, /RT-bad: номер пути — вида «rt-…»/,
+    ]) expect(f).toMatch(x);
   });
 
   it('место с закрытой и открытой точкой допущено; закрытая точка снята; в NOTICE — только источник открытой (К-14, К-15)', () => {

@@ -849,6 +849,76 @@ export interface Place {
   prov?: Partial<Prov>;
 }
 
+/**
+ * Упоминание места (02 § 3.13.5): форма в стихе среди слов-оснований и место, с которым её связал составитель.
+ * `cert` — уровень связи упоминания с местом: уточнение в самом стихе («Писание»), по соседним стихам («вывод» — тогда
+ * `refs` называет эти стихи), по сводке («справочно»). Место для упоминания — ссылка, а не зависимость (§ 3.17).
+ */
+export interface PlaceMention {
+  /** `lm-<число>`: без смысловой части — в одном стихе место может стоять дважды (Быт 12:8). */
+  id: string;
+  ref: Ref;
+  /** Номер вхождения формы в стихе (с единицы). */
+  n: number;
+  form: string;
+  place?: string;
+  candidates?: string[];
+  cert: Cert;
+  /** Стихи вывода у `cert: 'inference'`: где место названо. */
+  refs?: Ref[];
+  role: 'where' | 'from' | 'to' | 'via' | 'mentioned';
+  account?: number;
+  story?: string;
+  actors?: { actor: string; role: 'born' | 'dwelt' | 'died' | 'buried' | 'came' }[];
+  status: 'linked' | 'disputed';
+  note?: string;
+  prov?: Partial<Prov>;
+}
+
+/** Стоянка варианта пути (02 § 3.13.8; 05 § 3.5): место или земля, стих и слова стиха. */
+export interface RouteStop {
+  /** Номер по тексту; у начала без «стана» — 0 (только для ссылки отрезка; номера на карте нет — 05 § 3.5, правило 10). */
+  n?: number;
+  place?: string;
+  land?: string;
+  ref: Ref;
+  words: string;
+  kind: 'start' | 'stop' | 'return' | 'pass' | 'direction' | 'sortie' | 'intent';
+  /** Привязка стоянки-земли к месту словами стиха: «расположился там Израиль станом против горы» (Исх 19:2). */
+  anchor?: { place: string; ref: Ref; cert: Cert; refs?: Ref[]; words?: string };
+  note?: string;
+}
+
+export interface RouteSegment {
+  /** Номера `n` стоянок варианта. */
+  from: number;
+  to: number;
+  mode: 'land' | 'sea';
+  /** Слова перехода среди слов-оснований стиха (05 § 3.5). */
+  words: string;
+  ref: Ref;
+  road?: string;
+}
+
+export interface Route {
+  /** `rt-…`. */
+  id: string;
+  title: { words: string; refs: Ref[] };
+  travellers: string[];
+  stories: string[];
+  variants: {
+    books: string[];
+    cert: Cert;
+    refs: Ref[];
+    stops: RouteStop[];
+    segments: RouteSegment[];
+    days?: { words: string; ref: Ref; from: number; to: number }[];
+  }[];
+  seaPass?: { place: string; side: string; ref: Ref }[];
+  sources?: string[];
+  prov?: Partial<Prov>;
+}
+
 // ---------- истории (02 § 3.12; 11 § 11.2; В-21, В-30) ----------
 
 /** Уровень (11 § 2.1): повествование — ряд историй без своих стихов; часть — поле истории, не уровень (В-21). */

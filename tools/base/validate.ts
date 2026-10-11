@@ -87,6 +87,8 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     places: existsSync(join(dir, 'places.json')) ? items('places.json') : [],
+    placeMentions: existsSync(join(dir, 'place-mentions.json')) ? items('place-mentions.json') : [],
+    routes: existsSync(join(dir, 'routes.json')) ? items('routes.json') : [],
     relations: existsSync(join(dir, 'relations.json')) ? items('relations.json') : [],
     // истории (02 § 3.12; 11 § 11): файлы пишет перенос из data/stories/
     stories: existsSync(join(dir, 'stories.json')) ? items('stories.json') : [],
@@ -308,6 +310,8 @@ export function validate(base: Base): Issue[] {
   }
   // ---------- места (02 § 3.13; 05 § 10; К-11, К-14) ----------
   validatePlaces(base, err, warn, (w, ref) => texts(w, ref));
+  validatePlaceMentions(base, err, (w, ref) => mainTexts(w, ref));
+  validateRoutes(base, err, (w, ref) => mainTexts(w, ref));
   validateStories(base, err, warn);
 
   // ---------- новые правила (К-8) ----------
@@ -833,6 +837,103 @@ export function validatePlaces(base: Base, err: Err, warn: Err, texts: (where: s
       if (p.match.otherNameOf && !ids.has(p.match.otherNameOf)) err('место', w, `«другое имя» по сводке: нет места «${p.match.otherNameOf}»`);
     }
     if (p.degree !== undefined && !['certain', 'probable', 'possible', 'unknown'].includes(p.degree)) err('место', w, `степень «${p.degree}» не из словаря`);
+  }
+}
+
+/** Текст для поиска формы места: строчные, «ё» = «е», тире внутри имени (без пробела перед ним) = дефис («Беэр—лахай—рои», «Аве— Ситтима»), пробелы схлопнуты. */
+const placeText = (t: string) => norm(t).replace(/(?<=\p{L})[—–]\s?(?=\p{L})/gu, '-').replace(/\s+/g, ' ').trim();
+/** Сколько раз форма стоит в тексте отдельными словами. */
+export function formCount(text: string, form: string): number {
+  const f = placeText(form).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  if (!f) return 0;
+  return [...placeText(text).matchAll(new RegExp(`(?<![\\p{L}-])${f}(?![\\p{L}-])`, 'gu'))].length;
+}
+
+const MENTION_ROLES = new Set(['where', 'from', 'to', 'via', 'mentioned']);
+const MENTION_CERTS = new Set(['scripture', 'inference', 'reference']);
+const ACTOR_ROLES = new Set(['born', 'dwelt', 'died', 'buried', 'came']);
+
+/**
+ * Упоминания мест (02 § 3.13.5; 05 § 13 п. 3): форма стоит в своём стихе среди слов-оснований (вне скобок и в скобках
+ * вида «б», «г»); место существует; уровень связи — «Писание», «вывод» (со стихами вывода) или «справочно».
+ */
+export function validatePlaceMentions(base: Base, err: Err, mainTexts: (where: string, ref: string) => string[]) {
+  const places = new Map((base.places ?? []).map((p) => [p.id, p]));
+  const ids = new Set<string>();
+  for (const m of base.placeMentions ?? []) {
+    const w = m.id || '(упоминание без номера)';
+    if (!/^lm-\d+$/.test(m.id ?? '')) err('упоминание места', w, 'номер упоминания — вида «lm-<число>»');
+    if (ids.has(m.id)) err('упоминание места', w, 'номер упоминания повторяется');
+    ids.add(m.id);
+    if (!m.place && !m.candidates?.length) err('упоминание места', w, 'нет ни места, ни кандидатов');
+    for (const x of [m.place, ...(m.candidates ?? [])]) if (x && !places.has(x)) err('упоминание места', w, `нет места «${x}»`);
+    if (!MENTION_CERTS.has(m.cert)) err('упоминание места', w, `уровень связи «${m.cert}» — только «Писание», «вывод» или «справочно» (05 § 3.2)`);
+    if (m.cert === 'inference' && !m.refs?.length) err('упоминание места', w, 'связь «вывод» — со стихами вывода (refs)');
+    if (!MENTION_ROLES.has(m.role)) err('упоминание места', w, `роль «${m.role}» не из словаря`);
+    if (m.status !== 'linked' && m.status !== 'disputed') err('упоминание места', w, `состояние «${m.status}» не из словаря`);
+    for (const a of m.actors ?? []) if (!ACTOR_ROLES.has(a.role)) err('упоминание места', w, `роль лица «${a.role}» не из словаря`);
+    for (const r of m.refs ?? []) mainTexts(w, r);
+    const t = mainTexts(w, m.ref).join(' ');
+    if (!(m.n >= 1)) err('упоминание места', w, 'номер вхождения формы — с единицы');
+    else if (formCount(t, m.form ?? '') < m.n) err('упоминание места', w, `формы «${m.form}» нет среди слов-оснований стиха ${m.ref}${m.n > 1 ? ` (вхождение ${m.n})` : ''}`);
+  }
+  // имя места со стихом — в этом стихе есть упоминание этого места (у мест, чьи упоминания уже записаны)
+  const at = new Set((base.placeMentions ?? []).map((m) => `${m.place}|${m.ref}`));
+  const withMentions = new Set((base.placeMentions ?? []).map((m) => m.place));
+  for (const p of base.places ?? []) {
+    if (!withMentions.has(p.id)) continue;
+    for (const n of p.names ?? []) for (const r of n.refs ?? []) if (!at.has(`${p.id}|${r.ref}`)) err('упоминание места', p.id, `у имени «${n.form}» стих ${r.ref} без упоминания места`);
+  }
+}
+
+/** Слова перехода (05 § 3.5): глаголы и обороты; отрезок пути есть только при них. */
+const TRANSITION = /(^|[^\p{L}])(отправил\p{L}*|отправившись|двинул\p{L}*|пош[её]л|пошли|пришл?и|пришел|вышел|вышли|поднял\p{L}*|сош[её]л|сошли|прош[её]л|прошли|проходили|удалились|отплыли|приплыли|прибыли|возвратил\p{L}*|обратились|повел|оттуда|отсюда)(?![\p{L}])|(^|[^\p{L}])из [\p{L}-]+ в /u;
+const STOP_KINDS = new Set(['start', 'stop', 'return', 'pass', 'direction', 'sortie', 'intent']);
+
+/**
+ * Пути (02 § 3.13.8; 05 § 3.5): у стоянки — стих и слова стиха среди слов-оснований; место или земля существует, земля —
+ * вида «земля» или «вода»; у отрезка — концы среди стоянок варианта и слова перехода в стихе.
+ */
+export function validateRoutes(base: Base, err: Err, mainTexts: (where: string, ref: string) => string[]) {
+  const places = new Map((base.places ?? []).map((p) => [p.id, p]));
+  const ids = new Set<string>();
+  const has = (w: string, ref: string, words: string) => placeText(mainTexts(w, ref).join(' ')).includes(placeText(words));
+  for (const r of base.routes ?? []) {
+    const w = r.id || '(путь без номера)';
+    if (!/^rt-[a-z0-9-]+$/.test(r.id ?? '')) err('путь', w, 'номер пути — вида «rt-…»');
+    if (ids.has(r.id)) err('путь', w, 'номер пути повторяется');
+    ids.add(r.id);
+    if (!r.title?.words || !r.title.refs?.length) err('путь', w, 'имя пути — словами и главами текста');
+    for (const x of r.title?.refs ?? []) mainTexts(w, x);
+    if (!r.variants?.length) err('путь', w, 'нет ни одного варианта');
+    for (const v of r.variants ?? []) {
+      for (const x of v.refs ?? []) mainTexts(w, x);
+      const ns = new Set<number>();
+      for (const s of v.stops ?? []) {
+        if (!STOP_KINDS.has(s.kind)) err('путь', w, `вид стоянки «${s.kind}» не из словаря`);
+        if (s.n !== undefined) {
+          if (ns.has(s.n)) err('путь', w, `номер стоянки ${s.n} повторяется`);
+          ns.add(s.n);
+        }
+        const pl = s.place ?? s.land;
+        if (pl && !places.has(pl)) err('путь', w, `стоянка ${s.ref}: нет места «${pl}»`);
+        if (s.land && places.has(s.land) && !PLACE_AREAL.has(places.get(s.land)!.kind)) err('путь', w, `стоянка ${s.ref}: «${s.land}» — не земля и не вода`);
+        if (!pl && s.kind !== 'direction' && s.kind !== 'intent') err('путь', w, `стоянка ${s.ref} без места`);
+        if (!has(w, s.ref, s.words ?? '')) err('путь', w, `слов «${s.words}» нет среди слов-оснований ${s.ref}`);
+        if (s.anchor) {
+          if (!places.has(s.anchor.place)) err('путь', w, `привязка: нет места «${s.anchor.place}»`);
+          if (s.anchor.cert === 'inference' && new Set([s.anchor.ref, ...(s.anchor.refs ?? [])]).size < 2) err('путь', w, 'привязка «вывод» — со стихами обеих сторон');
+          if (s.anchor.words && !has(w, s.anchor.ref, s.anchor.words)) err('путь', w, `слов привязки «${s.anchor.words}» нет в ${s.anchor.ref}`);
+        }
+      }
+      for (const g of v.segments ?? []) {
+        if (!ns.has(g.from) || !ns.has(g.to)) err('путь', w, `отрезок ${g.from} → ${g.to}: нет такой стоянки`);
+        if (g.mode !== 'land' && g.mode !== 'sea') err('путь', w, `вид отрезка «${g.mode}» не из словаря`);
+        if (!has(w, g.ref, g.words ?? '')) err('путь', w, `слов «${g.words}» нет среди слов-оснований ${g.ref}`);
+        else if (!TRANSITION.test(placeText(g.words))) err('путь', w, `отрезок ${g.from} → ${g.to} (${g.ref}): нет слов перехода (05 § 3.5)`);
+      }
+      for (const d of v.days ?? []) if (!has(w, d.ref, d.words)) err('путь', w, `слов о днях пути «${d.words}» нет в ${d.ref}`);
+    }
   }
 }
 

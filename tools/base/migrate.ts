@@ -19,7 +19,7 @@ import { join } from 'node:path';
 import type {
   ActorRelation,
   Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoModel, ChronoRecord, Correction, KingScheme, KinTerm, Membership, Name, NoData, Origin,
-  Place, Prov, ReadingSet, Redirect, Source, Story, TextParallel, Union, UnionTerm, VerseClass,
+  Place, PlaceMention, Prov, ReadingSet, Route, Redirect, Source, Story, TextParallel, Union, UnionTerm, VerseClass,
 } from './types.ts';
 import { attachStories } from './stories.ts';
 import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
@@ -100,6 +100,9 @@ export interface Base {
    * пересборка его не трогает и берёт с диска.
    */
   places?: Place[];
+  /** Упоминания мест и пути (02 § 3.13.5, § 3.13.8): как места — файлы на диске, перенос их не пишет (tools/places/pilot.py). */
+  placeMentions?: PlaceMention[];
+  routes?: Route[];
   /** Отношения лиц «не то же лицо» и «возможно, то же лицо» (02 § 3.11.1; Д-5). */
   relations: ActorRelation[];
   /**
@@ -434,6 +437,8 @@ export function buildBase(opts: BuildOptions = {}) {
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
   base.ids = iss.table;
   base.places = readItems('places.json');
+  base.placeMentions = readItems('place-mentions.json');
+  base.routes = readItems('routes.json');
   attachStories(base);
   return base;
 }

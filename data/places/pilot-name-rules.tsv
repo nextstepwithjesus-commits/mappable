@@ -1,0 +1,46 @@
+# запись	форма в стихе (образец целиком)	имя	вид имени	основание времени по стихам (стих=основание; иначе story)
+Ammon	пределов Аммонитских	пределы Аммонитские	main
+Antioch 2	Антиохи\w+	Антиохия	main
+Ar	Шебет-Ар\w*	Шебет-Ар	main
+Ashdod	Азотск\w+	Азотский	main
+Bashan	Васанск\w+	Васанский	main
+Canaan	Ханаан\w*	Ханаан	main
+Debir 1	Кириаф-Сефер\w*	Кириаф-Сефер	former	Нав 15:15=former-by-verse
+Debir 1	Кириаф-Санн\w+	Кириаф-Санна	that-is
+Dibon 1	Дивон-Гад\w*	Дивон-Гад	main
+Edom	Идуме\w+	Идумея	main
+Edom	Едомовы	Едомовы	main
+Edom	Едомск\w+	Едомская	main
+Egypt	земл\w+ Египетск\w+	земля Египетская	main
+Egypt	Египетск\w+	Египетский	main
+Ekron	Екронск\w+	Екронский	main
+Gaza	Газск\w+	Газский	main
+Gerar	Герарск\w+	Герарский	main
+Geshur	Гессурск\w+	Гессурская	main
+Gilead 1	Галаадск\w+	Галаадские	main
+Gomorrah	Гоморрск\w+	Гоморрский	main
+Hazor 3	Гацор	Гацор	that-is
+Hebron	Кириаф-Арб\w+	Кириаф-Арба	former	Быт 23:2=former-by-verse
+Hebron	Хеврон\w*	Хеврон	main	Быт 23:2=narrator-now;Быт 23:19=narrator-now
+Heshbon	Есевонск\w+	Есевонский	main
+Iye-abarim	Ийм-Аварим\w*	Ийм-Аварим	main
+Iye-abarim	Ийм\w*	Ийм	main
+Kadesh-barnea	Мишпат	Мишпат	that-is
+Kadesh-barnea	Кадес-Варн\w+	Кадес-Варни	main
+Kiriath-jearim	Кириаф-Ваал\w*	Кириаф-Ваал	that-is
+Maacah	Маахск\w+	Маахская	main
+Moab 1	Моавитск\w+	Моавитский	main
+Mount Jearim	Кесалон	Кесалон	that-is
+Pi-hahiroth	Гахироф\w*	Гахироф	main
+Pisgah	Фасги	Фасга	main
+Pisidia	Писидийск\w+	Писидийская	main
+Shinar	Сеннаарск\w+	Сеннаарский	main
+Shur	пустын\w+ Сур	пустыня Сур	main
+Sodom	Содомск\w+	Содомский	main
+Valley of Shaveh	долина царская	долина царская	now	Быт 14:17=narrator-now
+Valley of Hinnom	долин\w+ Енномов\w+	долина Енномова	main
+Zoar	Бел\w+	Бела	that-is
+Jebus	Иевус\w*	Иевус	that-is
+Baalah 2	Ваал\w*	Ваал	that-is
+Chesalon	Кесалон	Кесалон	that-is
+King’s Valley	долина царская	долина царская	now	Быт 14:17=narrator-now
