@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "6363b8c"
+   "commit": "77cc9db"
   }
  },
  "sources": [
@@ -13153,7 +13153,18 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D19-2"
+   },
+   "identity": {
+    "of": "child",
+    "degree": "inferred",
+    "form": "p-eliashiv-pervosvyashchennik#n2",
+    "refs": [
+     "Неем 12:10",
+     "Неем 3:1"
+    ],
+    "note": "в стихах ребра ребёнок назван формой «Елиашив» или не назван вовсе — форма «выв.» карточки Елияшив: так выходит, если сравнить места (02 § 3.3.5)"
    }
   },
   {
@@ -13171,7 +13182,19 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
+    },
+    "by": "исправление D19-2"
+   },
+   "identity": {
+    "of": "parent",
+    "degree": "inferred",
+    "form": "p-eliashiv-pervosvyashchennik#n2",
+    "refs": [
+     "Неем 12:10",
+     "Неем 13:28",
+     "Неем 3:1"
+    ],
+    "note": "в стихах ребра родитель назван формой «Елиашив» или не назван вовсе — форма «выв.» карточки Елияшив: так выходит, если сравнить места (02 § 3.3.5)"
    }
   },
   {
@@ -19460,20 +19483,9 @@
     "from": {
      "vol": "09-tribes-a.json"
     },
-    "by": "исправление D19-1"
+    "by": "исправление D19-2"
    },
-   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
-   "identity": {
-    "of": "parent",
-    "degree": "inferred",
-    "form": "p-fallu#n2",
-    "refs": [
-     "Чис 26:8",
-     "Быт 46:9",
-     "Чис 26:5"
-    ],
-    "note": "в стихах ребра родитель назван формой «Фаллуй» или не назван вовсе — форма «выв.» карточки Фаллу: так выходит, если сравнить места (02 § 3.3.5)"
-   }
+   "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)"
   },
   {
    "id": "o-eliav-syn-fallu--nemuil-syn-eliava",
@@ -27190,15 +27202,15 @@
    "role": "father",
    "kind": "natural",
    "refs": [
-    "1Цар 27:2",
-    "3Цар 2:39"
+    "1Цар 27:2"
    ],
    "cert": "scripture",
    "primary": true,
    "prov": {
     "from": {
      "vol": "12-house-of-david.json"
-    }
+    },
+    "by": "исправление D18-5"
    }
   },
   {
@@ -30507,9 +30519,9 @@
    }
   },
   {
-   "id": "o-ananiy-prozorlivets--iiuy-syn-anani",
+   "id": "o-ananiya-otets-iiuya--iiuy-syn-anani",
    "child": "p-iiuy-syn-anani",
-   "parent": "p-ananiy-prozorlivets",
+   "parent": "p-ananiya-otets-iiuya",
    "role": "father",
    "kind": "natural",
    "refs": [
@@ -30523,7 +30535,8 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D18-5"
    }
   },
   {
@@ -31242,17 +31255,16 @@
     "from": {
      "vol": "15-prophets-exile.json"
     },
-    "by": "исправление D19-1"
+    "by": "исправление C45"
    },
    "identity": {
     "of": "parent",
-    "degree": "inferred",
-    "form": "p-shafan#n2",
+    "degree": "possible",
+    "note": "«Иезания, сын Сафанов» (Иез 8:11) — что это Сафан, писец при Иосии (4Цар 22:3), текст прямо не говорит",
     "refs": [
      "Иез 8:11",
-     "4Цар 22:12"
-    ],
-    "note": "в стихах ребра родитель назван формой «Сафан» или не назван вовсе — форма «выв.» карточки Шафан: так выходит, если сравнить места (02 § 3.3.5)"
+     "4Цар 22:3"
+    ]
    }
   },
   {
@@ -41814,6 +41826,24 @@
    },
    "prov": {
     "by": "исправление D15-15"
+   }
+  },
+  {
+   "id": "o-maakha-otets-ankhusa--ankhus-syn-maakhi",
+   "child": "p-ankhus-syn-maakhi",
+   "parent": "p-maakha-otets-ankhusa",
+   "role": "father",
+   "kind": "natural",
+   "refs": [
+    "3Цар 2:39"
+   ],
+   "cert": "scripture",
+   "primary": true,
+   "prov": {
+    "from": {
+     "vol": "12-house-of-david.json"
+    },
+    "by": "исправление D18-5"
    }
   }
  ]

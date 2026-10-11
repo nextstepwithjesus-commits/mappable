@@ -84,7 +84,9 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     // Писания тёзок; −2 выбывших у Иехонии), отношений +14 (13 у тёзок и Раамии, 2 у Иоханана, −1 ar-34)
     // 02 ред. 4.6 (В-33): рёбер ±0 (21 ребро «из дома X» и ребро Маттафии — к новым карточкам, номер по концам сменился),
     // утверждений +44 (места Писания и заметки 21 главы дома из Неем 12:12–21 и Селлума Кореянина), отношений +24
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2156, 16418, 82, 16, 22, 72]);
+    // правка по второму ключу В-33 (D18-5): ребро +1 (Анхус при Соломоне — сын Маахи, 3Цар 2:39), ребро Ииуя — к Анании (номер
+    // сменился); утверждений +9 (места Писания и заметки четырёх новых карточек, царь Гефский у Анхуса); отношений +4
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2157, 16427, 82, 16, 22, 76]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));
@@ -108,7 +110,9 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
           'o-ieremiya-neem12--khananiya-neem12', 'o-ioiariv-neem12--mafnay', 'o-khelkiya-neem12--khashaviya-neem12', 'o-maadiya--piltay',
           'o-mallukh-neem12--ionafan-neem12-14', 'o-meremof-neem12--khelkiya-neem12-15', 'o-rekhum-neem12--adna-neem12', 'o-sallu-neem12--kallay',
           'o-seraiya-neem12--meraiya', 'o-shallum-syn-kore--mattafiya-syn-selluma', 'o-shekhaniya-neem12--iosif-neem12',
-          'o-shemaiya-neem12--ionafan-neem12-18', 'o-vilga-neem12--shammuy-neem12'].map((id) => [id, true])].sort(),
+          'o-shemaiya-neem12--ionafan-neem12-18', 'o-vilga-neem12--shammuy-neem12',
+          // правка по второму ключу В-33: ребро Ииуя — к Анании, отцу Ииуя (D18-5)
+          'o-ananiy-prozorlivets--iiuy-syn-anani'].map((id) => [id, true])].sort(),
     );
   });
 

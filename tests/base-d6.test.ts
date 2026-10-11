@@ -170,7 +170,8 @@ describe('Д6-3: конец земной жизни и мелкое по вто�
 
   it('входы времени на форме «выв.» «Азария» — с idCert (второй ключ Д6, № 2); без него — ошибка', () => {
     const certs = base.chrono.flatMap((c) => ((c.chrono as ChronoD6).inputs ?? []).filter((t) => t.idCert?.form === 'p-oziya#n2').map(() => c.actor));
-    expect([...new Set(certs)].sort()).toEqual(['p-fakey', 'p-fakiya', 'p-ioafam', 'p-menaim', 'p-oziya', 'p-sellum-syn-iavisa', 'p-zakhariya-syn-ieroboama']);
+    // второй ключ В-33 (№ 4; D18-6): у Иоафама вход «при царе» — ещё 2Пар 26:21, где названы и Озия, и Иоафам: «Писание», без idCert
+    expect([...new Set(certs)].sort()).toEqual(['p-fakey', 'p-fakiya', 'p-menaim', 'p-oziya', 'p-sellum-syn-iavisa', 'p-zakhariya-syn-ieroboama']);
     const b = structuredClone(base);
     delete inp(b, 'p-menaim', 'synchronism')[0].idCert;
     expect(validate(b).filter((i) => i.level === 'error' && i.check === 'тождество по форме').map((i) => i.msg).join('\n')).toMatch(/вход держится на форме «выв.» «Азария» \(p-oziya\)/);

@@ -12,6 +12,7 @@ import { admission } from '../tools/base/admit.ts';
 import { anchorYear } from '../tools/base/chrono-calc.ts';
 import { buildCardVolumes } from '../tools/pack/packages.ts';
 import { HOUSES, SPELL_B } from '../tools/base/corrections-v33.ts';
+import { CASES, NOCERT_B } from '../tools/base/corrections-v33b.ts';
 import type { Actor, Anchor, ChronoD6, Descriptor } from '../tools/base/types.ts';
 
 const ROOT = join(import.meta.dirname, '..');
@@ -81,7 +82,8 @@ describe('Д-18, К-22: другое написание — по общим пр
     const left = base.volumes.flatMap((v) => v.actors).flatMap((a) => a.names.filter((n) => n.type !== 'main' && /другое написание/.test(n.note ?? '')).map((n) => `${a.id} ${n.form}`));
     expect(left).toEqual([]);
     expect(SPELL_B).toHaveLength(78);
-    for (const r of SPELL_B) {
+    // правка по второму ключу: «Фаллуй», «Шуний», «Гуний» — падеж, сняты (D18-3); «Мааха» — своя карточка (D18-5)
+    for (const r of SPELL_B.filter((x) => !CASES.some(([c, f]) => c === x.c && f === x.f) && x.c !== 'p-maokh')) {
       const a = actor(base, r.c);
       const f = r.swap ? a.names.find((n) => n.type !== 'main' && n.cert === 'inference' && n.compare?.main.refs.join() === r.main.join()) : a.names.find((n) => n.form === r.f);
       expect([r.c, f?.cert, !!f?.compare?.form.refs.length, !!f?.why?.codes.length]).toEqual([r.c, 'inference', true, true]);
@@ -100,7 +102,17 @@ describe('Д-18, К-22: другое написание — по общим пр
     f.cert = 'scripture';
     delete f.compare;
     delete f.why;
-    expect(errs(b, /^форма «Писание»$/)).toMatch(/p-iessey «Иесей»/);
+    // форма без поля cert — тоже «Писание» (второй ключ В-33, № 2)
+    const g = actor(b, 'p-shimey-syn-girsona').names.find((n) => n.form === 'Шимеи')!;
+    delete g.cert;
+    delete g.compare;
+    delete g.why;
+    // падеж основного имени отдельной формой (второй ключ, № 5): «Хаггий» по «от Хаггия» (Чис 26:15) при «Хагги»
+    actor(b, 'p-khaggi').names.push({ form: 'Хаггий', type: 'variant', refs: ['Чис 26:15'] });
+    const e = errs(b, /^форма «Писание»$/);
+    expect(e).toMatch(/p-iessey «Иесей»/);
+    expect(e).toMatch(/p-shimey-syn-girsona «Шимеи»/);
+    expect(e).toMatch(/p-khaggi «Хаггий»/);
   });
 });
 
@@ -247,5 +259,45 @@ describe('П1-4: мелкое по эпохам', () => {
     expect(s).not.toMatch(/723 по схеме|587 по умолчанию|30, возможен 33/);
     const christ = base.epochs.find((e) => e.id === 'era-christ') as any;
     expect(christ.end.refs).toContain('Деян 1:3');
+  });
+});
+
+describe('правка по второму ключу В-33 (tools/base/corrections-v33b.ts)', () => {
+  it('главы домов Неем 12 — «тот, по кому назван дом»; падежи сняты; формы без cert — «выв.»', () => {
+    for (const h of HOUSES) expect(actor(base, h.id).disambig).toBe(`тот, по кому назван дом (${h.verse})`);
+    for (const [c, f] of CASES) expect([c, actor(base, c).names.some((n) => n.form === f)]).toEqual([c, false]);
+    expect(actor(base, 'p-kharmiy-syn-zimri').names.map((n) => n.form)).toEqual(['Харми']);
+    for (const r of NOCERT_B) {
+      const a = actor(base, r.c);
+      expect([r.c, a.names.filter((n) => n.cert === 'inference').length]).toEqual([r.c, 1]);
+    }
+    expect([actor(base, 'p-vaana-iz-vernuvshikhsya').names[0].form, actor(base, 'p-matred').names[0].form]).toEqual(['Ваан', 'Матреда']);
+  });
+
+  it('вид (в): Анания, отец Ииуя; Анхус при Соломоне и Мааха — без кругового вывода; Вания (Неем 10:14)', () => {
+    const rel = (a: string) => base.relations.filter((r) => r.a === a && r.kind === 'possibly-same').map((r) => r.b);
+    expect(rel('p-ananiya-otets-iiuya')).toEqual(['p-ananiy-prozorlivets']);
+    expect(base.origins.filter((o) => o.child === 'p-iiuy-syn-anani' && o.role === 'father').map((o) => o.parent)).toEqual(['p-ananiya-otets-iiuya']);
+    expect(rel('p-ankhus-syn-maakhi')).toEqual(['p-ankhus']);
+    expect(rel('p-maakha-otets-ankhusa')).toEqual(['p-maokh']);
+    expect(base.origins.filter((o) => o.child === 'p-ankhus-syn-maakhi').map((o) => [o.parent, o.refs, o.identity])).toEqual([['p-maakha-otets-ankhusa', ['3Цар 2:39'], undefined]]);
+    expect(base.origins.filter((o) => o.child === 'p-ankhus').map((o) => [o.parent, o.refs])).toEqual([['p-maokh', ['1Цар 27:2']]]);
+    expect(actor(base, 'p-maokh').names.map((n) => n.form)).toEqual(['Маох']);
+    expect(rel('p-vaniya-neem10-14')).toEqual(['p-vaniy-rod']);
+  });
+
+  it('Иоафам и Амон — «Писание» по стиху с основным именем; четыре заметки — толкование без авторов; Деян 1:5 у границы', () => {
+    const t = chrono(base, 'p-ioafam').inputs.find((x) => x.kind === 'under-king' && x.refs.includes('4Цар 15:5'))!;
+    expect([t.refs, t.idCert]).toEqual([['4Цар 15:5', '2Пар 26:21'], undefined]);
+    const amon = actor(base, 'p-amon-tsar').facts.find((f) => f.id === 'a-9344')!;
+    expect([(amon.value as any).refs, amon.idCert]).toEqual([['4Цар 21:19', '2Пар 33:21'], undefined]);
+    for (const [w, id] of [['p-khuppim', 'a-2989'], ['p-khur', 'a-3615'], ['p-iiuy-syn-anani', 'a-10507'], ['p-malkhiya-otets-paskhora', 'a-11119']]) {
+      const f = actor(base, w).facts.find((x) => x.id === id)!;
+      expect([id, f.cert, f.needsSources]).toEqual([id, 'interpretation', true]);
+    }
+    for (const id of ['era-christ', 'era-apostolic']) {
+      const e = base.epochs.find((x) => x.id === id) as any;
+      expect((id === 'era-christ' ? e.end : e.start).refs).toEqual(['Деян 1:3', 'Деян 1:5', 'Деян 2:1']);
+    }
   });
 });

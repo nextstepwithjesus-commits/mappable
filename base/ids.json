@@ -17929,7 +17929,7 @@
   {"id":"o-sinnakherim--adramelekh","kind":"origin","key":"origin:p-adramelekh|p-sinnakherim|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-sinnakherim--sharetser","kind":"origin","key":"origin:p-sharetser|p-sinnakherim|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-sinnakherim--asardan","kind":"origin","key":"origin:p-asardan|p-sinnakherim|father|p","at":"2026-10-11","state":"active"},
-  {"id":"o-ananiy-prozorlivets--iiuy-syn-anani","kind":"origin","key":"origin:p-iiuy-syn-anani|p-ananiy-prozorlivets|father|p","at":"2026-10-11","state":"active"},
+  {"id":"o-ananiy-prozorlivets--iiuy-syn-anani","kind":"origin","key":"origin:p-iiuy-syn-anani|p-ananiy-prozorlivets|father|p","at":"2026-10-11","state":"retired"},
   {"id":"o-oded-otets-azarii--azariya-syn-odeda","kind":"origin","key":"origin:p-azariya-syn-odeda|p-oded-otets-azarii|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-safat-otets-eliseya--elisey","kind":"origin","key":"origin:p-elisey|p-safat-otets-eliseya|father|p","at":"2026-10-11","state":"active"},
   {"id":"o-iemvlay--mikhey-syn-iemvlaya","kind":"origin","key":"origin:p-mikhey-syn-iemvlaya|p-iemvlay|father|p","at":"2026-10-11","state":"active"},
@@ -18823,6 +18823,21 @@
   {"id":"o-sallay-neem12-20--kallay","kind":"origin","key":"origin:p-kallay|p-sallay-neem12-20|father|o","at":"2026-10-11","state":"active"},
   {"id":"o-amok-neem12-20--ever-neem12","kind":"origin","key":"origin:p-ever-neem12|p-amok-neem12-20|father|o","at":"2026-10-11","state":"active"},
   {"id":"o-khelkiya-neem12-21--khashaviya-neem12","kind":"origin","key":"origin:p-khashaviya-neem12|p-khelkiya-neem12-21|father|o","at":"2026-10-11","state":"active"},
-  {"id":"o-iedaiya-neem12-21--nafanail-neem12","kind":"origin","key":"origin:p-nafanail-neem12|p-iedaiya-neem12-21|father|o","at":"2026-10-11","state":"active"}
+  {"id":"o-iedaiya-neem12-21--nafanail-neem12","kind":"origin","key":"origin:p-nafanail-neem12|p-iedaiya-neem12-21|father|o","at":"2026-10-11","state":"active"},
+  {"id":"a-16425","kind":"fact","key":"fact:p-maakha-otets-ankhusa|scripture|eb13b6da3aa41c87|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16426","kind":"fact","key":"fact:p-maakha-otets-ankhusa|notes|e46120194843ada0|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16427","kind":"fact","key":"fact:p-ankhus-syn-maakhi|status|26d3218e1029a899|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16428","kind":"fact","key":"fact:p-ankhus-syn-maakhi|scripture|78e05d0eac4f08e1|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16429","kind":"fact","key":"fact:p-ankhus-syn-maakhi|notes|089f12b9e3aaf2c7|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16430","kind":"fact","key":"fact:p-ananiya-otets-iiuya|scripture|7a8b2dbbcdbbe235|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16431","kind":"fact","key":"fact:p-ananiya-otets-iiuya|notes|27343840de31e7ca|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16432","kind":"fact","key":"fact:p-vaniya-neem10-14|scripture|80f632d37b28df47|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"a-16433","kind":"fact","key":"fact:p-vaniya-neem10-14|notes|fac688d6a10dd8f1|D18-5","at":"2026-10-11","state":"active"},
+  {"id":"ar-75","kind":"relation","key":"relation:p-ananiya-otets-iiuya|p-ananiy-prozorlivets|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-76","kind":"relation","key":"relation:p-ankhus-syn-maakhi|p-ankhus|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-77","kind":"relation","key":"relation:p-maakha-otets-ankhusa|p-maokh|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-78","kind":"relation","key":"relation:p-vaniya-neem10-14|p-vaniy-rod|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"o-ananiya-otets-iiuya--iiuy-syn-anani","kind":"origin","key":"origin:p-iiuy-syn-anani|p-ananiya-otets-iiuya|father|p","at":"2026-10-11","state":"active"},
+  {"id":"o-maakha-otets-ankhusa--ankhus-syn-maakhi","kind":"origin","key":"origin:p-ankhus-syn-maakhi|p-maakha-otets-ankhusa|father|p","at":"2026-10-11","state":"active"}
  ]
 }

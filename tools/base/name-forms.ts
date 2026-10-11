@@ -27,6 +27,15 @@ const textOf = (id: string) => {
   return m ? norm(scriptureText(m[1], +m[2], +m[3]) ?? '') : '';
 };
 
+/** Все слова текста вне скобок (для проверки, стоит ли форма в тексте как есть). */
+let WORDS: Set<string> | null = null;
+const bibleWords = () => {
+  if (WORDS) return WORDS;
+  WORDS = new Set<string>();
+  for (const k of loadBible().verses.keys()) for (const w of textOf(k).match(/[а-я-]+/g) ?? []) WORDS.add(w);
+  return WORDS;
+};
+
 /** Номер формы: `p-…#n<число>`. */
 export const FORM_ID = /^(p-[a-z0-9]+(?:-[a-z0-9]+)*)#n(\d+)$/;
 
@@ -146,10 +155,28 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     // с другой (with); другое написание само по себе уровня не даёт (02 § 3.3.4 [4.6]; К-22)
     if (a.kind !== 'unnamed' && a.kind !== 'group' && mains[0]) {
       for (const n of a.names) {
-        if (n === mains[0] || n.cert !== 'scripture' || n.with) continue;
+        if (n === mains[0] || (n.cert ?? 'scripture') !== 'scripture' || n.with || n.type === 'title' || n.type === 'epithet' || n.type === 'patronymic') continue;
         const others = a.names.filter((m) => m !== n && m.cert !== 'inference');
+        // имя с прозванием или пояснением («Ирод царь», «Иуда Искариот», «Самуил-прозорливец») — то же имя, а не другое
+        const first = (f: string) => norm(f).split(/[\s,-]+/)[0];
+        if (norm(n.form).split(/[\s,-]+/).some((w) => others.some((m) => first(m.form) === w))) continue;
+        // притяжательное или падеж того же имени, стоящие в тексте как есть («сын Тимеев», Мк 10:46; «Сосипатр Пирров»)
+        // (форма длиннее и начинается с основы имени: «Тимей» — «Тимеев»; «Шимей» — «Шимеи» — другое написание, а не падеж)
+        const adj = (m: Name) => norm(n.form).length > norm(m.form).length && norm(n.form).startsWith(norm(m.form).slice(0, -1));
+        if (norm(n.form).split(/\s+/).every((w) => bibleWords().has(w)) && others.some((m) => adj(m) && nameMatcher(m.form).test(` ${norm(n.form)} `))) continue;
         const vs = [...new Set(verseIds([...(n.refs ?? []), ...others.flatMap((m) => m.refs ?? [])]))];
-        const both = vs.some((v) => nameMatcher(n.form).test(textOf(v)) && others.some((m) => nameMatcher(m.form).test(textOf(v))));
+        // в стихе — два разных слова: одно — этой формы (и не другой), другое — другой формы; падеж того же имени («Хаггия» при
+        // «Хагги», Чис 26:15) двумя именами не считается (второй ключ В-33, № 2, 5)
+        const words = (v: string) => textOf(v).match(/[а-я-]+/g) ?? [];
+        const hit = (re: RegExp, w: string) => re.test(` ${w} `);
+        const both = vs.some((v) => {
+          const ws = words(v);
+          const fm = nameMatcher(n.form);
+          return others.some((m) => {
+            const mm = nameMatcher(m.form);
+            return ws.some((w) => hit(fm, w) && !hit(mm, w)) && ws.some((w) => hit(mm, w));
+          });
+        });
         if (n.refs?.length && !both) err('форма «Писание»', `${a.id} «${n.form}»`, 'форма «Писание» без стиха, где лицо названо и этой, и другой формой «Писание»: другое написание само по себе уровня не даёт — вид (б) или (в) по 02 § 3.3.4 [4.6]');
       }
     }
@@ -223,7 +250,8 @@ export function validateNameForms(base: Base, err: Err, warn: Err) {
     const w = `${o.child} ← ${o.parent ?? '?'}`;
     identityOk(w, o.identity, o.identity?.of === 'parent' ? o.parent : o.child);
     // ребро, которое держится на форме «выв.» конца, — identity inferred (02 § 3.3.5)
-    if (o.identity?.degree === 'inferred' || o.candidates?.length) continue;
+    // «предположительно» (possible) — уже не выше вывода: тождество по форме его не повышает
+    if (o.identity?.degree === 'inferred' || o.identity?.degree === 'possible' || o.candidates?.length) continue;
     for (const [end, of] of [[o.parent, 'parent'], [o.child, 'child']] as const) {
       const a = end ? actors.get(end) : undefined;
       if (!a || !inferredForms(a).length) continue;

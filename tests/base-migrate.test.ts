@@ -24,6 +24,7 @@ import { STEPS_D6 } from '../tools/base/corrections-d6.ts';
 import { STEPS_D6B } from '../tools/base/corrections-d6b.ts';
 import { STEPS_D6C } from '../tools/base/corrections-d6c.ts';
 import { STEPS_V33 } from '../tools/base/corrections-v33.ts';
+import { STEPS_V33B } from '../tools/base/corrections-v33b.ts';
 import { validate } from '../tools/base/validate.ts';
 import { finishIds, freezeIds, loadIds, startIds } from '../tools/base/ids.ts';
 
@@ -48,8 +49,8 @@ describe('перенос в базу', () => {
     startIds(base, loadIds(join(import.meta.dirname, '..', 'base')), '2026-10-11');
     // номера закрепляются в тех же местах, что и в сборке (migrate.ts, main): перед партиями Д, Д-15 и 02 ред. 4.6; без этого
     // опоры шагов Д6 не находятся по номеру an- (номер выдаётся при закреплении)
-    const freeze = new Set([STEPS_D[0], STEPS_D_2[0], STEPS_D_3[0], STEPS_D4[0], STEPS_D15[0], STEPS_D15B[0], STEPS_D15C[0], STEPS_V33[0]]);
-    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...STEPS_P13, ...STEPS_V33]) {
+    const freeze = new Set([STEPS_D[0], STEPS_D_2[0], STEPS_D_3[0], STEPS_D4[0], STEPS_D15[0], STEPS_D15B[0], STEPS_D15C[0], STEPS_V33[0], STEPS_V33B[0]]);
+    for (const s of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...STEPS_P13, ...STEPS_V33, ...STEPS_V33B]) {
       if (freeze.has(s)) freezeIds(base);
       expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
     }

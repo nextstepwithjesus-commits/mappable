@@ -3297,28 +3297,6 @@
    }
   },
   {
-   "key": "actor:p-melkhisua",
-   "by": "bibleist-reviewer (второй ключ, В-33)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "e4962556218fa933e64c0f2b5ea2c9ad2a6ce372952675b55ece66e5768463f5",
-   "inputs": {
-    "verses": [
-     "1Пар 10:2",
-     "1Пар 8:33",
-     "1Пар 9:39",
-     "1Цар 14:49",
-     "1Цар 31:2"
-    ],
-    "text": "2e87458086e5ecdba4b099aa93f95eac298fa2f1d6fe282f283dd5c4cc74901c",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "actor:p-menaim",
    "by": "bibleist-reviewer (второй ключ, сцены пакета 1)",
    "kind": "agent",
@@ -5862,30 +5840,6 @@
    }
   },
   {
-   "key": "chrono:p-ioafam",
-   "by": "bibleist-reviewer (второй ключ, Д-15 партия 2)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "bd96abf62f048645562734fde3ae4c0903a2807813840c7e0dd7a8c27961e95a",
-   "inputs": {
-    "verses": [
-     "2Пар 26:23",
-     "2Пар 27:1",
-     "4Цар 15:1",
-     "4Цар 15:32",
-     "4Цар 15:33",
-     "4Цар 15:5",
-     "4Цар 15:7"
-    ],
-    "text": "4452078e33a2248eb959278356588b7a75e60501c3470770963e4c61c497fb0e",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
    "key": "chrono:p-ioakh-syn-asafa",
    "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
    "kind": "agent",
@@ -6604,79 +6558,6 @@
     ],
     "text": "df9729d1a68cf0ba8bcdc2651a6a2a45180cc022263e38cc5c14ba3337c7aaec",
     "brackets": "f3faf3e76ee8ac42afbbeaf8737a6b090aacbadbd534f6ff3cdcb7d35b6c1627",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "epoch:era-apostolic",
-   "by": "bibleist-reviewer (второй ключ, В-33)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "2af82f0ec014b8de81007892c1a219952c8e7623b6dbd0ee240d802c3ea81396",
-   "inputs": {
-    "verses": [
-     "Деян 15:6",
-     "Деян 1:3",
-     "Деян 28:30",
-     "Деян 2:1",
-     "Деян 2:2",
-     "Деян 2:3",
-     "Деян 2:4",
-     "Откр 1:9"
-    ],
-    "text": "37780d123283f36b91947b5722c39b9168c5d6a52db2d5ca2e4a7b92ef21469f",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "epoch:era-christ",
-   "by": "bibleist-reviewer (второй ключ, В-33)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "8ca2efb1aacc16b11b4842a5dd197abfa9a1eee6c604937538750d6895e91b72",
-   "inputs": {
-    "verses": [
-     "Деян 1:3",
-     "Деян 2:1",
-     "Лк 1:10",
-     "Лк 1:11",
-     "Лк 1:12",
-     "Лк 1:13",
-     "Лк 1:24",
-     "Лк 1:25",
-     "Лк 1:26",
-     "Лк 1:5",
-     "Лк 1:6",
-     "Лк 1:7",
-     "Лк 1:8",
-     "Лк 1:9",
-     "Лк 2:4",
-     "Лк 2:42",
-     "Лк 2:43",
-     "Лк 2:44",
-     "Лк 2:45",
-     "Лк 2:46",
-     "Лк 2:5",
-     "Лк 2:6",
-     "Лк 2:7",
-     "Лк 3:1",
-     "Лк 3:21",
-     "Лк 3:22",
-     "Лк 3:23",
-     "Мф 27:35",
-     "Мф 28:5",
-     "Мф 28:6",
-     "Мф 2:1"
-    ],
-    "text": "353d9d41500da5fbfc356f2aa4d8eeab08d9e3d71a849d2ba9689a95c76954da",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
@@ -17909,24 +17790,6 @@
      "4Цар 21:1"
     ],
     "text": "fb671ff29bb63c38150a9fcb9f06fc13acebd5e2da8544384b062ffa35dfc096",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "fact:a-9344",
-   "by": "bibleist-reviewer (второй ключ, В-33)",
-   "kind": "agent",
-   "at": "2026-10-11",
-   "hash": "16f10a6e477949197cd436fa556c6bdceb65beb920447ab292bf5dd04a354b97",
-   "inputs": {
-    "verses": [
-     "4Цар 21:19"
-    ],
-    "text": "2a773f3409dd4293b42b1567ce3e88bac4c35888e07bc6cc5735579820de0b15",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {

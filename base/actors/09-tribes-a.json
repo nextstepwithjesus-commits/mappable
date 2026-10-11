@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/09-tribes-a.json",
-   "commit": "6363b8c"
+   "commit": "77cc9db"
   }
  },
  "sources": [
@@ -6708,14 +6708,38 @@
      "type": "main",
      "refs": [
       "Чис 26:35"
-     ]
+     ],
+     "id": "p-shutela-syn-efrema#n1"
     },
     {
      "form": "Шутелах",
      "type": "variant",
      "refs": [
       "1Пар 7:20"
-     ]
+     ],
+     "id": "p-shutela-syn-efrema#n2",
+     "cert": "inference",
+     "compare": {
+      "form": {
+       "refs": [
+        "1Пар 7:20"
+       ]
+      },
+      "main": {
+       "refs": [
+        "Чис 26:35"
+       ]
+      }
+     },
+     "why": {
+      "codes": [
+       "parallel",
+       "same-node",
+       "one-candidate",
+       "no-contradiction"
+      ],
+      "note": "сын Ефрема: «от Шутелы поколение Шутелино» (Чис 26:35) — «Сыновья Ефрема: Шутелах» (1Пар 7:20). Одно ли это имя в разном написании, текст не говорит: что это один человек, так выходит, если сравнить места (02 § 3.3.4 [4.6])"
+     }
     }
    ],
    "disambig": "сын Ефрема",
@@ -6786,7 +6810,10 @@
       ]
      }
     }
-   ]
+   ],
+   "prov": {
+    "by": "исправление D18-4"
+   }
   },
   {
    "id": "p-bekher-syn-efrema",

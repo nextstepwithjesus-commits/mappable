@@ -418,7 +418,7 @@ export function exemptOf(a: Actor, f: Assertion): Assertion['idCertExempt'] {
   return undefined;
 }
 
-function autoIdCert(base: Base, step: string) {
+export function autoIdCert(base: Base, step: string) {
   const A = actorsOf(base);
   const n = { facts: 0, exempt: 0, memberships: 0, nodata: 0, origins: 0, inputs: 0, dangling: 0 };
   const touched = new Set<string>();
@@ -459,7 +459,8 @@ function autoIdCert(base: Base, step: string) {
     if (form) (x.idCert = { form: form.id!, refs: [...x.refs] }), touch(x, step), n.nodata++, touched.add(x.actor);
   }
   for (const o of base.origins) {
-    if (o.identity?.degree === 'inferred' || o.candidates?.length) continue;
+    // «предположительно» слабее вывода по форме — степень не повышается (второй ключ В-33: Иоханан из Неем 12:22–23)
+    if (o.identity?.degree === 'inferred' || o.identity?.degree === 'possible' || o.candidates?.length) continue;
     for (const [end, of] of [[o.parent, 'parent'], [o.child, 'child']] as const) {
       const a = end ? A.get(end) : undefined;
       if (!a || !inferredForms(a).length) continue;
@@ -511,7 +512,7 @@ function autoIdCert(base: Base, step: string) {
 
 // ---------------------------------------------------------------- шаги
 
-const scopeOf = (ids: string[]) => ids.flatMap((id) => [`actor:${id}.`, `origin:${id}|`, `|${id}|`, `membership:${id}|`, `nodata:${id}|`, `relation:${id}|`, `chrono:${id}`]);
+export const scopeOf = (ids: string[]) => ids.flatMap((id) => [`actor:${id}.`, `origin:${id}|`, `|${id}|`, `membership:${id}|`, `nodata:${id}|`, `relation:${id}|`, `chrono:${id}`]);
 
 export const STEPS_V33: Step[] = [
   {
