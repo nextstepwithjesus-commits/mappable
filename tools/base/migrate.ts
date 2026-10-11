@@ -37,6 +37,7 @@ import { STEPS_D15C } from './corrections-d15c.ts';
 import { STEPS_D6 } from './corrections-d6.ts';
 import { STEPS_D6B } from './corrections-d6b.ts';
 import { STEPS_D6C } from './corrections-d6c.ts';
+import { STEPS_P13 } from './corrections-p13.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -419,7 +420,7 @@ export function buildBase(opts: BuildOptions = {}) {
   freezeIds(base);
   applyAll(base, hints, STEPS_D15C.filter((s) => !skip.has(s.id)));
   // Д6 для сцен пакета 1 (10 § 4.2.2; 04 § 9): модели и схемы, опоры, эпохи 1–5, хронологические входы окончательного вида
-  applyAll(base, hints, [...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
+  applyAll(base, hints, [...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...STEPS_P13, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
@@ -507,7 +508,7 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C]) {
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2, ...STEPS_D_3, ...STEPS_D4, ...STEPS_D_R11, ...STEPS_D15, ...STEPS_D15B, ...STEPS_D15C, ...STEPS_D6, ...STEPS_D6B, ...STEPS_D6C, ...STEPS_P13]) {
     if (step === STEPS_D[0] || step === STEPS_D_2[0] || step === STEPS_D_3[0] || step === STEPS_D4[0] || step === STEPS_D15[0] || step === STEPS_D15B[0] || step === STEPS_D15C[0]) freezeIds(base);
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;

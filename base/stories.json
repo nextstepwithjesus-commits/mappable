@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/stories",
-   "commit": "e80fccb"
+   "commit": "18c46f0"
   }
  },
  "sources": [
@@ -26364,6 +26364,7 @@
        "role": "addressed"
       }
      ],
+     "main": true,
      "account": 0,
      "roleText": {
       "text": "и старались схватить Его, но побоялись народа",

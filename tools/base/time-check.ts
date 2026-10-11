@@ -124,7 +124,9 @@ export function checkTime(base: Base, x: TimeCtx) {
     const w = `эпоха ${e.id}`;
     for (const k of ['start', 'end'] as const) {
       const b = e[k];
-      if (!b?.event || !b.refs?.length) err('эпоха', w, `${k === 'start' ? 'начало' : 'конец'} — без события или стиха`);
+      // граница без стиха — только условная и со словами, почему (04 § 3.2: эпоха 16 «После канона», стих «—»; решение П1-3)
+      const freeEdge = e.boundary === 'conventional' && !!b?.event && !b.refs?.length && !!b.note?.trim() && !b.rule;
+      if (!b?.event || (!b.refs?.length && !freeEdge)) err('эпоха', w, `${k === 'start' ? 'начало' : 'конец'} — без события или стиха`);
       else if (b.words && !wordsIn(w, b.words.replace(/…/g, ' '), b.refs)) {
         // слова границы могут быть выпиской через «…»: каждая часть — в стихах
         if (!b.words.split('…').every((part: string) => wordsIn(w, part, b.refs))) err('цитата', w, `слов «${b.words}» нет в ${b.refs.join('; ')}`);

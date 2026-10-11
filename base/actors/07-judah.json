@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/07-judah.json",
-   "commit": "e80fccb"
+   "commit": "18c46f0"
   }
  },
  "sources": [
@@ -2194,20 +2194,9 @@
      "refs": [
       "Нав 2:1"
      ]
-    },
-    {
-     "form": "Раава",
-     "type": "variant",
-     "refs": [
-      "Нав 2:3"
-     ],
-     "note": "косвенный падеж «Рааве»"
     }
    ],
    "disambig": "блудница из Иерихона",
-   "roles": [
-    "matriarch"
-   ],
    "prominence": 4,
    "facts": [
     {
@@ -2554,7 +2543,7 @@
     }
    ],
    "prov": {
-    "by": "исправление D15-9"
+    "by": "исправление P13-1"
    }
   },
   {
