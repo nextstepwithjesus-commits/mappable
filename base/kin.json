@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "cb38e3c"
+   "commit": "5f7f6d6"
   }
  },
  "sources": [
@@ -560,13 +560,15 @@
    "to": "p-akhaz",
    "rel": "сын царя",
    "refs": [
+    "2Пар 28:1",
     "2Пар 28:7"
    ],
-   "cert": "interpretation",
+   "cert": "inference",
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -589,13 +591,15 @@
    "to": "p-ioakim-tsar",
    "rel": "сын царя",
    "refs": [
-    "Иер 36:26"
+    "Иер 36:26",
+    "Иер 36:28"
    ],
-   "cert": "interpretation",
+   "cert": "inference",
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -604,13 +608,15 @@
    "to": "p-sedekiya",
    "rel": "сын царя",
    "refs": [
+    "Иер 38:5",
     "Иер 38:6"
    ],
-   "cert": "interpretation",
+   "cert": "inference",
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -634,13 +640,15 @@
    "rel": "сын царя",
    "refs": [
     "3Цар 22:26",
+    "2Пар 18:3",
     "2Пар 18:25"
    ],
-   "cert": "interpretation",
+   "cert": "inference",
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -724,11 +732,12 @@
    "refs": [
     "Неем 13:4"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -837,21 +846,6 @@
    }
   },
   {
-   "id": "k-57",
-   "from": "p-iuda-brat-gospoden",
-   "to": "p-iakov-brat-gospoden",
-   "rel": "брат",
-   "refs": [
-    "Иуд 1:1"
-   ],
-   "cert": "interpretation",
-   "prov": {
-    "from": {
-     "vol": "16-jesus-genealogy.json"
-    }
-   }
-  },
-  {
    "id": "k-58",
    "from": "p-mariya-kleopova",
    "to": "p-mariya",
@@ -859,11 +853,20 @@
    "refs": [
     "Ин 19:25"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "16-jesus-genealogy.json"
-    }
+    },
+    "by": "исправление D5"
+   },
+   "identity": {
+    "of": "from",
+    "degree": "possible",
+    "note": "«Матерь Его и сестра Матери Его, Мария Клеопова, и Мария Магдалина» (Ин 19:25) — одно ли лицо «сестра Матери Его» и Мария Клеопова, текст прямо не говорит",
+    "refs": [
+     "Ин 19:25"
+    ]
    }
   },
   {
@@ -982,36 +985,6 @@
    }
   },
   {
-   "id": "k-66",
-   "from": "p-ioann-deyan4-6",
-   "to": "p-anna-pervosvyashchennik",
-   "rel": "из рода первосвященнического",
-   "refs": [
-    "Деян 4:6"
-   ],
-   "cert": "interpretation",
-   "prov": {
-    "from": {
-     "vol": "17-new-testament.json"
-    }
-   }
-  },
-  {
-   "id": "k-67",
-   "from": "p-aleksandr-deyan4-6",
-   "to": "p-anna-pervosvyashchennik",
-   "rel": "из рода первосвященнического",
-   "refs": [
-    "Деян 4:6"
-   ],
-   "cert": "interpretation",
-   "prov": {
-    "from": {
-     "vol": "17-new-testament.json"
-    }
-   }
-  },
-  {
    "id": "k-68",
    "from": "p-loida",
    "to": "p-timofey",
@@ -1061,11 +1034,12 @@
    "refs": [
     "Рим 16:7"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1076,11 +1050,12 @@
    "refs": [
     "Рим 16:7"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1091,11 +1066,12 @@
    "refs": [
     "Рим 16:11"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1106,11 +1082,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1121,11 +1098,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1136,11 +1114,12 @@
    "refs": [
     "Рим 16:21"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "17-new-testament.json"
-    }
+    },
+    "by": "исправление D5"
    }
   },
   {
@@ -1179,11 +1158,21 @@
    "refs": [
     "1Пар 11:38"
    ],
-   "cert": "interpretation",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
+    },
+    "by": "исправление D5"
+   },
+   "identity": {
+    "of": "to",
+    "degree": "possible",
+    "note": "«Иоиль, брат Нафана» (1Пар 11:38); на этом месте перечня в 2Цар 23:36 стоит «Игал, сын Нафана»; тот ли это Нафан, текст прямо не говорит",
+    "refs": [
+     "1Пар 11:38",
+     "2Цар 23:36"
+    ]
    }
   },
   {
@@ -1231,7 +1220,10 @@
    "refs": [
     "1Пар 7:15"
    ],
-   "cert": "interpretation"
+   "cert": "scripture",
+   "prov": {
+    "by": "исправление D5"
+   }
   },
   {
    "id": "k-84",
@@ -1241,7 +1233,10 @@
    "refs": [
     "1Пар 7:15"
    ],
-   "cert": "interpretation"
+   "cert": "scripture",
+   "prov": {
+    "by": "исправление D5"
+   }
   },
   {
    "id": "k-85",

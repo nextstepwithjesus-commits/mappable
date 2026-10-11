@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/19-court-and-heroes.json",
-   "commit": "cb38e3c"
+   "commit": "5f7f6d6"
   }
  },
  "sources": [
@@ -321,11 +321,17 @@
      "field": "offices",
      "value": {
       "title": "Военачальник над войском Соломона вместо Иоава",
-      "from": -970,
       "refs": [
        "3Цар 2:35",
        "3Цар 4:4"
       ]
+     },
+     "calc": {
+      "event": "3Цар 2:35",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -909,12 +915,17 @@
      "field": "offices",
      "value": {
       "title": "Начальник над податью при Ровоаме",
-      "from": -931,
-      "to": -931,
       "refs": [
        "3Цар 12:18",
        "2Пар 10:18"
       ]
+     },
+     "calc": {
+      "event": "3Цар 12:18",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {

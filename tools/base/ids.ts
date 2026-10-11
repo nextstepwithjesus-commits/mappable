@@ -144,6 +144,11 @@ export class Issuer {
     return this.byId.has(id);
   }
 
+  /** Выданная запись таблицы по номеру. */
+  entryById(id: string): IdEntry | undefined {
+    return this.byId.get(id);
+  }
+
   /** Выданная запись таблицы по ключу. */
   entry(key: string): IdEntry | undefined {
     return this.byKey.get(key);
@@ -212,6 +217,17 @@ export function tagNew(base: Base, step: string) {
 }
 
 /**
+ * Закрепить номера до шагов, которые пишутся после появления таблицы (шаги Д-партий, corrections-d.ts): все записи
+ * получают номера сейчас, в том же порядке, в каком их выдал бы конец выдачи. Тогда сборка с пустой таблицей
+ * повторяет таблицу на диске: записи, добавленные поздним шагом, получают номера после прежних (а не в середине),
+ * а снятая поздним шагом запись успевает получить свой номер и выбывает с переадресацией (02 § 3.3.1; К-16).
+ */
+export function freezeIds(base: Base) {
+  // та же выдача, что в конце (все виды и в том же порядке); второй вызов в конце закреплённые номера только сверяет
+  finishIds(base);
+}
+
+/**
  * Конец выдачи — после всех шагов: номера утверждений и родства по заготовкам, рёбра по концам, эпохи с префиксом era- и
  * переадресация с прежних номеров эпох. Номер, который шаг дал записи явно, заносится в таблицу. Ошибки (совпадение
  * ключей, повтор номера) — в `issuer.errors`.
@@ -220,9 +236,13 @@ export function finishIds(base: Base): Issuer | undefined {
   const iss = ISSUERS.get(base);
   if (!iss) return undefined;
   tagNew(base, 'после шагов');
+  // один номер — у одной записи: шаг, размноживший запись с закреплённым номером (freezeIds), — ошибка, как совпадение ключей
+  const claimed = new Map<string, string>();
   const fix = <T extends { id?: string }>(kind: IdKind, x: T, where: string): T => {
     const id = x.id!;
     if (id.startsWith(PENDING)) return withId(iss.issue(kind, id.slice(1), where), x);
+    if (claimed.has(id)) iss.errors.push(`совпадение ключей сопоставления: номер ${id} стоит у двух записей (${claimed.get(id)}; ${where})`);
+    claimed.set(id, where);
     iss.claim(kind, id, `${kind}:${id}`, where);
     return x;
   };
@@ -234,7 +254,13 @@ export function finishIds(base: Base): Issuer | undefined {
   base.origins = base.origins.map((o) => {
     const where = `${o.child} ← ${o.parent ?? '?'}`;
     const cur = originKey(o);
-    if (o.id && !o.id.startsWith(PENDING)) return fix('origin', o, where);
+    if (o.id && !o.id.startsWith(PENDING)) {
+      // номер закреплён до поздних шагов (freezeIds), а конец с тех пор сменился — как у заготовки: новая запись
+      const had = iss.entryById(o.id);
+      if (!had || had.kind !== 'origin' || !had.key.includes('|') || had.key === cur) return fix('origin', o, where);
+      moved.push({ old: had.key, key: cur });
+      return withId(iss.issue('origin', cur, where, originId(o)), o);
+    }
     if (o.id && o.id.slice(1) !== cur) moved.push({ old: o.id.slice(1), key: cur });
     return withId(iss.issue('origin', cur, where, originId(o)), o);
   });

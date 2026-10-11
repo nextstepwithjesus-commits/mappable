@@ -1,0 +1,93 @@
+/**
+ * Задачи данных 02 § 3.18, первая партия: Д-5 (родство и союзы без «толкования»), Д-7 (год в записи → ссылка calc),
+ * Д-2 (степень у вида «предок»). Шаги — tools/base/corrections-d.ts; отчёт — docs/app/reviews/Д-партия-1-отчёт.md.
+ */
+import { beforeAll, describe, expect, it } from 'vitest';
+import type { Base } from '../tools/base/migrate.ts';
+import { loadBase, validate, yearIn } from '../tools/base/validate.ts';
+import { buildIndex } from '../tools/base/bundle.ts';
+
+let base: Base;
+const copy = () => structuredClone(base);
+const errs = (b: Base, check?: string) => validate(b).filter((i) => i.level === 'error' && (!check || i.check === check));
+const facts = (b: Base) => b.volumes.flatMap((v) => v.actors.flatMap((a) => a.facts.map((f) => ({ a, f }))));
+
+beforeAll(() => {
+  base = loadBase();
+});
+
+describe('Д-5: «толкование» у родства и союзов', () => {
+  it('ни одного «толкования» у родства и союза; снятые номера — с переадресацией на карточку', () => {
+    expect(base.kin.filter((k) => k.cert === 'interpretation')).toEqual([]);
+    expect(base.unions.flatMap((u) => u.terms).filter((t) => t.cert === 'interpretation')).toEqual([]);
+    for (const [id, to] of [['k-57', 'p-iuda-brat-gospoden'], ['k-66', 'p-ioann-deyan4-6'], ['k-67', 'p-aleksandr-deyan4-6'], ['u-kleopa--mariya-kleopova', 'p-mariya-kleopova']]) {
+      expect(base.redirects.find((r) => r.from === id)?.to).toEqual([to]);
+    }
+    // понимание снятой записи — примечание без авторов: needsSources, в выпуск не идёт
+    const n = base.volumes.flatMap((v) => v.actors).find((a) => a.id === 'p-mariya-kleopova')!.facts.filter((f) => f.prov?.by === 'исправление D5');
+    expect(n.map((f) => [f.cert, f.needsSources])).toEqual([['interpretation', true]]);
+  });
+  it('«сын царя» — вывод: царя называет соседний стих главы; тождество конца — у слова, сказанного текстом', () => {
+    const k = (from: string) => base.kin.find((x) => x.from === from)!;
+    expect([k('p-maaseya-syn-akhaza').cert, k('p-maaseya-syn-akhaza').refs]).toEqual(['inference', ['2Пар 28:1', '2Пар 28:7']]);
+    expect(k('p-ioil-brat-nafana').identity).toMatchObject({ of: 'to', degree: 'possible' });
+    expect(base.unions.find((u) => u.id === 'u-mered--iudiya')!.terms[0]).toMatchObject({ cert: 'scripture', word: 'жена', identity: { of: 'husband', degree: 'possible' } });
+  });
+  it('родство и союз «предположительно» в выпуск не идут, как ребро «предположительно» (К-6)', () => {
+    const b = copy();
+    // проба: все записи считаем допущенными
+    const ix = buildIndex(b, 'probe');
+    expect(ix.kin.some((x: any) => x.f === 'ioil-brat-nafana')).toBe(false);
+    expect(ix.kin.some((x: any) => x.f === 'mariya-kleopova' && x.t === 'mariya')).toBe(false);
+    expect(ix.kin.find((x: any) => x.f === 'maaseya-syn-akhaza')).toMatchObject({ r: 'сын царя', ce: 'inference' });
+    expect(ix.unions.some((x: any) => x.h === 'mered' && x.w === 'iudiya')).toBe(false);
+  }, 60_000);
+  it('подложенные ошибки тождества ловятся', () => {
+    const b = copy();
+    const k = b.kin.find((x) => x.from === 'p-ioil-brat-nafana')!;
+    k.identity = { ...k.identity!, of: 'parent' as any, refs: [] };
+    const e = errs(b, 'тождество').map((i) => i.msg).join('\n');
+    expect(e).toMatch(/тождество: of «parent»/);
+    expect(e).toMatch(/с примечанием и стихами/);
+    const b2 = copy();
+    const t = b2.unions.find((u) => u.id === 'u-mered--iudiya')!.terms[0];
+    t.cert = 'interpretation';
+    expect(errs(b2, 'тождество').map((i) => i.msg).join()).toMatch(/у слова, сказанного текстом/);
+  });
+});
+
+describe('Д-7: год в записи → ссылка на расчёт', () => {
+  it('ни одного года в утверждениях; у переработанных — ссылка calc: модель до Соломона, схема — цари, остальное без модели', () => {
+    expect(facts(base).filter(({ f }) => yearIn(f.value))).toEqual([]);
+    const c = facts(base).filter(({ f }) => f.calc);
+    expect(c).toHaveLength(323);
+    const n = (p: (x: NonNullable<(typeof c)[number]['f']['calc']>) => boolean) => c.filter(({ f }) => p(f.calc!)).length;
+    expect([n((x) => x.model === 'm-dolgoe'), n((x) => x.scheme === 's-mcfall-young'), n((x) => !x.model && !x.scheme)]).toEqual([97, 92, 134]);
+    // событие — первый стих записи
+    for (const { f } of c) expect(f.calc!.event).toBe((f.value as any).refs[0]);
+  });
+  it('подложенные ошибки ссылки на расчёт ловятся', () => {
+    const b = copy();
+    const [x, y, z] = facts(b).filter(({ f }) => f.calc).map(({ f }) => f);
+    x.calc = { ...x.calc!, model: 'm-tiele' };
+    y.calc = { event: y.calc!.event, model: 'm-dolgoe', scheme: 's-thiele' };
+    (z.value as any).year = -1000;
+    const e = errs(b, 'расчёт').map((i) => i.msg).join('\n');
+    expect(e).toMatch(/модель «m-tiele» не из 04 § 16.1/);
+    expect(e).toMatch(/модель или схема, не обе/);
+    expect(e).toMatch(/год в записи остался/);
+  });
+});
+
+describe('Д-2: степень у вида «предок»', () => {
+  it('у каждого «предка» степень; «выведена» — уровень «вывод» и не меньше двух стихов', () => {
+    const anc = base.origins.filter((o) => o.kind === 'ancestor');
+    expect(anc.filter((o) => !o.degree)).toEqual([]);
+    const inf = anc.filter((o) => o.degree === 'inferred');
+    expect(inf.map((o) => o.child).sort()).toEqual(['p-azariya-1par6-10', 'p-gofoliya', 'p-iiuy', 'p-ierokham-syn-pashkhura', 'p-lavan', 'p-oziya', 'p-zakhariya-syn-varakhii'].sort());
+    for (const o of inf) expect([o.child, o.cert, o.refs.length >= 2]).toEqual([o.child, 'inference', true]);
+    expect(anc.filter((o) => o.degree === 'unstated')).toHaveLength(360);
+    // примечания рёбер без «понимания» и «по деду»
+    expect(anc.filter((o) => /пониман|по деду|в значении/.test(o.note ?? '')).map((o) => o.child)).toEqual([]);
+  });
+});

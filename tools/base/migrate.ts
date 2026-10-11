@@ -24,12 +24,13 @@ import { applyCorrections, makeCtx, STEPS, type Step } from './corrections.ts';
 import { ADDITIONS } from './additions.ts';
 import { STEPS_D3 } from './corrections-d3.ts';
 import { STEPS_K } from './corrections-k.ts';
+import { STEPS_D } from './corrections-d.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
 import { namesIn } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
-import { finishIds, loadIds, mergeRedirects, saveIds, startIds, tagNew, type IdEntry } from './ids.ts';
+import { finishIds, freezeIds, loadIds, mergeRedirects, saveIds, startIds, tagNew, type IdEntry } from './ids.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const DATA = join(ROOT, 'data');
@@ -370,7 +371,10 @@ export function buildBase(opts: BuildOptions = {}) {
   startIds(base, opts.ids ?? loadIds(OUT), opts.at ?? new Date().toISOString().slice(0, 10));
   applyCorrections(base, hints);
   const skip = new Set(opts.skip ?? []);
-  applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...STEPS_K, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
+  applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...STEPS_K].filter((s) => !skip.has(s.id)));
+  // номера прежних записей закрепляются до поздних шагов (Д-партии): сборка с пустой таблицей повторяет таблицу (К-16)
+  freezeIds(base);
+  applyAll(base, hints, [...STEPS_D, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
@@ -455,7 +459,8 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K]) {
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D]) {
+    if (step === STEPS_D[0]) freezeIds(base);
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);

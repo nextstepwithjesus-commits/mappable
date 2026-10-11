@@ -113,10 +113,16 @@ export function buildIndex(base: Base, level: Level | Admission) {
       ...(o.identity?.of === 'child' && o.parent && { p: short(o.parent) }),
       ...(o.identity && { idt: { o: o.identity.of, d: o.identity.degree, n: o.identity.note, r: o.identity.refs } }),
     })),
-    unions: base.unions.filter(ok).map((u) => ({ u, terms: u.terms.filter((t) => A.part(t)) })).filter((x) => x.terms.length)
+    // обозначение с тождеством «предположительно» (Д-5) — как ребро «предположительно»: не союз в выпуске (К-6)
+    unions: base.unions.filter(ok).map((u) => ({ u, terms: u.terms.filter((t) => A.part(t) && t.identity?.degree !== 'possible') })).filter((x) => x.terms.length)
       .map(({ u, terms }) => ({ h: short(u.husband), w: short(u.wife), k: [...new Set(terms.map((t) => t.kind))] })),
     // пометка «по словам …» (02 § 3.6) и авторы толкований (02 § 3.4 [R9]) идут в выпуск вместе с записью
-    kin: base.kin.filter(ok).map((k) => ({ f: short(k.from), t: short(k.to), r: k.rel, ...(k.saidBy && { sb: saidBy(k.saidBy) }) })),
+    // родство с тождеством конца «предположительно» (Д-5) — не родство в выпуске, как ребро «предположительно» (К-6);
+    // «весомо» — с полем `idt`; уровень «вывод» — полем `ce`
+    kin: base.kin.filter((k) => ok(k) && k.identity?.degree !== 'possible').map((k) => ({
+      f: short(k.from), t: short(k.to), r: k.rel, ...(k.cert && k.cert !== 'scripture' && { ce: k.cert }), ...(k.saidBy && { sb: saidBy(k.saidBy) }),
+      ...(k.identity && { idt: { o: k.identity.of, d: k.identity.degree, n: k.identity.note, r: k.identity.refs } }),
+    })),
     // ссылки на труды — только с подписанной записью `reading:<номер>#works` (02 § 3.3.3, п. 6; К-3); ✱ в выпуск не идёт
     readings: base.readings.filter(ok).map((r) => {
       const cites = A.okKey(`reading:${r.id}#works`);

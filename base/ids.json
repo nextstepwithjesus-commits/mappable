@@ -16333,7 +16333,7 @@
   {"id":"k-54","kind":"kin","key":"kin:p-iosiy-brat-gospoden|p-iisus|брат|b8a14b08fc4ec0a8","at":"2026-10-11","state":"active"},
   {"id":"k-55","kind":"kin","key":"kin:p-simon-brat-gospoden|p-iisus|брат|b8a14b08fc4ec0a8","at":"2026-10-11","state":"active"},
   {"id":"k-56","kind":"kin","key":"kin:p-iuda-brat-gospoden|p-iisus|брат|b8a14b08fc4ec0a8","at":"2026-10-11","state":"active"},
-  {"id":"k-57","kind":"kin","key":"kin:p-iuda-brat-gospoden|p-iakov-brat-gospoden|брат|72acb4f12247d493","at":"2026-10-11","state":"active"},
+  {"id":"k-57","kind":"kin","key":"kin:p-iuda-brat-gospoden|p-iakov-brat-gospoden|брат|72acb4f12247d493","at":"2026-10-11","state":"retired"},
   {"id":"k-58","kind":"kin","key":"kin:p-mariya-kleopova|p-mariya|сестра|40a7408f6b89898c","at":"2026-10-11","state":"active"},
   {"id":"k-59","kind":"kin","key":"kin:p-teshcha-simona|p-petr|тёща|250bbb174df5f90b","at":"2026-10-11","state":"active"},
   {"id":"k-60","kind":"kin","key":"kin:p-andrey|p-petr|брат|f827476d0b14e550","at":"2026-10-11","state":"active"},
@@ -16342,8 +16342,8 @@
   {"id":"k-63","kind":"kin","key":"kin:p-marfa|p-mariya-iz-vifanii|сестра|08384bd5118bc07a","at":"2026-10-11","state":"active"},
   {"id":"k-64","kind":"kin","key":"kin:p-filipp-brat-iroda|p-irod-antipa|брат|55fac60a1986d90d","at":"2026-10-11","state":"active"},
   {"id":"k-65","kind":"kin","key":"kin:p-anna-pervosvyashchennik|p-kaiafa|тесть|e00ad1b086d8af16","at":"2026-10-11","state":"active"},
-  {"id":"k-66","kind":"kin","key":"kin:p-ioann-deyan4-6|p-anna-pervosvyashchennik|из рода первосвященнического|6cc9bc7c63d5b1ff","at":"2026-10-11","state":"active"},
-  {"id":"k-67","kind":"kin","key":"kin:p-aleksandr-deyan4-6|p-anna-pervosvyashchennik|из рода первосвященнического|6cc9bc7c63d5b1ff","at":"2026-10-11","state":"active"},
+  {"id":"k-66","kind":"kin","key":"kin:p-ioann-deyan4-6|p-anna-pervosvyashchennik|из рода первосвященнического|6cc9bc7c63d5b1ff","at":"2026-10-11","state":"retired"},
+  {"id":"k-67","kind":"kin","key":"kin:p-aleksandr-deyan4-6|p-anna-pervosvyashchennik|из рода первосвященнического|6cc9bc7c63d5b1ff","at":"2026-10-11","state":"retired"},
   {"id":"k-68","kind":"kin","key":"kin:p-loida|p-timofey|бабка|dbde1c3db2228ccb","at":"2026-10-11","state":"active"},
   {"id":"k-69","kind":"kin","key":"kin:p-ioann-mark|p-varnava|племянник|3385d470d9679f98","at":"2026-10-11","state":"active"},
   {"id":"k-70","kind":"kin","key":"kin:p-manail|p-irod-antipa|совоспитанник|aade1e6fc2807a0d","at":"2026-10-11","state":"active"},
@@ -18546,6 +18546,12 @@
   {"id":"an-jerusalem-council","kind":"anchor","key":"anchor:jerusalem-council","at":"2026-10-11","state":"active"},
   {"id":"an-festus","kind":"anchor","key":"anchor:festus","at":"2026-10-11","state":"active"},
   {"id":"an-paul-rome","kind":"anchor","key":"anchor:paul-rome","at":"2026-10-11","state":"active"},
-  {"id":"an-revelation","kind":"anchor","key":"anchor:revelation","at":"2026-10-11","state":"active"}
+  {"id":"an-revelation","kind":"anchor","key":"anchor:revelation","at":"2026-10-11","state":"active"},
+  {"id":"a-16275","kind":"fact","key":"fact:p-tsaritsa-dan5|status|417e22842ce3531b|D2","at":"2026-10-11","state":"active"},
+  {"id":"a-16276","kind":"fact","key":"fact:p-tsaritsa-dan5|scripture|4991b1f945a89bf2|D2","at":"2026-10-11","state":"active"},
+  {"id":"a-16277","kind":"fact","key":"fact:p-iuda-brat-gospoden|notes|38e3cff146e92b03|D5","at":"2026-10-11","state":"active"},
+  {"id":"a-16278","kind":"fact","key":"fact:p-mariya-kleopova|notes|28c5dba843a4d4c9|D5","at":"2026-10-11","state":"active"},
+  {"id":"a-16279","kind":"fact","key":"fact:p-ioann-deyan4-6|notes|8b45c69f4fc509ed|D5","at":"2026-10-11","state":"active"},
+  {"id":"a-16280","kind":"fact","key":"fact:p-aleksandr-deyan4-6|notes|8b45c69f4fc509ed|D5","at":"2026-10-11","state":"active"}
  ]
 }

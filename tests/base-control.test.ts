@@ -173,9 +173,15 @@ describe('правки Д2 (рецензии 03 и 07, решение совет
     expect(JSON.stringify(A.get('p-khalev')!.facts)).not.toContain('названа и в перечне');
     expect((A.get('p-akhsa')!.facts.find((f) => f.field === 'scripture')!.value as any).key).not.toContain('1Пар 2:49');
   });
-  it('«из сыновей»: слова — Писание; Лаван — вывод о степени; Валтасар — «отец» сказано, вид «предок», степень не утверждается (Р4-8; C45)', () => {
-    expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].ref])).toEqual([['ancestor', 'inference', false, 'Быт 29:5']]);
-    expect(edge('p-valtasar-tsar', 'p-navukhodonosor').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].text])).toEqual([['ancestor', 'scripture', false, 'Навуходоносор, отец его']]);
+  it('«из сыновей»: слова — Писание; Лаван — вывод о степени; Валтасар — «отец» и «сын» сказаны, вид «слово текста», степень не утверждается (Р4-8; C45; 02 § 3.4 [4.2], Д-2)', () => {
+    expect(edge('p-lavan', 'p-nakhor-syn-farry').map((o) => [o.kind, o.cert, o.primary, o.words?.[0].ref, o.degree])).toEqual([['ancestor', 'inference', false, 'Быт 29:5', 'inferred']]);
+    const v = edge('p-valtasar-tsar', 'p-navukhodonosor');
+    expect(v.map((o) => [o.kind, o.cert, o.primary, o.degree])).toEqual([['text-word', 'scripture', false, undefined]]);
+    expect(v[0].words!.map((w) => [w.ref, w.saidBy?.actor, w.saidBy?.speechStart])).toEqual([
+      ['Дан 5:11', 'p-tsaritsa-dan5', 'Дан 5:10'], ['Дан 5:13', 'p-valtasar-tsar', undefined], ['Дан 5:18', 'p-daniil', 'Дан 5:17'], ['Дан 5:22', 'p-daniil', 'Дан 5:17'],
+    ]);
+    expect(v[0].note).not.toMatch(/внук|преемник|предок/);
+    expect(base.origins.filter((o) => o.kind === 'ancestor' && !o.degree)).toEqual([]);
     for (const [c, p] of [['p-oziya', 'p-ioram-syn-iosafata'], ['p-azariya-1par6-10', 'p-meraiof']]) expect(edge(c, p)[0].cert).toBe('inference');
   });
   it('Боган назван вне перечня сыновей Рувима', () => {
@@ -216,11 +222,17 @@ describe('правки Д3 (сверка контрольного набора �
   });
   it('союзы без единого слова о союзе в стихах — вид «не назван» (C39), а не «брак»', () => {
     const ids = ['u-salmon--raav', 'u-iefer-izmailtyanin--avigeya-sestra-davida', 'u-khalev-syn-esroma--ieriofa', 'u-david--aggifa',
-      'u-navat--tserua', 'u-isaiya--prorochitsa-zhena-isaii', 'u-kleopa--mariya-kleopova', 'u-zevedey--mat-synovey-zevedeevykh'];
+      'u-navat--tserua', 'u-zevedey--mat-synovey-zevedeevykh'];
     for (const id of ids) {
       const ts = base.unions.find((u) => u.id === id)!.terms;
-      expect([id, ts.map((t) => t.kind), ts.every((t) => t.cert === 'inference' || t.cert === 'interpretation')]).toEqual([id, ['not-stated'], true]);
+      expect([id, ts.map((t) => t.kind), ts.every((t) => t.cert === 'inference')]).toEqual([id, ['not-stated'], true]);
     }
+    // Д-5: союз описан текстом («и приступил я к пророчице, и она зачала», Ис 8:3) — «Писание», браком не назван;
+    // союз Клеопы и Марии Клеоповой держался на толковании — снят, понимание — примечанием needsSources
+    expect(base.unions.find((u) => u.id === 'u-isaiya--prorochitsa-zhena-isaii')!.terms.map((t) => [t.kind, t.cert])).toEqual([['not-stated', 'scripture']]);
+    expect(base.unions.some((u) => u.id === 'u-kleopa--mariya-kleopova')).toBe(false);
+    expect(base.unions.flatMap((u) => u.terms).filter((t) => t.cert === 'interpretation')).toEqual([]);
+    expect(base.kin.filter((k) => k.cert === 'interpretation')).toEqual([]);
     expect(base.unions.flatMap((u) => u.terms.map((t) => [u.id, t] as const)).filter(([, t]) => t.kind === 'marriage' && !t.word).map(([id]) => id)).toEqual([]);
   });
   it('Иаков и Лия — «жены» повествователя (Быт 32:22) и «муж» по словам Лии (Быт 29:32; 30:20); пометка — только на «муж» (C40, C43)', () => {

@@ -49,6 +49,9 @@ export function unionWordIn(word: string, text: string): boolean {
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const CERTS = new Set<Cert>(['scripture', 'inference', 'interpretation', 'calc', 'reference']);
+/** Постоянные номера моделей и схем (04 § 16.1; 02 § 3.15.2–3.15.3): ссылка `calc` называет только их. */
+export const MODELS = ['m-dolgoe', 'm-kratkoe', 'm-farra70', 'm-skobki'];
+export const SCHEMES = ['s-mcfall-young', 's-thiele', 's-galil'];
 
 export function loadBase(dir = join(ROOT, 'base')): Base {
   // происхождение каждого файла хранится: статус записи без своего prov берётся у файла (02 § 3.1; Д-база, Б-1, п. 3)
@@ -293,6 +296,16 @@ export function validate(base: Base): Issue[] {
   // ---------- новые правила (К-8) ----------
   // «толк.» у обозначения союза и родства словами: у них нет набора прочтений — толкование здесь не хранится (02 § 3.1).
   // Сейчас 18 записей родства и 5 обозначений (остаток Д3-11) — замечание до разбора Д-5
+  // тождество конца у родства и союза (Д-5) — как у ребра (C45): у слова, сказанного вне скобок, со стихами и примечанием
+  const endIdentity = (w: string, id: { of: string; degree: string; note: string; refs: string[] } | undefined, ends: string[], cert: Cert | undefined) => {
+    if (!id) return;
+    if (!ends.includes(id.of) || !['weighty', 'possible'].includes(id.degree)) err('тождество', w, `тождество: of «${id.of}», degree «${id.degree}»`);
+    if (!id.note?.trim() || !id.refs?.length) err('тождество', w, 'тождество конца — с примечанием и стихами');
+    walk(w, { refs: id.refs ?? [] });
+    if (cert === 'interpretation') err('тождество', w, 'поле тождества — у слова, сказанного текстом («Писание» или «вывод»)');
+  };
+  for (const k of base.kin) endIdentity(`${k.from} — ${k.to}`, k.identity, ['from', 'to'], k.cert);
+  for (const u of base.unions) for (const t of u.terms) endIdentity(u.id, t.identity, ['husband', 'wife'], t.cert);
   for (const k of base.kin) if (k.cert === 'interpretation') warn('толкование', `${k.from} — ${k.to}`, 'родство словами уровня «толкование»: вне набора прочтений толкование не хранится (Д-5)');
   for (const u of base.unions) for (const t of u.terms) if (t.cert === 'interpretation') warn('толкование', u.id, `обозначение союза «${t.kind}» уровня «толкование»: вне набора прочтений толкование не хранится (Д-5)`);
   // эпоха с готовым годом или «преданием» не подписывается (02 § 3.15, § 7 [4.1])
@@ -468,6 +481,16 @@ export function validate(base: Base): Issue[] {
       if (f.needsSources && f.cert !== 'interpretation') err('толкование', w, 'пометка «нужен совет источников» — только у толкования');
       if (f.field === 'met') has('целостность', w, (f.value as any).id);
       // год в записи (К-8): до замены ссылкой calc (Д-7) не показывается и не выгружается; подписать такую запись — ошибка
+      // ссылка на расчёт (02 § 3.10.2; Д-7): модель — у года до царей, схема — у года царя; числа года в записи нет
+      if (f.calc) {
+        const c = f.calc;
+        if (!c.event?.trim()) err('расчёт', w, 'ссылка на расчёт без события');
+        if (c.model && !MODELS.includes(c.model)) err('расчёт', w, `модель «${c.model}» не из 04 § 16.1`);
+        if (c.scheme && !SCHEMES.includes(c.scheme)) err('расчёт', w, `схема «${c.scheme}» не из 04 § 16.1`);
+        if (c.model && c.scheme) err('расчёт', w, 'у ссылки на расчёт — модель или схема, не обе');
+        if (!c.model && !c.scheme) warn('расчёт', w, 'ссылка на расчёт без модели и схемы: для этого времени модели ещё нет (Д-7)');
+        if (yearIn(f.value)) err('расчёт', w, 'у записи со ссылкой на расчёт год в записи остался');
+      }
       if (yearIn(f.value) && f.cert !== 'calc') {
         if (f.id && ledgerKeys.has(`fact:${f.id}`)) err('год', w, 'год в записи подписан: до замены ссылкой calc запись не выходит (Д-7)');
         else warn('год', w, 'год в записи без модели: не выгружается до замены ссылкой calc (Д-7)');

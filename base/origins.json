@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "cb38e3c"
+   "commit": "5f7f6d6"
   }
  },
  "sources": [
@@ -10675,7 +10675,7 @@
     "from": {
      "vol": "07-judah.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "gapSuspected": "составитель прежних данных предполагал пропуск поколений; ни одно место текста пропущенных не называет — толкование или хронологическое напряжение (документ 04)",
    "identity": {
@@ -10685,7 +10685,8 @@
     "refs": [
      "1Пар 4:21"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-shela-syn-iudy--iokim-syn-siloma",
@@ -11635,8 +11636,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-lael--eliasaf-syn-laela",
@@ -11670,8 +11673,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-avikhail-otets-tsuriila--tsuriil",
@@ -12226,8 +12231,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iliy-svyashchennik--ofni",
@@ -12713,7 +12720,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C24"
+    "by": "исправление D2"
    },
    "gap": true,
    "skipped": {
@@ -12728,7 +12735,8 @@
     "refs": [
      "1Пар 6:7-10"
     ]
-   }
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-azariya-1par6-10--amariya-1par6-11",
@@ -13082,8 +13090,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-sadok--azariya-pri-ezekii",
@@ -13100,8 +13110,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-maaseya-otets-tsefanii--tsefaniya-syn-maasei",
@@ -15179,8 +15191,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iaaziya--beno",
@@ -15287,8 +15301,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iedaiya-1par24-7",
@@ -15305,8 +15321,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--kharim",
@@ -15323,8 +15341,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--seorim",
@@ -15341,8 +15361,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--malkhiy-1par24-9",
@@ -15359,8 +15381,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--miyamin-1par24-9",
@@ -15377,8 +15401,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--gakkots",
@@ -15395,8 +15421,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--aviya-1par24-10",
@@ -15413,8 +15441,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ieshua-1par24-11",
@@ -15431,8 +15461,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shekhaniya-1par24-11",
@@ -15449,8 +15481,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--eliashiv-1par24-12",
@@ -15467,8 +15501,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iakim-1par24-12",
@@ -15485,8 +15521,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khushay",
@@ -15503,8 +15541,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ieshevav",
@@ -15521,8 +15561,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--vilga-1par24-14",
@@ -15539,8 +15581,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--immer",
@@ -15557,8 +15601,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khezir",
@@ -15575,8 +15621,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--gapitsets",
@@ -15593,8 +15641,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--petakhiya-1par24-16",
@@ -15611,8 +15661,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iezekiil-1par24-16",
@@ -15629,8 +15681,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iakhin-1par24-17",
@@ -15647,8 +15701,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--gamul",
@@ -15665,8 +15721,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--delaiya-1par24-18",
@@ -15683,8 +15741,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--maaziya",
@@ -15701,8 +15761,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-itsgar--khenaniya-itsgarit",
@@ -15718,8 +15780,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khevron-syn-kaafa--khashaviya-khevronit",
@@ -15735,8 +15799,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kaaf--uriil-nachalnik-kaafitov",
@@ -15752,8 +15818,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elitsafan--shemaiya-elisafanit",
@@ -15769,8 +15837,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khevron-syn-kaafa--eliel-khevronit",
@@ -15786,8 +15856,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-uziil--aminadav-uzziilit",
@@ -15803,8 +15875,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aviasaf--kore-syn-eviasafa",
@@ -16019,8 +16093,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khosa--shimri-syn-khosy",
@@ -16109,8 +16185,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-malkhiya-1par9-12--pashkhur-syn-malkhii",
@@ -16154,16 +16232,19 @@
    "role": "father",
    "kind": "ancestor",
    "refs": [
-    "1Пар 9:12"
+    "1Пар 9:12",
+    "Неем 11:12"
    ],
-   "cert": "scripture",
+   "cert": "inference",
    "primary": false,
-   "note": "1 Пар 9:12 называет Иерохама «сын Пашхура», пропуская Фелалию, Амция и Захарию",
+   "note": "«Адаия, сын Иерохама, сын Пашхура» (1Пар 9:12); по Неем 11:12 — «Адаия, сын Иерохама, сын Фелалии, сын Амция, сын Захарии, сын Пашхура»",
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-ierokham-syn-pashkhura--adaiya-syn-ierokhama",
@@ -16310,8 +16391,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashaviya-1par9-14--azrikam-syn-khashavii",
@@ -16529,8 +16612,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--talmon",
@@ -16548,8 +16633,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--akhiman-privratnik",
@@ -16567,8 +16654,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-asaf--matfaniya-asafit",
@@ -16584,8 +16673,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-matfaniya-asafit--ieiel-syn-matfanii",
@@ -16669,8 +16760,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-amasay-2par29--makhaf-2par29",
@@ -16703,8 +16796,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-azariya-otets-ioelya-2par29--ioel-syn-azarii-2par29",
@@ -16737,8 +16832,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-avdiy-2par29--kis-syn-avdiya",
@@ -16771,8 +16868,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iegallelel--azariya-syn-iegallelela",
@@ -16805,8 +16904,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zimma-2par29--ioakh-syn-zimmy-2par29",
@@ -16856,8 +16957,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elitsafan--ieiel-elitsafanit",
@@ -16873,8 +16976,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-asaf--zakhariya-asafit-2par29",
@@ -16890,8 +16995,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-asaf--matfaniya-asafit-2par29",
@@ -16907,8 +17014,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-eman--iekhiel-emanit",
@@ -16924,8 +17033,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-eman--shimey-emanit",
@@ -16941,8 +17052,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-idifun--shemaiya-idifunit",
@@ -16958,8 +17071,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-idifun--uzziel-idifunit",
@@ -16975,8 +17090,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--khonaniya-levit",
@@ -16993,8 +17110,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--simey-brat-khonanii",
@@ -17010,8 +17129,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--imna-levit",
@@ -17028,8 +17149,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-imna-levit--kore-syn-imny",
@@ -17062,8 +17185,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-merari--ovadiya-merarit-2par34",
@@ -17079,8 +17204,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kaaf--zakhariya-kaafit-2par34",
@@ -17096,8 +17223,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kaaf--meshullam-kaafit-2par34",
@@ -17113,8 +17242,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--khonaniya-2par35",
@@ -17131,8 +17262,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shemaiya-2par35",
@@ -17149,8 +17282,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--nafanail-2par35",
@@ -17167,8 +17302,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--godaviya",
@@ -17185,8 +17322,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-godaviya--kadmiil",
@@ -17203,8 +17342,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kadmiil--iisus-syn-kadmiila",
@@ -17238,8 +17379,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-verzelliy-galaadityanin--zhena-verzelliya-svyashchennika",
@@ -17257,8 +17400,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-finees--girson-iz-synov-fineesa",
@@ -17274,8 +17419,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ifamar--daniil-iz-synov-ifamara",
@@ -17291,8 +17438,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-makhli--sherevia",
@@ -17308,8 +17457,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-merari--khashaviya-merarit",
@@ -17325,8 +17476,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-merari--ieshaiya",
@@ -17342,8 +17495,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-gakkots--uriya-syn-gakkotsa",
@@ -17424,8 +17579,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iisus-otets-iozavada--iozavad-syn-iisusa",
@@ -17459,8 +17616,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vinnuy-otets-noadii--noadiya",
@@ -17494,8 +17653,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iosedek--eliezer-ezd10-18",
@@ -17512,8 +17673,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iosedek--iariv-ezd10-18",
@@ -17530,8 +17693,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iosedek--gedaliya-ezd10-18",
@@ -17548,8 +17713,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-immer--khananiy-ezd10-20",
@@ -17565,8 +17732,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-immer--zevadiya-ezd10-20",
@@ -17582,8 +17751,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim--maaseya-ezd10-21",
@@ -17599,8 +17770,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim--eliya-ezd10-21",
@@ -17616,8 +17789,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim--shemaiya-ezd10-21",
@@ -17633,8 +17808,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim--iekhiil-ezd10-21",
@@ -17650,8 +17827,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim--uzziya-ezd10-21",
@@ -17667,8 +17846,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--elioenay-ezd10-22",
@@ -17685,7 +17866,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17695,7 +17876,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--maaseya-ezd10-22",
@@ -17712,7 +17894,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17722,7 +17904,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--ismail-ezd10-22",
@@ -17739,7 +17922,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17749,7 +17932,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--nafanail-ezd10-22",
@@ -17766,7 +17950,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17776,7 +17960,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--iozavad-ezd10-22",
@@ -17793,7 +17978,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17803,7 +17988,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pashkhur-syn-malkhii--elasa-ezd10-22",
@@ -17820,7 +18006,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -17830,7 +18016,8 @@
      "Езд 10:22",
      "1Пар 9:12"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iozavad-ezd10-23",
@@ -17846,8 +18033,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shimey-ezd10-23",
@@ -17863,8 +18052,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--kelaiya",
@@ -17880,8 +18071,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--pafakhiya-ezd10-23",
@@ -17897,8 +18090,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iuda-ezd10-23",
@@ -17914,8 +18109,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--eliezer-ezd10-23",
@@ -17931,8 +18128,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--seraiya-neem12",
@@ -17951,8 +18150,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ieremiya-neem12",
@@ -17971,8 +18172,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ezdra-neem12",
@@ -17991,8 +18194,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--amariya-neem12",
@@ -18011,8 +18216,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--mallukh-neem12",
@@ -18031,8 +18238,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khattush-neem12",
@@ -18051,8 +18260,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shekhaniya-neem12",
@@ -18071,8 +18282,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--rekhum-neem12",
@@ -18091,8 +18304,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--meremof-neem12",
@@ -18111,8 +18326,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iddo-neem12",
@@ -18131,8 +18348,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ginnefoy",
@@ -18151,8 +18370,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--aviya-neem12",
@@ -18171,8 +18392,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--miyamin-neem12",
@@ -18191,8 +18414,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--maadiya",
@@ -18211,8 +18436,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--vilga-neem12",
@@ -18231,8 +18458,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shemaiya-neem12",
@@ -18251,8 +18480,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ioiariv-neem12",
@@ -18271,8 +18502,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iedaiya-neem12-6",
@@ -18291,8 +18524,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--sallu-neem12",
@@ -18310,8 +18545,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--amok",
@@ -18329,8 +18566,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khelkiya-neem12",
@@ -18348,8 +18587,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--iedaiya-neem12-7",
@@ -18367,8 +18608,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-seraiya-neem12--meraiya",
@@ -18385,8 +18628,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ieremiya-neem12--khananiya-neem12",
@@ -18403,8 +18648,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ezdra-neem12--meshullam-neem12-13",
@@ -18421,8 +18668,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-amariya-neem12--iokhanan-neem12",
@@ -18439,8 +18688,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-mallukh-neem12--ionafan-neem12-14",
@@ -18457,8 +18708,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-shekhaniya-neem12--iosif-neem12",
@@ -18475,8 +18728,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-rekhum-neem12--adna-neem12",
@@ -18494,7 +18749,7 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -18504,7 +18759,8 @@
      "Неем 12:3",
      "Неем 12:15"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-meremof-neem12--khelkiya-neem12-15",
@@ -18521,8 +18777,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iddo-neem12--zakhariya-neem12",
@@ -18539,8 +18797,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ginnefoy--meshullam-neem12-16",
@@ -18557,8 +18817,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aviya-neem12--zikhriy-neem12",
@@ -18575,8 +18837,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-maadiya--piltay",
@@ -18593,8 +18857,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vilga-neem12--shammuy-neem12",
@@ -18611,8 +18877,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-shemaiya-neem12--ionafan-neem12-18",
@@ -18629,8 +18897,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ioiariv-neem12--mafnay",
@@ -18647,8 +18917,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iedaiya-neem12-6--uzziy-neem12",
@@ -18665,8 +18937,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-sallu-neem12--kallay",
@@ -18683,8 +18957,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-amok--ever-neem12",
@@ -18701,8 +18977,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khelkiya-neem12--khashaviya-neem12",
@@ -18719,8 +18997,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iedaiya-neem12-7--nafanail-neem12",
@@ -18737,8 +19017,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--binnuy",
@@ -18754,8 +19036,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--sherevia-neem12-8",
@@ -18771,8 +19055,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iuda-levit-neem12",
@@ -18788,8 +19074,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--bakbukiya",
@@ -18805,8 +19093,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--unniy-neem12",
@@ -18822,8 +19112,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--ovadiya-neem12-25",
@@ -18840,8 +19132,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--meshullam-neem12-25",
@@ -18858,8 +19152,10 @@
    "prov": {
     "from": {
      "vol": "08-levi.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-fallu--eliav-syn-fallu",
@@ -21691,8 +21987,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-egud-1par8-6--naaman-syn-eguda",
@@ -21820,8 +22118,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-shegaraim--iovav-syn-shegaraima",
@@ -22545,8 +22845,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-shimey-1par8-21--iakim-syn-shimeya",
@@ -22924,8 +23226,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ierokham-1par8-27--shamsheray",
@@ -24990,8 +25294,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iefer-1par7-38--iefunni-syn-iefera",
@@ -25062,8 +25368,10 @@
    "prov": {
     "from": {
      "vol": "10-tribes-b.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ulla--arakh-syn-ully",
@@ -25196,12 +25504,12 @@
    ],
    "cert": "scripture",
    "primary": false,
-   "note": "назван «сыном Геры, сына Иеминиева»; Гера, сын Вениамина, жил за столетия до Аода, так что «сын» здесь, по распространённому пониманию, означает потомка",
+   "note": "«Аода, сына Геры, сына Иеминиева» (Суд 3:15) — слово «сын» сказано; Гера ли это, сын Вениамина (Быт 46:21), и какая степень родства, текст прямо не говорит",
    "prov": {
     "from": {
      "vol": "11-judges.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -25211,7 +25519,8 @@
      "Суд 3:15",
      "Быт 46:21"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-anaf--samegar",
@@ -25266,8 +25575,10 @@
    "prov": {
     "from": {
      "vol": "11-judges.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-mat-sisary--sisara",
@@ -25306,8 +25617,10 @@
    "prov": {
     "from": {
      "vol": "11-judges.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ioas-otets-gedeona--gedeon",
@@ -25533,8 +25846,10 @@
    "prov": {
     "from": {
      "vol": "11-judges.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-gillel--avdon-syn-gillela",
@@ -25569,8 +25884,10 @@
    "prov": {
     "from": {
      "vol": "11-judges.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-manoy--samson",
@@ -25670,7 +25987,7 @@
     "from": {
      "vol": "12-house-of-david.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -25681,7 +25998,8 @@
      "Нав 15:55",
      "1Цар 30:14"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-emiud--falmay",
@@ -29101,8 +29419,10 @@
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-navat--ieroboam",
@@ -29211,8 +29531,10 @@
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-akhiya-otets-vaasy--vaasa",
@@ -29420,16 +29742,20 @@
    "kind": "ancestor",
    "refs": [
     "4Цар 8:26",
-    "2Пар 22:2"
+    "2Пар 22:2",
+    "4Цар 8:18",
+    "3Цар 16:28"
    ],
-   "cert": "scripture",
+   "cert": "inference",
    "primary": false,
-   "note": "«Гофолия, дочь Амврия» — в значении «потомок»: её отец — Ахав, сын Амврия",
+   "note": "«Гофолия, дочь Амврия» (4Цар 8:26; 2Пар 22:2); по 4Цар 8:18 она «дочь Ахава», а Ахав — сын Амврия: «И воцарился Ахав, сын его, вместо него» (3Цар 16:28)",
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-akhiil-vefilyanin--aviram-syn-akhiila",
@@ -29512,16 +29838,20 @@
    "refs": [
     "3Цар 19:16",
     "4Цар 9:20",
-    "2Пар 22:7"
+    "2Пар 22:7",
+    "4Цар 9:2",
+    "4Цар 9:14"
    ],
-   "cert": "scripture",
+   "cert": "inference",
    "primary": false,
-   "note": "«Ииуй, сын Намессиин» (3 Цар 19:16), «сын Намессиев» (4 Цар 9:20; 2 Пар 22:7) — внук Намессия (4 Цар 9:2, 14)",
+   "note": "«Ииуя, сына Намессиина» (3Цар 19:16), «сына Намессиева» (4Цар 9:20; 2Пар 22:7); по 4Цар 9:2, 14 — «Ииуя, сына Иосафата, сына Намессиева»",
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-iiuy--ioakhaz-syn-iiuya",
@@ -30237,8 +30567,10 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-godoliya-otets-anana--anan-syn-godolii",
@@ -30567,12 +30899,12 @@
    ],
    "cert": "scripture",
    "primary": false,
-   "note": "«сын Еммеров»: обычно понимается как принадлежность к священнической череде Иммера (1 Пар 24:14)",
+   "note": "«Пасхор, сын Еммеров, священник» (Иер 20:1); Иммер ли это, глава шестнадцатой череды («шестнадцатый Имеру», 1Пар 24:14), и какая степень родства, текст прямо не говорит",
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -30582,7 +30914,8 @@
      "Иер 20:1",
      "1Пар 24:14"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-malkhiya-otets-paskhora--paskhor-syn-malkhii",
@@ -30758,8 +31091,10 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-karey--ioanan-syn-kareya",
@@ -31124,8 +31459,10 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iuda--ananiya-sedrakh",
@@ -31142,8 +31479,10 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iuda--misail-misakh",
@@ -31160,8 +31499,10 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iuda--azariya-avdenago",
@@ -31178,15 +31519,17 @@
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-navukhodonosor--valtasar-tsar",
    "child": "p-valtasar-tsar",
    "parent": "p-navukhodonosor",
    "role": "father",
-   "kind": "ancestor",
+   "kind": "text-word",
    "refs": [
     "Дан 5:2",
     "Дан 5:11",
@@ -31200,31 +31543,50 @@
     "from": {
      "vol": "15-prophets-exile.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "words": [
     {
-     "text": "Навуходоносор, отец его",
-     "ref": "Дан 5:2"
-    },
-    {
      "text": "царь Навуходоносор, отец твой",
-     "ref": "Дан 5:11"
+     "ref": "Дан 5:11",
+     "saidBy": {
+      "actor": "p-tsaritsa-dan5",
+      "ref": "Дан 5:11",
+      "label": "по словам царицы",
+      "speechStart": "Дан 5:10"
+     }
     },
     {
      "text": "отец мой, царь",
-     "ref": "Дан 5:13"
+     "ref": "Дан 5:13",
+     "saidBy": {
+      "actor": "p-valtasar-tsar",
+      "ref": "Дан 5:13",
+      "label": "по словам Валтасара"
+     }
     },
     {
      "text": "отцу твоему Навуходоносору",
-     "ref": "Дан 5:18"
+     "ref": "Дан 5:18",
+     "saidBy": {
+      "actor": "p-daniil",
+      "ref": "Дан 5:18",
+      "label": "по словам Даниила",
+      "speechStart": "Дан 5:17"
+     }
     },
     {
      "text": "ты, сын его Валтасар",
-     "ref": "Дан 5:22"
+     "ref": "Дан 5:22",
+     "saidBy": {
+      "actor": "p-daniil",
+      "ref": "Дан 5:22",
+      "label": "по словам Даниила",
+      "speechStart": "Дан 5:17"
+     }
     }
    ],
-   "note": "Слово «отец» сказано (Дан 5:2, 11, 18); сын, внук или преемник на престоле — текст не говорит: вид «предок», степень не утверждается"
+   "note": "Текст говорит и «отец», и «сын». Повествователь: «Навуходоносор, отец его» (Дан 5:2). Царица: «во дни отца твоего» (Дан 5:11). Валтасар: «которых отец мой, царь, привел» (Дан 5:13). Даниил: «отцу твоему Навуходоносору» (Дан 5:18), «И ты, сын его Валтасар» (Дан 5:22)"
   },
   {
    "id": "o-ezekiya--amoriya-praded-sofonii",
@@ -31364,16 +31726,20 @@
    "kind": "ancestor",
    "refs": [
     "Езд 5:1",
-    "Езд 6:14"
+    "Езд 6:14",
+    "Зах 1:1",
+    "Зах 1:7"
    ],
-   "cert": "scripture",
+   "cert": "inference",
    "primary": false,
-   "note": "в Книге Ездры назван «сыном Адды» — по деду",
+   "note": "«Захария, сын Адды» (Езд 5:1; 6:14); по Зах 1:1, 7 — «Захарии, сыну Варахиину, сыну Аддову»",
    "prov": {
     "from": {
      "vol": "15-prophets-exile.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-sofoniya-otets-iosii--iosiya-syn-sofonii",
@@ -32889,8 +33255,10 @@
    "prov": {
     "from": {
      "vol": "16-jesus-genealogy.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--elisaveta",
@@ -32907,8 +33275,10 @@
    "prov": {
     "from": {
      "vol": "16-jesus-genealogy.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zakhariya-svyashchennik--ioann-krestitel",
@@ -34466,7 +34836,7 @@
     "from": {
      "vol": "19-court-and-heroes.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -34476,7 +34846,8 @@
      "1Пар 27:11",
      "Чис 26:20"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zara--magaray",
@@ -34494,7 +34865,7 @@
     "from": {
      "vol": "19-court-and-heroes.json"
     },
-    "by": "исправление C45"
+    "by": "исправление D2"
    },
    "identity": {
     "of": "parent",
@@ -34504,7 +34875,8 @@
      "1Пар 27:13",
      "Чис 26:20"
     ]
-   }
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-baana-otets-kheleva--khelev",
@@ -34539,8 +34911,10 @@
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ribay--ittay-syn-ribaya",
@@ -34593,8 +34967,10 @@
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-sharar--akhiam",
@@ -35033,8 +35409,10 @@
    "prov": {
     "from": {
      "vol": "19-court-and-heroes.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zikhri-otets-eliezera--eliezer-syn-zikhri",
@@ -35315,8 +35693,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--ater-privratnik",
@@ -35334,8 +35714,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--khatita",
@@ -35353,8 +35735,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shovay",
@@ -35372,8 +35756,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-fares--vaniy-1par9-4",
@@ -35390,8 +35776,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-1par9-4--imriy-syn-vaniya",
@@ -35475,8 +35863,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zara--ieuil",
@@ -35493,8 +35883,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-veniamin--gassenuya",
@@ -35511,8 +35903,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-gassenuya--godaviya-syn-gassenui",
@@ -35580,8 +35974,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ierokham-otets-ivnii--ivniya-syn-ierokhama",
@@ -35615,8 +36011,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-mikhriy--uzziy-syn-mikhriya",
@@ -35667,8 +36065,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ivniya-otets-reguila--reguil-syn-ivnii",
@@ -35736,8 +36136,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--kheresh",
@@ -35754,8 +36156,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-fares--maleleil-iz-synovey-faresa",
@@ -35772,8 +36176,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-maleleil-iz-synovey-faresa--safatiya-syn-maleleila",
@@ -35995,8 +36401,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-isaiya-veniamityanin--ifiil-syn-isaii",
@@ -36132,8 +36540,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-veniamin--sallay-neem11-8",
@@ -36150,8 +36560,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zikhri-otets-ioilya--ioil-syn-zikhri",
@@ -36368,8 +36780,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shavfay-levit",
@@ -36386,8 +36800,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iozavad-glava-levitov",
@@ -36404,8 +36820,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-matfaniya-syn-mikhi--khashaviya-syn-matfanii",
@@ -36473,8 +36891,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-meshezavel-iz-synovey-zary--petakhiya-syn-meshezavela",
@@ -36508,8 +36928,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--zakhariya-iz-synovey-parosha",
@@ -36525,8 +36947,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--zerakhiya-otets-elegoenaya",
@@ -36543,8 +36967,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zerakhiya-otets-elegoenaya--elegoenay-syn-zerakhii",
@@ -36595,8 +37021,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-ionafan-otets-eveda--eved-syn-ionafana",
@@ -36630,8 +37058,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-afaliya-otets-ieshaii--ieshaiya-syn-afalii",
@@ -36665,8 +37095,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-mikhail-otets-zevadii--zevadiya-syn-mikhaila",
@@ -36700,8 +37132,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iekhiel-otets-ovadii--ovadiya-syn-iekhiela",
@@ -36770,8 +37204,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-gakkatan--iokhanan-syn-gakkatana",
@@ -36804,8 +37240,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-adonikam--ieiel-iz-synovey-adonikama",
@@ -36821,8 +37259,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-adonikam--shemaiya-iz-synovey-adonikama",
@@ -36838,8 +37278,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bigvay-rod--ufay-iz-synovey-bigvaya",
@@ -36855,8 +37297,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bigvay-rod--zabbud",
@@ -36872,8 +37316,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--iekhiil-otets-shekhanii",
@@ -36890,8 +37336,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-iekhiil-otets-shekhanii--shekhaniya-syn-iekhiila",
@@ -36987,8 +37435,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shallum-privratnik-ezd10-24",
@@ -37006,8 +37456,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--telem",
@@ -37025,8 +37477,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--uriy-privratnik",
@@ -37044,8 +37498,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--malkhiya-iz-synovey-kharima",
@@ -37081,8 +37537,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--izziya-ezd10-25",
@@ -37099,8 +37557,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--malkhiya-ezd10-25-1",
@@ -37117,8 +37577,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--miyamin-ezd10-25",
@@ -37135,8 +37597,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--eleazar-ezd10-25",
@@ -37153,8 +37617,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--malkhiya-ezd10-25-2",
@@ -37171,8 +37637,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-parosh--venaiya-ezd10-25",
@@ -37189,8 +37657,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--matfaniya-ezd10-26",
@@ -37207,8 +37677,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--zakhariya-ezd10-26",
@@ -37225,8 +37697,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--iekhiel-ezd10-26",
@@ -37243,8 +37717,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--avdiy-ezd10-26",
@@ -37261,8 +37737,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--iremof-ezd10-26",
@@ -37279,8 +37757,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-elam-rod--eliya-ezd10-26",
@@ -37297,8 +37777,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--elioenay-ezd10-27",
@@ -37315,8 +37797,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--eliyashiv-ezd10-27",
@@ -37333,8 +37817,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--matfaniya-ezd10-27",
@@ -37351,8 +37837,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--iremof-ezd10-27",
@@ -37369,8 +37857,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--zavad-ezd10-27",
@@ -37387,8 +37877,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-zaffu--azisa-ezd10-27",
@@ -37405,8 +37897,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bevay--iokhanan-ezd10-28",
@@ -37423,8 +37917,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bevay--khananiya-ezd10-28",
@@ -37441,8 +37937,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bevay--zabvay-ezd10-28",
@@ -37459,8 +37957,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-bevay--aflay-ezd10-28",
@@ -37477,8 +37977,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--meshullam-ezd10-29",
@@ -37495,8 +37997,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--mallukh-ezd10-29",
@@ -37513,8 +38017,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--adaya-ezd10-29",
@@ -37531,8 +38037,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--iashuv-ezd10-29",
@@ -37549,8 +38057,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--sheal-ezd10-29",
@@ -37567,8 +38077,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--ieramof-ezd10-29",
@@ -37585,8 +38097,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--adna-ezd10-30",
@@ -37603,8 +38117,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--khelal-ezd10-30",
@@ -37621,8 +38137,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--venaiya-ezd10-30",
@@ -37639,8 +38157,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--maaseya-ezd10-30",
@@ -37657,8 +38177,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--matfaniya-ezd10-30",
@@ -37675,8 +38197,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--veseleil-ezd10-30",
@@ -37693,8 +38217,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--binnuy-ezd10-30",
@@ -37711,8 +38237,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-pakhaf-moav--manassiya-ezd10-30",
@@ -37729,8 +38257,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--eliezer-ezd10-31",
@@ -37747,8 +38277,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--ishshiya-ezd10-31",
@@ -37765,8 +38297,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--shemaiya-ezd10-31",
@@ -37783,8 +38317,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--simeon-ezd10-31",
@@ -37801,8 +38337,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--veniamin-ezd10-32",
@@ -37820,8 +38358,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--mallukh-ezd10-32",
@@ -37839,8 +38379,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-kharim-rod--shemariya-ezd10-32",
@@ -37858,8 +38400,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--mafnay-ezd10-33",
@@ -37876,8 +38420,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--mafafa-ezd10-33",
@@ -37894,8 +38440,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--zavad-ezd10-33",
@@ -37912,8 +38460,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--elifelet-ezd10-33",
@@ -37930,8 +38480,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--ieremay-ezd10-33",
@@ -37948,8 +38500,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--manassiya-ezd10-33",
@@ -37966,8 +38520,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khashum--shimey-ezd10-33",
@@ -37984,8 +38540,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--maaday-ezd10-34",
@@ -38002,8 +38560,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--amram-ezd10-34",
@@ -38020,8 +38580,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--uel-ezd10-34",
@@ -38038,8 +38600,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--benaiya-ezd10-35",
@@ -38057,8 +38621,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--bidya-ezd10-35",
@@ -38076,8 +38642,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--kelugi-ezd10-35",
@@ -38095,8 +38663,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--vaneya-ezd10-36",
@@ -38114,8 +38684,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--meremof-ezd10-36",
@@ -38133,8 +38705,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--eliashiv-ezd10-36",
@@ -38152,8 +38726,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--matfaniya-ezd10-37",
@@ -38171,8 +38747,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--mafnay-ezd10-37",
@@ -38190,8 +38768,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--iaasay-ezd10-37",
@@ -38209,8 +38789,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--vaniy-ezd10-38",
@@ -38227,8 +38809,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--binnuy-ezd10-38",
@@ -38246,8 +38830,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shimey-ezd10-38",
@@ -38265,8 +38851,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shelemiya-ezd10-39",
@@ -38284,8 +38872,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--nafan-ezd10-39",
@@ -38303,8 +38893,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--adaiya-ezd10-39",
@@ -38322,8 +38914,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--makhnadbay-ezd10-40",
@@ -38341,8 +38935,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shashay-ezd10-40",
@@ -38360,8 +38956,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--sharay-ezd10-40",
@@ -38379,8 +38977,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--azariel-ezd10-41",
@@ -38398,8 +38998,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shelemiyagu-ezd10-41",
@@ -38417,8 +39019,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shemariya-ezd10-41",
@@ -38436,8 +39040,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--shallum-ezd10-42",
@@ -38455,8 +39061,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--amariya-ezd10-42",
@@ -38474,8 +39082,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-rod--iosif-ezd10-42",
@@ -38493,8 +39103,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--ieiel-ezd10-43",
@@ -38511,8 +39123,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--matfifiya-ezd10-43",
@@ -38529,8 +39143,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--zavad-ezd10-43",
@@ -38547,8 +39163,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--zevina-ezd10-43",
@@ -38565,8 +39183,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--iadday-ezd10-43",
@@ -38583,8 +39203,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--ioel-ezd10-43",
@@ -38601,8 +39223,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-nevo-rod--benaiya-ezd10-43",
@@ -38619,8 +39243,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-imriy-otets-zakkhura--zakkhur-syn-imriya",
@@ -38929,8 +39555,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-vaniy-otets-rekhuma--rekhum-syn-vaniya",
@@ -38964,8 +39592,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-khenadad--bavvay-syn-khenadada",
@@ -39219,8 +39849,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--azariya-neem10-2",
@@ -39237,8 +39869,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ieremiya-neem10-2",
@@ -39255,8 +39889,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--pashkhur-neem10-3",
@@ -39273,8 +39909,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--amariya-neem10-3",
@@ -39291,8 +39929,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--malkhiya-neem10-3",
@@ -39309,8 +39949,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khattush-neem10-4",
@@ -39327,8 +39969,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shevaniya-neem10-4",
@@ -39345,8 +39989,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--mallukh-neem10-4",
@@ -39363,8 +40009,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--kharim-neem10-5",
@@ -39381,8 +40029,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--meremof-neem10-5",
@@ -39399,8 +40049,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ovadiya-neem10-5",
@@ -39417,8 +40069,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--ginnefon-neem10-6",
@@ -39435,8 +40089,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--varukh-neem10-6",
@@ -39453,8 +40109,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--meshullam-neem10-7",
@@ -39471,8 +40129,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--aviya-neem10-7",
@@ -39489,8 +40149,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--miyamin-neem10-7",
@@ -39507,8 +40169,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--maaziya-neem10-8",
@@ -39525,8 +40189,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--vilgay-neem10-8",
@@ -39543,8 +40209,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shemaiya-neem10-8",
@@ -39561,8 +40229,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--azaniya",
@@ -39579,8 +40249,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-azaniya--iisus-syn-azanii",
@@ -39614,8 +40286,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shevaniya-levit-neem10-10",
@@ -39633,8 +40307,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--godiya-levit-neem10-10",
@@ -39652,8 +40328,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--felaiya-levit",
@@ -39671,8 +40349,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--khanan-levit-neem10-10",
@@ -39690,8 +40370,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--mikha-levit-neem10-11",
@@ -39709,8 +40391,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--rekhov-levit",
@@ -39728,8 +40412,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--zakkhur-levit-neem10-12",
@@ -39747,8 +40433,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--shevaniya-levit-neem10-12",
@@ -39766,8 +40454,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--godiya-levit-neem10-13",
@@ -39785,8 +40475,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--vaniy-levit-neem10-13",
@@ -39804,8 +40496,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--veninuy",
@@ -39823,8 +40517,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--vanaiya-levit-neem8-7",
@@ -39841,8 +40537,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iamin-levit-neem8-7",
@@ -39859,8 +40557,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--akkuv-levit-neem8-7",
@@ -39877,8 +40577,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--maaseya-levit-neem8-7",
@@ -39895,8 +40597,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--azariya-levit-neem8-7",
@@ -39913,8 +40617,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-matfaniya-syn-mikhi--shemaiya-syn-matfanii",
@@ -39982,8 +40688,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--azariil-neem12-36",
@@ -40000,8 +40708,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--milalay",
@@ -40018,8 +40728,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--gilalay",
@@ -40036,8 +40748,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--maay",
@@ -40054,8 +40768,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--nafanail-neem12-36",
@@ -40072,8 +40788,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--iuda-neem12-36",
@@ -40090,8 +40808,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--khananiy-neem12-36",
@@ -40108,8 +40828,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--eliakim-neem12-41",
@@ -40126,8 +40848,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--maaseya-neem12-41",
@@ -40144,8 +40868,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--miniamin-neem12-41",
@@ -40162,8 +40888,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--mikhey-neem12-41",
@@ -40180,8 +40908,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--elioenay-neem12-41",
@@ -40198,8 +40928,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--zakhariya-neem12-41",
@@ -40216,8 +40948,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--khananiya-neem12-41",
@@ -40234,8 +40968,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--izrakhiya-nachalnik-pevtsov",
@@ -40253,8 +40989,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-aaron--shelemiya-svyashchennik",
@@ -40271,8 +41009,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-leviy--fedaiya-levit-neem13",
@@ -40289,8 +41029,10 @@
    "prov": {
     "from": {
      "vol": "20-return-lists.json"
-    }
-   }
+    },
+    "by": "исправление D2"
+   },
+   "degree": "unstated"
   },
   {
    "id": "o-matfaniya-ded-khanana--zakkhur-syn-matfanii",
@@ -40362,8 +41104,9 @@
    ],
    "note": "Слово «сын» — Писание (Быт 29:5); степень «внук» — вывод: Лаван — сын Вафуила (Быт 28:5), Вафуил — сын Нахора (Быт 24:24; 22:20–23)",
    "prov": {
-    "by": "исправление C19"
-   }
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-ioram-syn-iosafata--oziya",
@@ -40402,8 +41145,9 @@
    },
    "note": "У Матфея опущены Охозия, Иоас и Амасия; их называют 4 Цар 8:24 – 14:1 и 1 Пар 3:11–12",
    "prov": {
-    "by": "исправление C23"
-   }
+    "by": "исправление D2"
+   },
+   "degree": "inferred"
   },
   {
    "id": "o-zhena-kaina--enokh-syn-kaina",

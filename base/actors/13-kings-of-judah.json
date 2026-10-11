@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/13-kings-of-judah.json",
-   "commit": "cb38e3c"
+   "commit": "5f7f6d6"
   }
  },
  "sources": [
@@ -257,12 +257,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -931,
-      "to": -913,
       "refs": [
        "3Цар 14:21",
        "2Пар 12:13"
       ]
+     },
+     "calc": {
+      "event": "3Цар 14:21",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -1425,12 +1430,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -913,
-      "to": -911,
       "refs": [
        "3Цар 15:1-2",
        "2Пар 13:1-2"
       ]
+     },
+     "calc": {
+      "event": "3Цар 15:1-2",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -1991,11 +2001,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -911,
-      "to": -870,
       "refs": [
        "3Цар 15:9-10"
       ]
+     },
+     "calc": {
+      "event": "3Цар 15:9-10",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -2762,11 +2777,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -873,
-      "to": -848,
       "refs": [
        "3Цар 22:41-42"
       ]
+     },
+     "calc": {
+      "event": "3Цар 22:41-42",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -3917,11 +3937,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -853,
-      "to": -841,
       "refs": [
        "4Цар 8:16-17"
       ]
+     },
+     "calc": {
+      "event": "4Цар 8:16-17",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -4344,11 +4369,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -841,
-      "to": -841,
       "refs": [
        "4Цар 8:25-26"
       ]
+     },
+     "calc": {
+      "event": "4Цар 8:25-26",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -4879,12 +4909,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -835,
-      "to": -796,
       "refs": [
        "4Цар 12:1",
        "2Пар 24:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 12:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -6147,11 +6182,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -796,
-      "to": -767,
       "refs": [
        "4Цар 14:1-2"
       ]
+     },
+     "calc": {
+      "event": "4Цар 14:1-2",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -6675,12 +6715,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -792,
-      "to": -740,
       "refs": [
        "4Цар 15:1-2",
        "2Пар 26:3"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:1-2",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7241,11 +7286,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -750,
-      "to": -735,
       "refs": [
        "4Цар 15:32-33"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:32-33",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7580,11 +7630,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -735,
-      "to": -715,
       "refs": [
        "4Цар 16:1-2"
       ]
+     },
+     "calc": {
+      "event": "4Цар 16:1-2",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -9037,11 +9092,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -715,
-      "to": -686,
       "refs": [
        "4Цар 18:1-2"
       ]
+     },
+     "calc": {
+      "event": "4Цар 18:1-2",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -9812,12 +9872,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -697,
-      "to": -642,
       "refs": [
        "4Цар 21:1",
        "2Пар 33:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 21:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -10326,11 +10391,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -642,
-      "to": -640,
       "refs": [
        "4Цар 21:19"
       ]
+     },
+     "calc": {
+      "event": "4Цар 21:19",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -10848,12 +10918,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -640,
-      "to": -609,
       "refs": [
        "4Цар 22:1",
        "2Пар 34:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 22:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -11694,12 +11769,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский (три месяца)",
-      "from": -609,
-      "to": -609,
       "refs": [
        "4Цар 23:31",
        "2Пар 36:2"
       ]
+     },
+     "calc": {
+      "event": "4Цар 23:31",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -12088,12 +12168,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -609,
-      "to": -598,
       "refs": [
        "4Цар 23:36",
        "2Пар 36:5"
       ]
+     },
+     "calc": {
+      "event": "4Цар 23:36",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -12623,12 +12708,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский",
-      "from": -597,
-      "to": -586,
       "refs": [
        "4Цар 24:18",
        "Иер 52:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 24:18",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -13532,12 +13622,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Иудейский (три месяца)",
-      "from": -598,
-      "to": -597,
       "refs": [
        "4Цар 24:8",
        "2Пар 36:9"
       ]
+     },
+     "calc": {
+      "event": "4Цар 24:8",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {

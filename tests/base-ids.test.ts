@@ -52,10 +52,14 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
     expect(all.filter(([kind, id]) => !id!.startsWith(PREFIX[kind as keyof typeof PREFIX]))).toEqual([]);
     expect(all.filter(([kind, id]) => issued.get(id!)?.kind !== kind)).toEqual([]);
     expect(new Set(all.map(([, id]) => id)).size).toBe(all.length);
-    // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16, опор 22 (К-10)
+    // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16, опор 22 (К-10); Д-партия 1: +6 утверждений
+    // (4 примечания Д-5, 2 записи царицы Дан 5:10), родства −3 (сняты по Д-5 с переадресацией)
     const n = (k: string) => all.filter(([kind]) => kind === k).length;
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor')]).toEqual([2147, 16274, 85, 16, 22]);
-    expect(base.ids!.length).toBe(all.length);
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor')]).toEqual([2147, 16280, 82, 16, 22]);
+    // каждый действующий номер — у записи; выбывший — со строкой переадресации
+    expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
+    const red = new Set(base.redirects.map((r) => r.from));
+    expect(base.ids!.filter((e) => e.state === 'retired').map((e) => [e.id, red.has(e.id)])).toEqual([['k-57', true], ['k-66', true], ['k-67', true]]);
   });
 
   it('номера рёбер смысловые (03 § 21.1), утверждений и родства — порядковые, эпох — era-', () => {

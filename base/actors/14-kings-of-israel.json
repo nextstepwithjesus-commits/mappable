@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/14-kings-of-israel.json",
-   "commit": "cb38e3c"
+   "commit": "5f7f6d6"
   }
  },
  "sources": [
@@ -1203,12 +1203,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -931,
-      "to": -910,
       "refs": [
        "3Цар 12:20",
        "3Цар 14:20"
       ]
+     },
+     "calc": {
+      "event": "3Цар 12:20",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -1833,12 +1838,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -910,
-      "to": -909,
       "refs": [
        "3Цар 14:20",
        "3Цар 15:25"
       ]
+     },
+     "calc": {
+      "event": "3Цар 14:20",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -2137,12 +2147,17 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -909,
-      "to": -886,
       "refs": [
        "3Цар 15:28",
        "3Цар 15:33"
       ]
+     },
+     "calc": {
+      "event": "3Цар 15:28",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -2388,11 +2403,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -886,
-      "to": -885,
       "refs": [
        "3Цар 16:8"
       ]
+     },
+     "calc": {
+      "event": "3Цар 16:8",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -2572,11 +2592,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -885,
-      "to": -885,
       "refs": [
        "3Цар 16:15"
       ]
+     },
+     "calc": {
+      "event": "3Цар 16:15",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -3223,11 +3248,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -885,
-      "to": -874,
       "refs": [
        "3Цар 16:23"
       ]
+     },
+     "calc": {
+      "event": "3Цар 16:23",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -4041,11 +4071,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -874,
-      "to": -853,
       "refs": [
        "3Цар 16:29"
       ]
+     },
+     "calc": {
+      "event": "3Цар 16:29",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -4640,11 +4675,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -853,
-      "to": -852,
       "refs": [
        "3Цар 22:51"
       ]
+     },
+     "calc": {
+      "event": "3Цар 22:51",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -5003,11 +5043,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -852,
-      "to": -841,
       "refs": [
        "4Цар 3:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 3:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -5425,12 +5470,17 @@
      "field": "offices",
      "value": {
       "title": "Царствовала над Иудеей",
-      "from": -841,
-      "to": -835,
       "refs": [
        "4Цар 11:3",
        "2Пар 22:12"
       ]
+     },
+     "calc": {
+      "event": "4Цар 11:3",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -6203,11 +6253,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -841,
-      "to": -814,
       "refs": [
        "4Цар 10:36"
       ]
+     },
+     "calc": {
+      "event": "4Цар 10:36",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -6662,11 +6717,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -814,
-      "to": -798,
       "refs": [
        "4Цар 13:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 13:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -6925,11 +6985,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -798,
-      "to": -782,
       "refs": [
        "4Цар 13:10"
       ]
+     },
+     "calc": {
+      "event": "4Цар 13:10",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7220,11 +7285,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -793,
-      "to": -753,
       "refs": [
        "4Цар 14:23"
       ]
+     },
+     "calc": {
+      "event": "4Цар 14:23",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7448,11 +7518,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -753,
-      "to": -753,
       "refs": [
        "4Цар 15:8"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:8",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7618,11 +7693,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -752,
-      "to": -752,
       "refs": [
        "4Цар 15:13"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:13",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7851,11 +7931,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -752,
-      "to": -742,
       "refs": [
        "4Цар 15:17"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:17",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -7992,11 +8077,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -742,
-      "to": -740,
       "refs": [
        "4Цар 15:23"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:23",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -8207,11 +8297,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -752,
-      "to": -732,
       "refs": [
        "4Цар 15:27"
       ]
+     },
+     "calc": {
+      "event": "4Цар 15:27",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
@@ -8500,11 +8595,16 @@
      "field": "offices",
      "value": {
       "title": "Царь Израильский",
-      "from": -732,
-      "to": -722,
       "refs": [
        "4Цар 17:1"
       ]
+     },
+     "calc": {
+      "event": "4Цар 17:1",
+      "scheme": "s-mcfall-young"
+     },
+     "prov": {
+      "by": "исправление D7"
      }
     },
     {
