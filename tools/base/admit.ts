@@ -37,8 +37,8 @@ export const PROBE_BANNER = 'Данные не проверены: проба';
 
 export type Coll =
   | 'actor' | 'fact' | 'origin' | 'union' | 'kin' | 'reading' | 'cite' | 'area' | 'membership' | 'nodata' | 'chrono' | 'redirect'
-  | 'line' | 'epoch' | 'anchor' | 'place';
-export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place'];
+  | 'line' | 'epoch' | 'anchor' | 'place' | 'relation';
+export const COLLS: Coll[] = ['actor', 'fact', 'origin', 'union', 'kin', 'reading', 'cite', 'area', 'membership', 'nodata', 'chrono', 'redirect', 'line', 'epoch', 'anchor', 'place', 'relation'];
 
 /**
  * Файлы base/ по коллекциям допуска (02 § 3.17 [4.1]; К-10): каждый файл базы принадлежит коллекции допуска или списку
@@ -48,7 +48,7 @@ export const COLL_FILES: Record<Coll, RegExp> = {
   actor: /^actors\/[^/]+\.json$/, fact: /^actors\/[^/]+\.json$/, origin: /^origins\.json$/, union: /^unions\.json$/, kin: /^kin\.json$/,
   reading: /^readings\.json$/, cite: /^readings\.json$/, area: /^areas\.json$/, membership: /^memberships\.json$/, nodata: /^nodata\.json$/,
   chrono: /^chrono\.json$/, redirect: /^redirects\.json$/, line: /^lines\/[^/]+\.json$/, epoch: /^epochs\.json$/, anchor: /^anchors\.json$/,
-  place: /^places\.json$/,
+  place: /^places\.json$/, relation: /^relations\.json$/,
 };
 /**
  * Служебные файлы base/ — не коллекции допуска: реестр источников, журнал подписей, исправления, выданные номера,
@@ -118,6 +118,7 @@ export function records(base: Base): Rec[] {
   for (const p of base.places ?? []) target.set(p.id, `place:${p.id}`);
   for (const o of base.origins) if (o.id) target.set(o.id, `origin:${o.id}`);
   for (const k of base.kin) if (k.id) target.set(k.id, `kin:${k.id}`);
+  for (const r of base.relations ?? []) if (r.id) target.set(r.id, `relation:${r.id}`);
   for (const v of base.volumes) for (const a of v.actors) for (const f of a.facts) if (f.id) target.set(f.id, `fact:${f.id}`);
   const redirectTo = new Map(base.redirects.map((r) => [r.from, r.to]));
   const finalTargets = (to: string[], path = new Set<string>()): string[] =>
@@ -141,6 +142,8 @@ export function records(base: Base): Rec[] {
   }
   for (const u of base.unions) add('union', `union:${u.id}`, u, 'unions.json', [A(u.husband), A(u.wife)]);
   for (const k of base.kin) add('kin', `kin:${k.from}|${k.to}|${k.rel}`, k, 'kin.json', [A(k.from), A(k.to)]);
+  // отношения лиц (02 § 3.11.1): обе карточки — зависимости
+  for (const r of base.relations ?? []) add('relation', `relation:${r.a}|${r.b}|${r.kind}`, r, 'relations.json', [A(r.a), A(r.b)]);
   // ссылки на труды набора — отдельная запись со своей подписью (02 § 3.3.3, п. 6; К-3): `works` в отпечаток набора не
   // входит. В её содержимое входят и записи трудов реестра (издание, год, традиция): правка труда снимает подпись ссылок
   const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));

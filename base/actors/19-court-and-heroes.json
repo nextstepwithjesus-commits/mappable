@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data/persons/19-court-and-heroes.json",
-   "commit": "5f7f6d6"
+   "commit": "2bdf557"
   }
  },
  "sources": [
@@ -5480,6 +5480,38 @@
      }
     }
    ]
+  },
+  {
+   "id": "p-nafan-1par11-38",
+   "kind": "human",
+   "sex": "m",
+   "names": [
+    {
+     "form": "Нафан",
+     "type": "main",
+     "refs": [
+      "1Пар 11:38"
+     ]
+    }
+   ],
+   "disambig": "брат Иоиля (1Пар 11:38)",
+   "facts": [
+    {
+     "id": "a-16286",
+     "sec": 23,
+     "field": "scripture",
+     "value": {
+      "first": "1Пар 11:38"
+     },
+     "prov": {
+      "by": "исправление D5-2"
+     }
+    }
+   ],
+   "prov": {
+    "by": "исправление D5-2",
+    "status": "draft"
+   }
   },
   {
    "id": "p-igal-syn-nafana",

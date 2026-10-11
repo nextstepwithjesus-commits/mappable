@@ -47,15 +47,17 @@ describe('таблица выданных номеров base/ids.json (К-1)', 
       ...base.kin.map((k) => ['kin', k.id] as [string, string | undefined]),
       ...base.epochs.map((e) => ['epoch', e.id] as [string, string | undefined]),
       ...base.anchors.anchors.map((a: any) => ['anchor', a.id] as [string, string | undefined]),
+      ...base.relations.map((r) => ['relation', r.id] as [string, string | undefined]),
     ];
     expect(all.filter(([, id]) => !id)).toEqual([]);
     expect(all.filter(([kind, id]) => !id!.startsWith(PREFIX[kind as keyof typeof PREFIX]))).toEqual([]);
     expect(all.filter(([kind, id]) => issued.get(id!)?.kind !== kind)).toEqual([]);
     expect(new Set(all.map(([, id]) => id)).size).toBe(all.length);
     // числа 02 § 3.3.1: рёбер 2 147, утверждений 16 274, родства 85, эпох 16, опор 22 (К-10); Д-партия 1: +6 утверждений
-    // (4 примечания Д-5, 2 записи царицы Дан 5:10), родства −3 (сняты по Д-5 с переадресацией)
+    // (4 примечания Д-5, 2 записи царицы Дан 5:10), родства −3 (сняты по Д-5 с переадресацией); вторая очередь Д-5:
+    // +6 утверждений карточек тёзок, 6 отношений «возможно, то же лицо» (ar-)
     const n = (k: string) => all.filter(([kind]) => kind === k).length;
-    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor')]).toEqual([2147, 16280, 82, 16, 22]);
+    expect([n('origin'), n('fact'), n('kin'), n('epoch'), n('anchor'), n('relation')]).toEqual([2147, 16286, 82, 16, 22, 6]);
     // каждый действующий номер — у записи; выбывший — со строкой переадресации
     expect(base.ids!.filter((e) => e.state === 'active').length).toBe(all.length);
     const red = new Set(base.redirects.map((r) => r.from));

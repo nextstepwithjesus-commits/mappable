@@ -142,6 +142,26 @@ export interface Assertion {
  */
 export interface EndIdentity { of: 'from' | 'to' | 'husband' | 'wife'; degree: 'weighty' | 'possible'; note: string; refs: Ref[] }
 
+/**
+ * Отношение лиц (02 § 3.11.1; § 3.3.4 [4.2]): «не то же лицо» или «возможно, то же лицо». Карточки не сливаются, связь,
+ * ребро и стих по «возможно» на другую карточку не переходят. Один возможный тёзка — своя карточка и это отношение,
+ * не ребро к известному лицу (Иоиль, «брат Нафана», 1Пар 11:38 — тот ли Нафан, что в 2Цар 23:36).
+ */
+export interface ActorRelation {
+  /** Номер `ar-<число>` из base/ids.json. */
+  id?: string;
+  a: string;
+  b: string;
+  kind: 'not-same' | 'possibly-same';
+  /** Стихи обеих сторон. */
+  refs: Ref[];
+  /** `not-same`: «Писание» или «вывод»; `possibly-same`: «вывод» или «толкование» с трудами. */
+  cert: Cert;
+  works?: Cite[];
+  note: string;
+  prov?: Partial<Prov>;
+}
+
 export interface Actor {
   id: string;
   kind: ActorKind;

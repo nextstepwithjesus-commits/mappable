@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "5f7f6d6"
+   "commit": "2bdf557"
   }
  },
  "sources": [
@@ -16242,9 +16242,20 @@
     "from": {
      "vol": "08-levi.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D2-2"
    },
-   "degree": "inferred"
+   "degree": "inferred",
+   "gap": true,
+   "skipped": {
+    "actors": [
+     "p-zakhariya-syn-pashkhura",
+     "p-amtsiy-syn-zakharii",
+     "p-felaliya"
+    ],
+    "refs": [
+     "Неем 11:12"
+    ]
+   }
   },
   {
    "id": "o-ierokham-syn-pashkhura--adaiya-syn-ierokhama",
@@ -29744,18 +29755,26 @@
     "4Цар 8:26",
     "2Пар 22:2",
     "4Цар 8:18",
+    "4Цар 8:25",
+    "4Цар 8:27",
     "3Цар 16:28"
    ],
    "cert": "inference",
    "primary": false,
-   "note": "«Гофолия, дочь Амврия» (4Цар 8:26; 2Пар 22:2); по 4Цар 8:18 она «дочь Ахава», а Ахав — сын Амврия: «И воцарился Ахав, сын его, вместо него» (3Цар 16:28)",
+   "note": "«Гофолия, дочь Амврия» (4Цар 8:26; 2Пар 22:2) — мать Охозии, сына Иорама (4Цар 8:25–26). Об Иораме сказано: «дочь Ахава была женою его» (4Цар 8:18); об Охозии — «он был в родстве с домом Ахавовым» (4Цар 8:27). Ахав — сын Амврия: «И воцарился Ахав, сын его, вместо него» (3Цар 16:28)",
    "prov": {
     "from": {
      "vol": "14-kings-of-israel.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D2-2"
    },
-   "degree": "inferred"
+   "degree": "inferred",
+   "words": [
+    {
+     "text": "Гофолия, дочь Амврия",
+     "ref": "4Цар 8:26"
+    }
+   ]
   },
   {
    "id": "o-akhiil-vefilyanin--aviram-syn-akhiila",
@@ -29849,9 +29868,19 @@
     "from": {
      "vol": "14-kings-of-israel.json"
     },
-    "by": "исправление D2"
+    "by": "исправление D2-2"
    },
-   "degree": "inferred"
+   "degree": "inferred",
+   "gap": true,
+   "skipped": {
+    "actors": [
+     "p-iosafat-syn-namessii"
+    ],
+    "refs": [
+     "4Цар 9:2",
+     "4Цар 9:14"
+    ]
+   }
   },
   {
    "id": "o-iiuy--ioakhaz-syn-iiuya",

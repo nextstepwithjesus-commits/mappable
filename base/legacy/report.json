@@ -1,7 +1,7 @@
 {
  "schema": 1,
  "title": "Отчёт переноса: отличия обратной проекции от прежних данных и исправления, которые их объясняют",
- "commit": "5f7f6d6",
+ "commit": "2bdf557",
  "exact": "точный перенос совпал с прежними данными без отличий",
  "note": "steps — ключи записей, изменённые каждым шагом исправления (все в объявленной области шага); projection — отличия прежнего вида по лицам и полям",
  "steps": {
@@ -3964,6 +3964,103 @@
    "actor:p-tsaritsa-dan5.prov",
    "actor:p-tsaritsa-dan5.facts.status",
    "actor:p-tsaritsa-dan5.facts.scripture"
+  ],
+  "D5-2": [
+   "volume:08-levi.json",
+   "actor:p-maakha-zhena-makhira.facts.notes",
+   "volume:10-tribes-b.json",
+   "actor:p-shupim-syn-ira.facts.notes",
+   "actor:p-khupim-syn-ira.facts.notes",
+   "volume:13-kings-of-judah.json",
+   "actor:p-maaseya-syn-akhaza.facts.notes",
+   "actor:p-ierameil-syn-tsarya.facts.notes",
+   "actor:p-malkhiya-syn-tsarya.facts.notes",
+   "actor:p-toviya-ammonityanin.facts.notes",
+   "actor:p-iuda-brat-gospoden.facts.notes",
+   "actor:p-mariya-kleopova.facts.notes",
+   "actor:p-ioann-deyan4-6.facts.notes",
+   "actor:p-aleksandr-deyan4-6.facts.notes",
+   "actor:p-andronik.facts.notes",
+   "actor:p-irodion.facts.notes",
+   "actor:p-luciy-srodnik.facts.notes",
+   "actor:p-iason-srodnik.facts.notes",
+   "actor:p-sosipatr-srodnik.facts.notes",
+   "volume:19-court-and-heroes.json",
+   "union:u-mered--iudiya",
+   "kin:p-maaseya-syn-akhaza|p-akhaz|сын царя",
+   "kin:p-malkhiya-syn-tsarya|p-sedekiya|сын царя",
+   "kin:p-toviya-ammonityanin|p-eliashiv-pervosvyashchennik|близкий родственник",
+   "kin:p-yuniya|p-pavel|сродница",
+   "kin:p-ioil-brat-nafana|p-nafan-otets-igala|брат",
+   "kin:p-maakha-zhena-makhira|p-shupim-syn-ira|сестра",
+   "kin:p-maakha-zhena-makhira|p-khupim-syn-ira|сестра",
+   "actor:p-eliashiv-neem13-4.id",
+   "actor:p-eliashiv-neem13-4.kind",
+   "actor:p-eliashiv-neem13-4.sex",
+   "actor:p-eliashiv-neem13-4.names",
+   "actor:p-eliashiv-neem13-4.disambig",
+   "actor:p-eliashiv-neem13-4.prov",
+   "actor:p-eliashiv-neem13-4.facts.status",
+   "actor:p-eliashiv-neem13-4.facts.events",
+   "actor:p-eliashiv-neem13-4.facts.scripture",
+   "actor:p-shupim-1par7-15.id",
+   "actor:p-shupim-1par7-15.kind",
+   "actor:p-shupim-1par7-15.sex",
+   "actor:p-shupim-1par7-15.names",
+   "actor:p-shupim-1par7-15.disambig",
+   "actor:p-shupim-1par7-15.prov",
+   "actor:p-shupim-1par7-15.facts.scripture",
+   "actor:p-khupim-1par7-15.id",
+   "actor:p-khupim-1par7-15.kind",
+   "actor:p-khupim-1par7-15.sex",
+   "actor:p-khupim-1par7-15.names",
+   "actor:p-khupim-1par7-15.disambig",
+   "actor:p-khupim-1par7-15.prov",
+   "actor:p-khupim-1par7-15.facts.scripture",
+   "actor:p-tsar-2par28-7.id",
+   "actor:p-tsar-2par28-7.kind",
+   "actor:p-tsar-2par28-7.sex",
+   "actor:p-tsar-2par28-7.descriptor",
+   "actor:p-tsar-2par28-7.names",
+   "actor:p-tsar-2par28-7.disambig",
+   "actor:p-tsar-2par28-7.prov",
+   "actor:p-tsar-ier38-6.id",
+   "actor:p-tsar-ier38-6.kind",
+   "actor:p-tsar-ier38-6.sex",
+   "actor:p-tsar-ier38-6.descriptor",
+   "actor:p-tsar-ier38-6.names",
+   "actor:p-tsar-ier38-6.disambig",
+   "actor:p-tsar-ier38-6.prov",
+   "actor:p-nafan-1par11-38.id",
+   "actor:p-nafan-1par11-38.kind",
+   "actor:p-nafan-1par11-38.sex",
+   "actor:p-nafan-1par11-38.names",
+   "actor:p-nafan-1par11-38.disambig",
+   "actor:p-nafan-1par11-38.prov",
+   "actor:p-nafan-1par11-38.facts.scripture",
+   "kin:p-maaseya-syn-akhaza|p-tsar-2par28-7|сын царя",
+   "kin:p-malkhiya-syn-tsarya|p-tsar-ier38-6|сын царя",
+   "kin:p-toviya-ammonityanin|p-eliashiv-neem13-4|близкий родственник",
+   "kin:p-yuniya|p-pavel|сродник",
+   "kin:p-ioil-brat-nafana|p-nafan-1par11-38|брат",
+   "kin:p-maakha-zhena-makhira|p-shupim-1par7-15|сестра",
+   "kin:p-maakha-zhena-makhira|p-khupim-1par7-15|сестра",
+   "relation:p-tsar-2par28-7|p-akhaz|possibly-same",
+   "relation:p-tsar-ier38-6|p-sedekiya|possibly-same",
+   "relation:p-eliashiv-neem13-4|p-eliashiv-pervosvyashchennik|possibly-same",
+   "relation:p-nafan-1par11-38|p-nafan-otets-igala|possibly-same",
+   "relation:p-shupim-1par7-15|p-shupim-syn-ira|possibly-same",
+   "relation:p-khupim-1par7-15|p-khupim-syn-ira|possibly-same"
+  ],
+  "D7-2": [
+   "actor:p-sadok.facts.offices",
+   "actor:p-irod-velikiy.facts.offices",
+   "actor:p-feliks.facts.offices"
+  ],
+  "D2-2": [
+   "origin:p-ierokham-syn-pashkhura|p-pashkhur-syn-malkhii|father|o",
+   "origin:p-gofoliya|p-amvriy|father|o",
+   "origin:p-iiuy|p-namessiy|father|o"
   ]
  },
  "projection": [
@@ -7425,6 +7522,7 @@
    "what": "лицо",
    "id": "maakha-zhena-makhira",
    "fields": [
+    "card.notes",
     "kin"
    ]
   },
@@ -7598,7 +7696,8 @@
    "id": "shupim-syn-ira",
    "fields": [
     "parentCert",
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -7606,7 +7705,8 @@
    "id": "khupim-syn-ira",
    "fields": [
     "parentCert",
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -8513,7 +8613,8 @@
    "what": "лицо",
    "id": "maaseya-syn-akhaza",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -8603,14 +8704,16 @@
    "what": "лицо",
    "id": "ierameil-syn-tsarya",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "malkhiya-syn-tsarya",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -9361,7 +9464,8 @@
    "what": "лицо",
    "id": "toviya-ammonityanin",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -10080,7 +10184,8 @@
    "what": "лицо",
    "id": "andronik",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -10094,28 +10199,32 @@
    "what": "лицо",
    "id": "irodion",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "luciy-srodnik",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "iason-srodnik",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
    "what": "лицо",
    "id": "sosipatr-srodnik",
    "fields": [
-    "kin"
+    "kin",
+    "card.notes"
    ]
   },
   {
@@ -10866,7 +10975,27 @@
   },
   {
    "what": "лицо (лишнее)",
+   "id": "eliashiv-neem13-4"
+  },
+  {
+   "what": "лицо (лишнее)",
    "id": "girson-syn-manassii"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "shupim-1par7-15"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "khupim-1par7-15"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "tsar-2par28-7"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "tsar-ier38-6"
   },
   {
    "what": "лицо (лишнее)",
@@ -10875,6 +11004,10 @@
   {
    "what": "лицо (лишнее)",
    "id": "davriin"
+  },
+  {
+   "what": "лицо (лишнее)",
+   "id": "nafan-1par11-38"
   },
   {
    "what": "лицо (лишнее)",
@@ -10898,11 +11031,23 @@
   },
   {
    "what": "том",
+   "id": "10"
+  },
+  {
+   "what": "том",
+   "id": "13"
+  },
+  {
+   "what": "том",
    "id": "15"
   },
   {
    "what": "том",
    "id": "18"
+  },
+  {
+   "what": "том",
+   "id": "19"
   },
   {
    "what": "линия",

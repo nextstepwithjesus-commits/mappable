@@ -17,6 +17,7 @@ import { pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import type {
+  ActorRelation,
   Actor, ActorKind, Assertion, Area, BaseFile, CheckEntry, ChronoRecord, Correction, KinTerm, Membership, Name, NoData, Origin,
   Place, Prov, ReadingSet, Redirect, Source, Union, UnionTerm,
 } from './types.ts';
@@ -25,6 +26,7 @@ import { ADDITIONS } from './additions.ts';
 import { STEPS_D3 } from './corrections-d3.ts';
 import { STEPS_K } from './corrections-k.ts';
 import { STEPS_D } from './corrections-d.ts';
+import { STEPS_D_2 } from './corrections-d-2.ts';
 import { project, canon, type Hints } from './project.ts';
 import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
@@ -83,6 +85,8 @@ export interface Base {
    * пересборка его не трогает и берёт с диска.
    */
   places?: Place[];
+  /** Отношения лиц «не то же лицо» и «возможно, то же лицо» (02 § 3.11.1; Д-5). */
+  relations: ActorRelation[];
   /**
    * Происхождение файлов base/ по умолчанию (02 § 3.1: у файла — значение по умолчанию, у записи — уточнение): путь от
    * base/ («actors/04-abraham.json», «origins.json», «lines/luke.json») → prov файла. Нет — как у переноса: черновик.
@@ -140,7 +144,7 @@ export function mapEpochIds(epoch: any, f: (id: string) => string): any {
 export function toBase(vols: any[], groups: any[], epochs: any[], anchors: any, lines: Record<string, any>): { base: Base; hints: Hints } {
   const hints: Hints = { volumes: {}, persons: {}, idmap: {}, lineOrder: Object.keys(lines) };
   const base: Base = {
-    volumes: [], unions: [], origins: [], kin: [], readings: [], areas: [], memberships: [], chrono: [], nodata: [],
+    volumes: [], unions: [], origins: [], kin: [], readings: [], areas: [], memberships: [], chrono: [], nodata: [], relations: [],
     redirects: [], corrections: [], lines: {}, epochs: [], anchors: structuredClone(anchors),
   };
   const sexOf = new Map<string, string>();
@@ -374,7 +378,10 @@ export function buildBase(opts: BuildOptions = {}) {
   applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...STEPS_K].filter((s) => !skip.has(s.id)));
   // номера прежних записей закрепляются до поздних шагов (Д-партии): сборка с пустой таблицей повторяет таблицу (К-16)
   freezeIds(base);
-  applyAll(base, hints, [...STEPS_D, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
+  applyAll(base, hints, STEPS_D.filter((s) => !skip.has(s.id)));
+  // вторая очередь (правка выпущенных шагов — новыми шагами): номера первой очереди закрепляются так же
+  freezeIds(base);
+  applyAll(base, hints, [...STEPS_D_2, ...(opts.extraSteps ?? [])].filter((s) => !skip.has(s.id)));
   const iss = finishIds(base)!;
   if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
   base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
@@ -415,6 +422,7 @@ export function recordKeys(base: Base): Map<string, string> {
   for (const u of base.unions) put(`union:${u.id}`, u);
   for (const k of base.kin) put(`kin:${k.from}|${k.to}|${k.rel}`, k);
   for (const x of base.memberships) put(`membership:${x.actor}|${x.area}`, x);
+  for (const x of base.relations ?? []) put(`relation:${x.a}|${x.b}|${x.kind}`, x);
   for (const x of base.chrono) put(`chrono:${x.actor}`, x);
   for (const x of base.nodata) put(`nodata:${x.actor}|${x.sec}|${x.kind}`, x);
   for (const x of base.readings) put(`reading:${x.id}`, x);
@@ -459,8 +467,8 @@ function main() {
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
   let bad = 0;
-  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D]) {
-    if (step === STEPS_D[0]) freezeIds(base);
+  for (const step of [...STEPS, ADDITIONS, ...STEPS_D3, ...STEPS_K, ...STEPS_D, ...STEPS_D_2]) {
+    if (step === STEPS_D[0] || step === STEPS_D_2[0]) freezeIds(base);
     const { changed, stray } = stepChanges(base, hints, step);
     steps[step.id] = changed;
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);
@@ -499,6 +507,7 @@ function main() {
   write('unions.json', file('Союзы', base.unions));
   write('origins.json', file('Происхождение', base.origins));
   write('kin.json', file('Родство словами Писания', base.kin));
+  write('relations.json', file('Отношения лиц: «не то же лицо» и «возможно, то же лицо»', base.relations));
   write('readings.json', file('Наборы взаимоисключающих прочтений', base.readings));
   write('areas.json', file('Области', base.areas, 'data/groups.json'));
   write('memberships.json', file('Членство', base.memberships));

@@ -18552,6 +18552,18 @@
   {"id":"a-16277","kind":"fact","key":"fact:p-iuda-brat-gospoden|notes|38e3cff146e92b03|D5","at":"2026-10-11","state":"active"},
   {"id":"a-16278","kind":"fact","key":"fact:p-mariya-kleopova|notes|28c5dba843a4d4c9|D5","at":"2026-10-11","state":"active"},
   {"id":"a-16279","kind":"fact","key":"fact:p-ioann-deyan4-6|notes|8b45c69f4fc509ed|D5","at":"2026-10-11","state":"active"},
-  {"id":"a-16280","kind":"fact","key":"fact:p-aleksandr-deyan4-6|notes|8b45c69f4fc509ed|D5","at":"2026-10-11","state":"active"}
+  {"id":"a-16280","kind":"fact","key":"fact:p-aleksandr-deyan4-6|notes|8b45c69f4fc509ed|D5","at":"2026-10-11","state":"active"},
+  {"id":"a-16281","kind":"fact","key":"fact:p-eliashiv-neem13-4|status|64f7029fea0e65b9|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16282","kind":"fact","key":"fact:p-eliashiv-neem13-4|events|4552149a8ca754a6|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16283","kind":"fact","key":"fact:p-eliashiv-neem13-4|scripture|6311380c2a189b84|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16284","kind":"fact","key":"fact:p-shupim-1par7-15|scripture|b78ae0ea152afe03|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16285","kind":"fact","key":"fact:p-khupim-1par7-15|scripture|b78ae0ea152afe03|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"a-16286","kind":"fact","key":"fact:p-nafan-1par11-38|scripture|939fbab79f03a69e|D5-2","at":"2026-10-11","state":"active"},
+  {"id":"ar-1","kind":"relation","key":"relation:p-tsar-2par28-7|p-akhaz|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-2","kind":"relation","key":"relation:p-tsar-ier38-6|p-sedekiya|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-3","kind":"relation","key":"relation:p-eliashiv-neem13-4|p-eliashiv-pervosvyashchennik|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-4","kind":"relation","key":"relation:p-nafan-1par11-38|p-nafan-otets-igala|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-5","kind":"relation","key":"relation:p-shupim-1par7-15|p-shupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"},
+  {"id":"ar-6","kind":"relation","key":"relation:p-khupim-1par7-15|p-khupim-syn-ira|possibly-same","at":"2026-10-11","state":"active"}
  ]
 }

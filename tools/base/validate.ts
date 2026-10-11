@@ -83,6 +83,7 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     places: existsSync(join(dir, 'places.json')) ? items('places.json') : [],
+    relations: existsSync(join(dir, 'relations.json')) ? items('relations.json') : [],
     checks: loadChecks(dir),
     ids: loadIds(dir),
   };
@@ -296,6 +297,20 @@ export function validate(base: Base): Issue[] {
   // ---------- новые правила (К-8) ----------
   // «толк.» у обозначения союза и родства словами: у них нет набора прочтений — толкование здесь не хранится (02 § 3.1).
   // Сейчас 18 записей родства и 5 обозначений (остаток Д3-11) — замечание до разбора Д-5
+  // отношения лиц (02 § 3.11.1; § 3.3.4 [4.2]): обе карточки есть и различны; уровень по виду; стихи обеих сторон
+  for (const r of base.relations ?? []) {
+    const w = `${r.a} ~ ${r.b}`;
+    has('целостность', w, r.a);
+    has('целостность', w, r.b);
+    if (r.a === r.b) err('отношение', w, 'отношение лица к самому себе');
+    if (!['not-same', 'possibly-same'].includes(r.kind)) err('отношение', w, `вид «${r.kind}» — нужен not-same или possibly-same`);
+    const ok = r.kind === 'not-same' ? ['scripture', 'inference'] : ['inference', 'interpretation'];
+    if (!ok.includes(r.cert)) err('отношение', w, `уровень «${r.cert}» у вида «${r.kind}» — нужен ${ok.join(' или ')}`);
+    if (r.cert === 'interpretation' && !r.works?.some((c) => c.weight !== 'excluded')) err('отношение', w, '«возможно, то же лицо» уровня «толкование» — с трудами works (R9 Г-4)');
+    if (!r.refs?.length) err('стих', w, 'отношение без стихов');
+    if (!r.note?.trim()) err('отношение', w, 'отношение без примечания');
+    walk(w, { refs: r.refs ?? [], cert: r.cert });
+  }
   // тождество конца у родства и союза (Д-5) — как у ребра (C45): у слова, сказанного вне скобок, со стихами и примечанием
   const endIdentity = (w: string, id: { of: string; degree: string; note: string; refs: string[] } | undefined, ends: string[], cert: Cert | undefined) => {
     if (!id) return;
@@ -384,6 +399,7 @@ export function validate(base: Base): Issue[] {
   const numbered: [IdKind, string, string | undefined][] = [
     ...base.origins.map((o) => ['origin', `${o.child} ← ${o.parent ?? '?'}`, o.id] as [IdKind, string, string | undefined]),
     ...base.kin.map((k) => ['kin', `${k.from} — ${k.to}`, k.id] as [IdKind, string, string | undefined]),
+    ...(base.relations ?? []).map((r) => ['relation', `${r.a} ~ ${r.b}`, r.id] as [IdKind, string, string | undefined]),
     ...[...actors.values()].flatMap((a) => a.facts.map((f) => ['fact', `${a.id} § ${f.sec} ${f.field}`, f.id] as [IdKind, string, string | undefined])),
     ...base.epochs.map((e) => ['epoch', `эпоха ${e.id}`, e.id] as [IdKind, string, string | undefined]),
     ...(base.anchors?.anchors ?? []).map((a: any) => ['anchor', `опора ${a.id}`, a.id] as [IdKind, string, string | undefined]),

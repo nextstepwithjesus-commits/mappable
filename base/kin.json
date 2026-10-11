@@ -7,7 +7,7 @@
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "5f7f6d6"
+   "commit": "2bdf557"
   }
  },
  "sources": [
@@ -557,18 +557,17 @@
   {
    "id": "k-38",
    "from": "p-maaseya-syn-akhaza",
-   "to": "p-akhaz",
+   "to": "p-tsar-2par28-7",
    "rel": "сын царя",
    "refs": [
-    "2Пар 28:1",
     "2Пар 28:7"
    ],
-   "cert": "inference",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
     },
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {
@@ -605,18 +604,17 @@
   {
    "id": "k-41",
    "from": "p-malkhiya-syn-tsarya",
-   "to": "p-sedekiya",
+   "to": "p-tsar-ier38-6",
    "rel": "сын царя",
    "refs": [
-    "Иер 38:5",
     "Иер 38:6"
    ],
-   "cert": "inference",
+   "cert": "scripture",
    "prov": {
     "from": {
      "vol": "13-kings-of-judah.json"
     },
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {
@@ -727,7 +725,7 @@
   {
    "id": "k-49",
    "from": "p-toviya-ammonityanin",
-   "to": "p-eliashiv-pervosvyashchennik",
+   "to": "p-eliashiv-neem13-4",
    "rel": "близкий родственник",
    "refs": [
     "Неем 13:4"
@@ -737,7 +735,7 @@
     "from": {
      "vol": "15-prophets-exile.json"
     },
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {
@@ -1046,7 +1044,7 @@
    "id": "k-72",
    "from": "p-yuniya",
    "to": "p-pavel",
-   "rel": "сродница",
+   "rel": "сродник",
    "refs": [
     "Рим 16:7"
    ],
@@ -1055,7 +1053,7 @@
     "from": {
      "vol": "17-new-testament.json"
     },
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {
@@ -1153,7 +1151,7 @@
   {
    "id": "k-79",
    "from": "p-ioil-brat-nafana",
-   "to": "p-nafan-otets-igala",
+   "to": "p-nafan-1par11-38",
    "rel": "брат",
    "refs": [
     "1Пар 11:38"
@@ -1163,16 +1161,7 @@
     "from": {
      "vol": "19-court-and-heroes.json"
     },
-    "by": "исправление D5"
-   },
-   "identity": {
-    "of": "to",
-    "degree": "possible",
-    "note": "«Иоиль, брат Нафана» (1Пар 11:38); на этом месте перечня в 2Цар 23:36 стоит «Игал, сын Нафана»; тот ли это Нафан, текст прямо не говорит",
-    "refs": [
-     "1Пар 11:38",
-     "2Цар 23:36"
-    ]
+    "by": "исправление D5-2"
    }
   },
   {
@@ -1215,27 +1204,27 @@
   {
    "id": "k-83",
    "from": "p-maakha-zhena-makhira",
-   "to": "p-shupim-syn-ira",
+   "to": "p-shupim-1par7-15",
    "rel": "сестра",
    "refs": [
     "1Пар 7:15"
    ],
    "cert": "scripture",
    "prov": {
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {
    "id": "k-84",
    "from": "p-maakha-zhena-makhira",
-   "to": "p-khupim-syn-ira",
+   "to": "p-khupim-1par7-15",
    "rel": "сестра",
    "refs": [
     "1Пар 7:15"
    ],
    "cert": "scripture",
    "prov": {
-    "by": "исправление D5"
+    "by": "исправление D5-2"
    }
   },
   {

@@ -21,7 +21,7 @@ import type { Base } from './migrate.ts';
 import type { Redirect } from './types.ts';
 
 export const IDS_FILE = 'ids.json';
-export type IdKind = 'origin' | 'fact' | 'kin' | 'epoch' | 'anchor';
+export type IdKind = 'origin' | 'fact' | 'kin' | 'epoch' | 'anchor' | 'relation';
 export interface IdEntry {
   id: string;
   kind: IdKind;
@@ -32,7 +32,7 @@ export interface IdEntry {
   /** «Действует» или «выбыл»; куда переадресован — только в redirects.json. */
   state: 'active' | 'retired';
 }
-export const PREFIX: Record<IdKind, string> = { origin: 'o-', fact: 'a-', kin: 'k-', epoch: 'era-', anchor: 'an-' };
+export const PREFIX: Record<IdKind, string> = { origin: 'o-', fact: 'a-', kin: 'k-', epoch: 'era-', anchor: 'an-', relation: 'ar-' };
 export const EPOCH_REDIRECT_REASON = 'номер эпохи получил префикс era- (02 § 3.3.2; К-1)';
 export const ANCHOR_REDIRECT_REASON = 'номер опоры получил префикс an- (02 § 3.3.1; К-1, К-10)';
 export const ORIGIN_REDIRECT_REASON = 'у ребра сменился конец или номер лица — новая запись (02 § 3.3.1 [4.2]; К-12)';
@@ -45,6 +45,7 @@ export const factKey = (actor: string, f: { field: string; value: unknown; cert?
   `fact:${actor}|${f.field}|${h16({ value: f.value, cert: f.cert ?? null })}${step ? `|${step}` : ''}`;
 export const kinKey = (k: { from: string; to: string; rel: string; refs: unknown; cert?: unknown }, step?: string) =>
   `kin:${k.from}|${k.to}|${k.rel}|${h16({ refs: k.refs, cert: k.cert ?? null })}${step ? `|${step}` : ''}`;
+export const relationKey = (r: { a: string; b: string; kind: string }) => `relation:${r.a}|${r.b}|${r.kind}`;
 export const originKey = (o: { child: string; parent?: string; unnamedParent?: { words: string }; role: string; primary: boolean }) =>
   `origin:${o.child}|${o.parent ?? `?${o.unnamedParent?.words ?? ''}`}|${o.role}|${o.primary ? 'p' : 'o'}`;
 export const originId = (o: { child: string; parent?: string }) => (o.parent ? `o-${short(o.parent)}--${short(o.child)}` : undefined);
@@ -248,6 +249,8 @@ export function finishIds(base: Base): Issuer | undefined {
   };
   for (const v of base.volumes) for (const a of v.actors) a.facts = a.facts.map((f) => fix('fact', f, `${a.id} § ${f.sec} ${f.field}`));
   base.kin = base.kin.map((k) => fix('kin', k, `${k.from} — ${k.to}`));
+  // отношения лиц (02 § 3.11.1): номер `ar-<число>` по ключу «лицо, лицо, вид»
+  base.relations = (base.relations ?? []).map((r) => (r.id ? fix('relation', r, `${r.a} ~ ${r.b}`) : withId(iss.issue('relation', relationKey(r), `${r.a} ~ ${r.b}`), r)));
   // рёбра — по нынешним концам. Конец сменился (смена родителя, ребёнка, роли или номера лица) — новая запись и новый
   // номер; прежний номер, если он выдан и больше ни у кого не стоит, выбывает со строкой переадресации (02 § 3.3.1; К-12)
   const moved: { old: string; key: string }[] = [];
