@@ -3,11 +3,11 @@
  "title": "Списки плена и возвращения",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data/persons/20-return-lists.json",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [
@@ -31,6 +31,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15084",
      "sec": 5,
      "field": "status",
      "value": {
@@ -42,6 +43,7 @@
      }
     },
     {
+     "id": "a-15085",
      "sec": 17,
      "field": "events",
      "value": {
@@ -52,6 +54,7 @@
      }
     },
     {
+     "id": "a-15086",
      "sec": 17,
      "field": "events",
      "value": {
@@ -63,6 +66,7 @@
      }
     },
     {
+     "id": "a-15087",
      "sec": 17,
      "field": "events",
      "value": {
@@ -73,6 +77,7 @@
      }
     },
     {
+     "id": "a-15088",
      "sec": 17,
      "field": "events",
      "value": {
@@ -83,6 +88,7 @@
      }
     },
     {
+     "id": "a-15089",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -97,6 +103,7 @@
      }
     },
     {
+     "id": "a-15090",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -108,6 +115,7 @@
      }
     },
     {
+     "id": "a-15091",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -137,6 +145,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15092",
      "sec": 3,
      "field": "meaning",
      "value": {
@@ -149,6 +158,7 @@
      }
     },
     {
+     "id": "a-15093",
      "sec": 5,
      "field": "status",
      "value": {
@@ -160,6 +170,7 @@
      }
     },
     {
+     "id": "a-15094",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -170,6 +181,7 @@
      }
     },
     {
+     "id": "a-15095",
      "sec": 17,
      "field": "events",
      "value": {
@@ -180,6 +192,7 @@
      }
     },
     {
+     "id": "a-15096",
      "sec": 17,
      "field": "events",
      "value": {
@@ -191,6 +204,7 @@
      }
     },
     {
+     "id": "a-15097",
      "sec": 17,
      "field": "events",
      "value": {
@@ -201,6 +215,7 @@
      }
     },
     {
+     "id": "a-15098",
      "sec": 17,
      "field": "events",
      "value": {
@@ -211,6 +226,7 @@
      }
     },
     {
+     "id": "a-15099",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -226,6 +242,7 @@
      }
     },
     {
+     "id": "a-15100",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -237,6 +254,7 @@
      }
     },
     {
+     "id": "a-15101",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -248,6 +266,7 @@
      }
     },
     {
+     "id": "a-15102",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -260,6 +279,7 @@
      }
     },
     {
+     "id": "a-15103",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -290,6 +310,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15104",
      "sec": 5,
      "field": "status",
      "value": {
@@ -301,6 +322,7 @@
      }
     },
     {
+     "id": "a-15105",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -312,6 +334,7 @@
      }
     },
     {
+     "id": "a-15106",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -324,6 +347,7 @@
      }
     },
     {
+     "id": "a-15107",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -336,6 +360,7 @@
      }
     },
     {
+     "id": "a-15108",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -348,6 +373,7 @@
      }
     },
     {
+     "id": "a-15109",
      "sec": 24,
      "field": "notes",
      "cert": "interpretation",
@@ -365,6 +391,7 @@
      "needsSources": true
     },
     {
+     "id": "a-15110",
      "sec": 6,
      "field": "parentsNote",
      "prov": {
@@ -396,6 +423,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15111",
      "sec": 17,
      "field": "events",
      "value": {
@@ -406,6 +434,7 @@
      }
     },
     {
+     "id": "a-15112",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -417,6 +446,7 @@
      }
     },
     {
+     "id": "a-15113",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -430,6 +460,7 @@
      }
     },
     {
+     "id": "a-15114",
      "sec": 24,
      "field": "notes",
      "cert": "interpretation",
@@ -447,6 +478,7 @@
      "needsSources": true
     },
     {
+     "id": "a-15115",
      "sec": 6,
      "field": "parentsNote",
      "prov": {
@@ -478,6 +510,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15116",
      "sec": 5,
      "field": "status",
      "value": {
@@ -489,6 +522,7 @@
      }
     },
     {
+     "id": "a-15117",
      "sec": 17,
      "field": "events",
      "value": {
@@ -499,6 +533,7 @@
      }
     },
     {
+     "id": "a-15118",
      "sec": 17,
      "field": "events",
      "value": {
@@ -509,6 +544,7 @@
      }
     },
     {
+     "id": "a-15119",
      "sec": 17,
      "field": "events",
      "value": {
@@ -520,6 +556,7 @@
      }
     },
     {
+     "id": "a-15120",
      "sec": 17,
      "field": "events",
      "value": {
@@ -530,6 +567,7 @@
      }
     },
     {
+     "id": "a-15121",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -544,6 +582,7 @@
      }
     },
     {
+     "id": "a-15122",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -555,6 +594,7 @@
      }
     },
     {
+     "id": "a-15123",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -566,6 +606,7 @@
      }
     },
     {
+     "id": "a-15124",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -578,6 +619,7 @@
      }
     },
     {
+     "id": "a-15125",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -615,6 +657,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15126",
      "sec": 5,
      "field": "status",
      "value": {
@@ -626,6 +669,7 @@
      }
     },
     {
+     "id": "a-15127",
      "sec": 17,
      "field": "events",
      "value": {
@@ -637,6 +681,7 @@
      }
     },
     {
+     "id": "a-15128",
      "sec": 17,
      "field": "events",
      "value": {
@@ -647,6 +692,7 @@
      }
     },
     {
+     "id": "a-15129",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -660,6 +706,7 @@
      }
     },
     {
+     "id": "a-15130",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -671,6 +718,7 @@
      }
     },
     {
+     "id": "a-15131",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -682,6 +730,7 @@
      }
     },
     {
+     "id": "a-15132",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -719,6 +768,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15133",
      "sec": 5,
      "field": "status",
      "value": {
@@ -729,6 +779,7 @@
      }
     },
     {
+     "id": "a-15134",
      "sec": 17,
      "field": "events",
      "value": {
@@ -740,6 +791,7 @@
      }
     },
     {
+     "id": "a-15135",
      "sec": 17,
      "field": "events",
      "value": {
@@ -752,6 +804,7 @@
      }
     },
     {
+     "id": "a-15136",
      "sec": 17,
      "field": "events",
      "value": {
@@ -762,6 +815,7 @@
      }
     },
     {
+     "id": "a-15137",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -775,6 +829,7 @@
      }
     },
     {
+     "id": "a-15138",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -786,6 +841,7 @@
      }
     },
     {
+     "id": "a-15139",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -797,6 +853,7 @@
      }
     },
     {
+     "id": "a-15140",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -808,6 +865,7 @@
      }
     },
     {
+     "id": "a-15141",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -820,6 +878,7 @@
      }
     },
     {
+     "id": "a-15142",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -831,6 +890,7 @@
      }
     },
     {
+     "id": "a-15143",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -867,6 +927,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15144",
      "sec": 5,
      "field": "status",
      "value": {
@@ -878,6 +939,7 @@
      }
     },
     {
+     "id": "a-15145",
      "sec": 17,
      "field": "events",
      "value": {
@@ -888,6 +950,7 @@
      }
     },
     {
+     "id": "a-15146",
      "sec": 17,
      "field": "events",
      "value": {
@@ -899,6 +962,7 @@
      }
     },
     {
+     "id": "a-15147",
      "sec": 17,
      "field": "events",
      "value": {
@@ -909,6 +973,7 @@
      }
     },
     {
+     "id": "a-15148",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -922,6 +987,7 @@
      }
     },
     {
+     "id": "a-15149",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -933,6 +999,7 @@
      }
     },
     {
+     "id": "a-15150",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -969,6 +1036,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15151",
      "sec": 5,
      "field": "status",
      "value": {
@@ -980,6 +1048,7 @@
      }
     },
     {
+     "id": "a-15152",
      "sec": 17,
      "field": "events",
      "value": {
@@ -990,6 +1059,7 @@
      }
     },
     {
+     "id": "a-15153",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1000,6 +1070,7 @@
      }
     },
     {
+     "id": "a-15154",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1013,6 +1084,7 @@
      }
     },
     {
+     "id": "a-15155",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1024,6 +1096,7 @@
      }
     },
     {
+     "id": "a-15156",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1053,6 +1126,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15157",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1064,6 +1138,7 @@
      }
     },
     {
+     "id": "a-15158",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1074,6 +1149,7 @@
      }
     },
     {
+     "id": "a-15159",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1086,6 +1162,7 @@
      }
     },
     {
+     "id": "a-15160",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1097,6 +1174,7 @@
      }
     },
     {
+     "id": "a-15161",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1127,6 +1205,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15162",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1138,6 +1217,7 @@
      }
     },
     {
+     "id": "a-15163",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1148,6 +1228,7 @@
      }
     },
     {
+     "id": "a-15164",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1158,6 +1239,7 @@
      }
     },
     {
+     "id": "a-15165",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1171,6 +1253,7 @@
      }
     },
     {
+     "id": "a-15166",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1182,6 +1265,7 @@
      }
     },
     {
+     "id": "a-15167",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1193,6 +1277,7 @@
      }
     },
     {
+     "id": "a-15168",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1223,6 +1308,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15169",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1234,6 +1320,7 @@
      }
     },
     {
+     "id": "a-15170",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1244,6 +1331,7 @@
      }
     },
     {
+     "id": "a-15171",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1254,6 +1342,7 @@
      }
     },
     {
+     "id": "a-15172",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1267,6 +1356,7 @@
      }
     },
     {
+     "id": "a-15173",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1278,6 +1368,7 @@
      }
     },
     {
+     "id": "a-15174",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1307,6 +1398,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15175",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1318,6 +1410,7 @@
      }
     },
     {
+     "id": "a-15176",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1328,6 +1421,7 @@
      }
     },
     {
+     "id": "a-15177",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1340,6 +1434,7 @@
      }
     },
     {
+     "id": "a-15178",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1351,6 +1446,7 @@
      }
     },
     {
+     "id": "a-15179",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1381,6 +1477,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15180",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1392,6 +1489,7 @@
      }
     },
     {
+     "id": "a-15181",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1403,6 +1501,7 @@
      }
     },
     {
+     "id": "a-15182",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1413,6 +1512,7 @@
      }
     },
     {
+     "id": "a-15183",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1426,6 +1526,7 @@
      }
     },
     {
+     "id": "a-15184",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1437,6 +1538,7 @@
      }
     },
     {
+     "id": "a-15185",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1466,6 +1568,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15186",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1477,6 +1580,7 @@
      }
     },
     {
+     "id": "a-15187",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1488,6 +1592,7 @@
      }
     },
     {
+     "id": "a-15188",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1498,6 +1603,7 @@
      }
     },
     {
+     "id": "a-15189",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1508,6 +1614,7 @@
      }
     },
     {
+     "id": "a-15190",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1522,6 +1629,7 @@
      }
     },
     {
+     "id": "a-15191",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1533,6 +1641,7 @@
      }
     },
     {
+     "id": "a-15192",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1544,6 +1653,7 @@
      }
     },
     {
+     "id": "a-15193",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1576,6 +1686,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15194",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1586,6 +1697,7 @@
      }
     },
     {
+     "id": "a-15195",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1593,6 +1705,7 @@
      }
     },
     {
+     "id": "a-15196",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1631,6 +1744,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15197",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1642,6 +1756,7 @@
      }
     },
     {
+     "id": "a-15198",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1653,6 +1768,7 @@
      }
     },
     {
+     "id": "a-15199",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1665,6 +1781,7 @@
      }
     },
     {
+     "id": "a-15200",
      "sec": 24,
      "field": "notes",
      "cert": "interpretation",
@@ -1682,6 +1799,7 @@
      "needsSources": true
     },
     {
+     "id": "a-15201",
      "sec": 6,
      "field": "parentsNote",
      "prov": {
@@ -1716,6 +1834,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15202",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1726,6 +1845,7 @@
      }
     },
     {
+     "id": "a-15203",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -1737,6 +1857,7 @@
      }
     },
     {
+     "id": "a-15204",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1771,6 +1892,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15205",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1783,6 +1905,7 @@
      }
     },
     {
+     "id": "a-15206",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1794,6 +1917,7 @@
      }
     },
     {
+     "id": "a-15207",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1805,6 +1929,7 @@
      }
     },
     {
+     "id": "a-15208",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1839,6 +1964,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15209",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1851,6 +1977,7 @@
      }
     },
     {
+     "id": "a-15210",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1862,6 +1989,7 @@
      }
     },
     {
+     "id": "a-15211",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1894,6 +2022,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15212",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1906,6 +2035,7 @@
      }
     },
     {
+     "id": "a-15213",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1917,6 +2047,7 @@
      }
     },
     {
+     "id": "a-15214",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1953,6 +2084,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15215",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1965,6 +2097,7 @@
      }
     },
     {
+     "id": "a-15216",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1976,6 +2109,7 @@
      }
     },
     {
+     "id": "a-15217",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1987,6 +2121,7 @@
      }
     },
     {
+     "id": "a-15218",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1998,6 +2133,7 @@
      }
     },
     {
+     "id": "a-15219",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2009,6 +2145,7 @@
      }
     },
     {
+     "id": "a-15220",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2020,6 +2157,7 @@
      }
     },
     {
+     "id": "a-15221",
      "sec": 24,
      "field": "notes",
      "cert": "interpretation",
@@ -2036,6 +2174,7 @@
      "needsSources": true
     },
     {
+     "id": "a-15222",
      "sec": 6,
      "field": "parentsNote",
      "prov": {
@@ -2068,6 +2207,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15223",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2075,6 +2215,7 @@
      }
     },
     {
+     "id": "a-15224",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2104,6 +2245,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15225",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2111,6 +2253,7 @@
      }
     },
     {
+     "id": "a-15226",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2140,6 +2283,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15227",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2147,6 +2291,7 @@
      }
     },
     {
+     "id": "a-15228",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2176,6 +2321,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15229",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2183,6 +2329,7 @@
      }
     },
     {
+     "id": "a-15230",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2212,6 +2359,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15231",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2222,6 +2370,7 @@
      }
     },
     {
+     "id": "a-15232",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2229,6 +2378,7 @@
      }
     },
     {
+     "id": "a-15233",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2241,6 +2391,7 @@
      }
     },
     {
+     "id": "a-15234",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2252,6 +2403,7 @@
      }
     },
     {
+     "id": "a-15235",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2281,6 +2433,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15236",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2292,6 +2445,7 @@
      }
     },
     {
+     "id": "a-15237",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -2302,6 +2456,7 @@
      }
     },
     {
+     "id": "a-15238",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2309,6 +2464,7 @@
      }
     },
     {
+     "id": "a-15239",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2321,6 +2477,7 @@
      }
     },
     {
+     "id": "a-15240",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2350,6 +2507,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15241",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2361,6 +2519,7 @@
      }
     },
     {
+     "id": "a-15242",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2368,6 +2527,7 @@
      }
     },
     {
+     "id": "a-15243",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2398,6 +2558,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15244",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2423,6 +2584,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15245",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2448,6 +2610,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15246",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2473,6 +2636,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15247",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2485,6 +2649,7 @@
      }
     },
     {
+     "id": "a-15248",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2492,6 +2657,7 @@
      }
     },
     {
+     "id": "a-15249",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2504,6 +2670,7 @@
      }
     },
     {
+     "id": "a-15250",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2515,6 +2682,7 @@
      }
     },
     {
+     "id": "a-15251",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2544,6 +2712,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15252",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2569,6 +2738,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15253",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2581,6 +2751,7 @@
      }
     },
     {
+     "id": "a-15254",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2588,6 +2759,7 @@
      }
     },
     {
+     "id": "a-15255",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2618,6 +2790,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15256",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2643,6 +2816,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15257",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2668,6 +2842,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15258",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2680,6 +2855,7 @@
      }
     },
     {
+     "id": "a-15259",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2687,6 +2863,7 @@
      }
     },
     {
+     "id": "a-15260",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2699,6 +2876,7 @@
      }
     },
     {
+     "id": "a-15261",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2729,6 +2907,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15262",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2736,6 +2915,7 @@
      }
     },
     {
+     "id": "a-15263",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2765,6 +2945,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15264",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2790,6 +2971,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15265",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2815,6 +2997,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15266",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2827,6 +3010,7 @@
      }
     },
     {
+     "id": "a-15267",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2834,6 +3018,7 @@
      }
     },
     {
+     "id": "a-15268",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2867,6 +3052,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15269",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2878,6 +3064,7 @@
      }
     },
     {
+     "id": "a-15270",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2885,6 +3072,7 @@
      }
     },
     {
+     "id": "a-15271",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2918,6 +3106,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15272",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2929,6 +3118,7 @@
      }
     },
     {
+     "id": "a-15273",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2936,6 +3126,7 @@
      }
     },
     {
+     "id": "a-15274",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2966,6 +3157,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15275",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2973,6 +3165,7 @@
      }
     },
     {
+     "id": "a-15276",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3002,6 +3195,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15277",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3027,6 +3221,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15278",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3052,6 +3247,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15279",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3077,6 +3273,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15280",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3102,6 +3299,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15281",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3113,6 +3311,7 @@
      }
     },
     {
+     "id": "a-15282",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3120,6 +3319,7 @@
      }
     },
     {
+     "id": "a-15283",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3149,6 +3349,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15284",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3156,6 +3357,7 @@
      }
     },
     {
+     "id": "a-15285",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3186,6 +3388,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15286",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3193,6 +3396,7 @@
      }
     },
     {
+     "id": "a-15287",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3223,6 +3427,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15288",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3248,6 +3453,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15289",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3273,6 +3479,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15290",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3280,6 +3487,7 @@
      }
     },
     {
+     "id": "a-15291",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3309,6 +3517,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15292",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3316,6 +3525,7 @@
      }
     },
     {
+     "id": "a-15293",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3346,6 +3556,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15294",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3356,6 +3567,7 @@
      }
     },
     {
+     "id": "a-15295",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3363,6 +3575,7 @@
      }
     },
     {
+     "id": "a-15296",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3392,6 +3605,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15297",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3399,6 +3613,7 @@
      }
     },
     {
+     "id": "a-15298",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3428,6 +3643,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15299",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3453,6 +3669,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15300",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3478,6 +3695,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15301",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3503,6 +3721,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15302",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3528,6 +3747,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15303",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3553,6 +3773,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15304",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3578,6 +3799,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15305",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3589,6 +3811,7 @@
      }
     },
     {
+     "id": "a-15306",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3596,6 +3819,7 @@
      }
     },
     {
+     "id": "a-15307",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3625,6 +3849,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15308",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3635,6 +3860,7 @@
      }
     },
     {
+     "id": "a-15309",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3660,6 +3886,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15310",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3670,6 +3897,7 @@
      }
     },
     {
+     "id": "a-15311",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3677,6 +3905,7 @@
      }
     },
     {
+     "id": "a-15312",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3706,6 +3935,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15313",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3713,6 +3943,7 @@
      }
     },
     {
+     "id": "a-15314",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3742,6 +3973,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15315",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3752,6 +3984,7 @@
      }
     },
     {
+     "id": "a-15316",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3777,6 +4010,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15317",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3784,6 +4018,7 @@
      }
     },
     {
+     "id": "a-15318",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3795,6 +4030,7 @@
      }
     },
     {
+     "id": "a-15319",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3824,6 +4060,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15320",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3834,6 +4071,7 @@
      }
     },
     {
+     "id": "a-15321",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3862,6 +4100,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15322",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3873,6 +4112,7 @@
      }
     },
     {
+     "id": "a-15323",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3880,6 +4120,7 @@
      }
     },
     {
+     "id": "a-15324",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3892,6 +4133,7 @@
      }
     },
     {
+     "id": "a-15325",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3924,6 +4166,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15326",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3935,6 +4178,7 @@
      }
     },
     {
+     "id": "a-15327",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3945,6 +4189,7 @@
      }
     },
     {
+     "id": "a-15328",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3955,6 +4200,7 @@
      }
     },
     {
+     "id": "a-15329",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3962,6 +4208,7 @@
      }
     },
     {
+     "id": "a-15330",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3975,6 +4222,7 @@
      }
     },
     {
+     "id": "a-15331",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4007,6 +4255,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15332",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4035,6 +4284,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15333",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4042,6 +4292,7 @@
      }
     },
     {
+     "id": "a-15334",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4074,6 +4325,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15335",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -4084,6 +4336,7 @@
      }
     },
     {
+     "id": "a-15336",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4091,6 +4344,7 @@
      }
     },
     {
+     "id": "a-15337",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4124,6 +4378,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15338",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4131,6 +4386,7 @@
      }
     },
     {
+     "id": "a-15339",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4164,6 +4420,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15340",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4192,6 +4449,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15341",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4203,6 +4461,7 @@
      }
     },
     {
+     "id": "a-15342",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4213,6 +4472,7 @@
      }
     },
     {
+     "id": "a-15343",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4220,6 +4480,7 @@
      }
     },
     {
+     "id": "a-15344",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4249,6 +4510,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15345",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4256,6 +4518,7 @@
      }
     },
     {
+     "id": "a-15346",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4285,6 +4548,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15347",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -4295,6 +4559,7 @@
      }
     },
     {
+     "id": "a-15348",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4323,6 +4588,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15349",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -4333,6 +4599,7 @@
      }
     },
     {
+     "id": "a-15350",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4340,6 +4607,7 @@
      }
     },
     {
+     "id": "a-15351",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4352,6 +4620,7 @@
      }
     },
     {
+     "id": "a-15352",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4392,6 +4661,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15353",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4402,6 +4672,7 @@
      }
     },
     {
+     "id": "a-15354",
      "sec": 15,
      "field": "places",
      "value": {
@@ -4414,6 +4685,7 @@
      }
     },
     {
+     "id": "a-15355",
      "sec": 17,
      "field": "events",
      "value": {
@@ -4424,6 +4696,7 @@
      }
     },
     {
+     "id": "a-15356",
      "sec": 17,
      "field": "events",
      "value": {
@@ -4434,6 +4707,7 @@
      }
     },
     {
+     "id": "a-15357",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4446,6 +4720,7 @@
      }
     },
     {
+     "id": "a-15358",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4480,6 +4755,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15359",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4490,6 +4766,7 @@
      }
     },
     {
+     "id": "a-15360",
      "sec": 17,
      "field": "events",
      "value": {
@@ -4500,6 +4777,7 @@
      }
     },
     {
+     "id": "a-15361",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4511,6 +4789,7 @@
      }
     },
     {
+     "id": "a-15362",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4545,6 +4824,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15363",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4552,6 +4832,7 @@
      }
     },
     {
+     "id": "a-15364",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4587,6 +4868,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15365",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4616,6 +4898,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15366",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4626,6 +4909,7 @@
      }
     },
     {
+     "id": "a-15367",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -4636,6 +4920,7 @@
      }
     },
     {
+     "id": "a-15368",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4643,6 +4928,7 @@
      }
     },
     {
+     "id": "a-15369",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4672,6 +4958,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15370",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4679,6 +4966,7 @@
      }
     },
     {
+     "id": "a-15371",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4709,6 +4997,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15372",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -4719,6 +5008,7 @@
      }
     },
     {
+     "id": "a-15373",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4726,6 +5016,7 @@
      }
     },
     {
+     "id": "a-15374",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4755,6 +5046,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15375",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -4765,6 +5057,7 @@
      }
     },
     {
+     "id": "a-15376",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4772,6 +5065,7 @@
      }
     },
     {
+     "id": "a-15377",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4802,6 +5096,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15378",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -4812,6 +5107,7 @@
      }
     },
     {
+     "id": "a-15379",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4837,6 +5133,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15380",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4848,6 +5145,7 @@
      }
     },
     {
+     "id": "a-15381",
      "sec": 14,
      "field": "met",
      "value": {
@@ -4860,6 +5158,7 @@
      }
     },
     {
+     "id": "a-15382",
      "sec": 14,
      "field": "met",
      "value": {
@@ -4872,6 +5171,7 @@
      }
     },
     {
+     "id": "a-15383",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4883,6 +5183,7 @@
      }
     },
     {
+     "id": "a-15384",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4895,6 +5196,7 @@
      }
     },
     {
+     "id": "a-15385",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4934,6 +5236,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15386",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4945,6 +5248,7 @@
      }
     },
     {
+     "id": "a-15387",
      "sec": 14,
      "field": "met",
      "value": {
@@ -4957,6 +5261,7 @@
      }
     },
     {
+     "id": "a-15388",
      "sec": 14,
      "field": "met",
      "value": {
@@ -4969,6 +5274,7 @@
      }
     },
     {
+     "id": "a-15389",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4980,6 +5286,7 @@
      }
     },
     {
+     "id": "a-15390",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4992,6 +5299,7 @@
      }
     },
     {
+     "id": "a-15391",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5029,6 +5337,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15392",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5040,6 +5349,7 @@
      }
     },
     {
+     "id": "a-15393",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5052,6 +5362,7 @@
      }
     },
     {
+     "id": "a-15394",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5064,6 +5375,7 @@
      }
     },
     {
+     "id": "a-15395",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5075,6 +5387,7 @@
      }
     },
     {
+     "id": "a-15396",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5105,6 +5418,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15397",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5115,6 +5429,7 @@
      }
     },
     {
+     "id": "a-15398",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5126,6 +5441,7 @@
      }
     },
     {
+     "id": "a-15399",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5137,6 +5453,7 @@
      }
     },
     {
+     "id": "a-15400",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5144,6 +5461,7 @@
      }
     },
     {
+     "id": "a-15401",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5156,6 +5474,7 @@
      }
     },
     {
+     "id": "a-15402",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5186,6 +5505,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15403",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5197,6 +5517,7 @@
      }
     },
     {
+     "id": "a-15404",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5209,6 +5530,7 @@
      }
     },
     {
+     "id": "a-15405",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5221,6 +5543,7 @@
      }
     },
     {
+     "id": "a-15406",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5232,6 +5555,7 @@
      }
     },
     {
+     "id": "a-15407",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5244,6 +5568,7 @@
      }
     },
     {
+     "id": "a-15408",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5273,6 +5598,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15409",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5284,6 +5610,7 @@
      }
     },
     {
+     "id": "a-15410",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5296,6 +5623,7 @@
      }
     },
     {
+     "id": "a-15411",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5308,6 +5636,7 @@
      }
     },
     {
+     "id": "a-15412",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5319,6 +5648,7 @@
      }
     },
     {
+     "id": "a-15413",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5356,6 +5686,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15414",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5367,6 +5698,7 @@
      }
     },
     {
+     "id": "a-15415",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5379,6 +5711,7 @@
      }
     },
     {
+     "id": "a-15416",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5391,6 +5724,7 @@
      }
     },
     {
+     "id": "a-15417",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5402,6 +5736,7 @@
      }
     },
     {
+     "id": "a-15418",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5432,6 +5767,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15419",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5443,6 +5779,7 @@
      }
     },
     {
+     "id": "a-15420",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5455,6 +5792,7 @@
      }
     },
     {
+     "id": "a-15421",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5467,6 +5805,7 @@
      }
     },
     {
+     "id": "a-15422",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5478,6 +5817,7 @@
      }
     },
     {
+     "id": "a-15423",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5490,6 +5830,7 @@
      }
     },
     {
+     "id": "a-15424",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5528,6 +5869,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15425",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5539,6 +5881,7 @@
      }
     },
     {
+     "id": "a-15426",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5551,6 +5894,7 @@
      }
     },
     {
+     "id": "a-15427",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5563,6 +5907,7 @@
      }
     },
     {
+     "id": "a-15428",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5574,6 +5919,7 @@
      }
     },
     {
+     "id": "a-15429",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5586,6 +5932,7 @@
      }
     },
     {
+     "id": "a-15430",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5625,6 +5972,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15431",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5636,6 +5984,7 @@
      }
     },
     {
+     "id": "a-15432",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5648,6 +5997,7 @@
      }
     },
     {
+     "id": "a-15433",
      "sec": 14,
      "field": "met",
      "value": {
@@ -5660,6 +6010,7 @@
      }
     },
     {
+     "id": "a-15434",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5671,6 +6022,7 @@
      }
     },
     {
+     "id": "a-15435",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5683,6 +6035,7 @@
      }
     },
     {
+     "id": "a-15436",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5712,6 +6065,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15437",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5722,6 +6076,7 @@
      }
     },
     {
+     "id": "a-15438",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5729,6 +6084,7 @@
      }
     },
     {
+     "id": "a-15439",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5741,6 +6097,7 @@
      }
     },
     {
+     "id": "a-15440",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5753,6 +6110,7 @@
      }
     },
     {
+     "id": "a-15441",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5784,6 +6142,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15442",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5795,6 +6154,7 @@
      }
     },
     {
+     "id": "a-15443",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5802,6 +6162,7 @@
      }
     },
     {
+     "id": "a-15444",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5832,6 +6193,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15445",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5839,6 +6201,7 @@
      }
     },
     {
+     "id": "a-15446",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5869,6 +6232,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15447",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5880,6 +6244,7 @@
      }
     },
     {
+     "id": "a-15448",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5905,6 +6270,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15449",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5912,6 +6278,7 @@
      }
     },
     {
+     "id": "a-15450",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5941,6 +6308,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15451",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5952,6 +6320,7 @@
      }
     },
     {
+     "id": "a-15452",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5959,6 +6328,7 @@
      }
     },
     {
+     "id": "a-15453",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5970,6 +6340,7 @@
      }
     },
     {
+     "id": "a-15454",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6000,6 +6371,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15455",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6025,6 +6397,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15456",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6036,6 +6409,7 @@
      }
     },
     {
+     "id": "a-15457",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6043,6 +6417,7 @@
      }
     },
     {
+     "id": "a-15458",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6072,6 +6447,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15459",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6097,6 +6473,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15460",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6108,6 +6485,7 @@
      }
     },
     {
+     "id": "a-15461",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6115,6 +6493,7 @@
      }
     },
     {
+     "id": "a-15462",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6144,6 +6523,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15463",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6169,6 +6549,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15464",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6180,6 +6561,7 @@
      }
     },
     {
+     "id": "a-15465",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6187,6 +6569,7 @@
      }
     },
     {
+     "id": "a-15466",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6216,6 +6599,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15467",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6241,6 +6625,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15468",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6252,6 +6637,7 @@
      }
     },
     {
+     "id": "a-15469",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6277,6 +6663,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15470",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6284,6 +6671,7 @@
      }
     },
     {
+     "id": "a-15471",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6313,6 +6701,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15472",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6324,6 +6713,7 @@
      }
     },
     {
+     "id": "a-15473",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6331,6 +6721,7 @@
      }
     },
     {
+     "id": "a-15474",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6360,6 +6751,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15475",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6371,6 +6763,7 @@
      }
     },
     {
+     "id": "a-15476",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6378,6 +6771,7 @@
      }
     },
     {
+     "id": "a-15477",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6407,6 +6801,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15478",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6432,6 +6827,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15479",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6443,6 +6839,7 @@
      }
     },
     {
+     "id": "a-15480",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6468,6 +6865,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15481",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6479,6 +6877,7 @@
      }
     },
     {
+     "id": "a-15482",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6504,6 +6903,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15483",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6515,6 +6915,7 @@
      }
     },
     {
+     "id": "a-15484",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6540,6 +6941,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15485",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6551,6 +6953,7 @@
      }
     },
     {
+     "id": "a-15486",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6576,6 +6979,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15487",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6587,6 +6991,7 @@
      }
     },
     {
+     "id": "a-15488",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6594,6 +6999,7 @@
      }
     },
     {
+     "id": "a-15489",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6623,6 +7029,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15490",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6634,6 +7041,7 @@
      }
     },
     {
+     "id": "a-15491",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6659,6 +7067,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15492",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6669,6 +7078,7 @@
      }
     },
     {
+     "id": "a-15493",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6694,6 +7104,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15494",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6704,6 +7115,7 @@
      }
     },
     {
+     "id": "a-15495",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6729,6 +7141,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15496",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6739,6 +7152,7 @@
      }
     },
     {
+     "id": "a-15497",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6764,6 +7178,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15498",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6774,6 +7189,7 @@
      }
     },
     {
+     "id": "a-15499",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6781,6 +7197,7 @@
      }
     },
     {
+     "id": "a-15500",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6810,6 +7227,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15501",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6820,6 +7238,7 @@
      }
     },
     {
+     "id": "a-15502",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6827,6 +7246,7 @@
      }
     },
     {
+     "id": "a-15503",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6856,6 +7276,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15504",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6866,6 +7287,7 @@
      }
     },
     {
+     "id": "a-15505",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6873,6 +7295,7 @@
      }
     },
     {
+     "id": "a-15506",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6902,6 +7325,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15507",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6912,6 +7336,7 @@
      }
     },
     {
+     "id": "a-15508",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6937,6 +7362,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15509",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6947,6 +7373,7 @@
      }
     },
     {
+     "id": "a-15510",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6972,6 +7399,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15511",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6982,6 +7410,7 @@
      }
     },
     {
+     "id": "a-15512",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7007,6 +7436,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15513",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7017,6 +7447,7 @@
      }
     },
     {
+     "id": "a-15514",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7042,6 +7473,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15515",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7052,6 +7484,7 @@
      }
     },
     {
+     "id": "a-15516",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7059,6 +7492,7 @@
      }
     },
     {
+     "id": "a-15517",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7088,6 +7522,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15518",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7098,6 +7533,7 @@
      }
     },
     {
+     "id": "a-15519",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7108,6 +7544,7 @@
      }
     },
     {
+     "id": "a-15520",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7115,6 +7552,7 @@
      }
     },
     {
+     "id": "a-15521",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7144,6 +7582,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15522",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7151,6 +7590,7 @@
      }
     },
     {
+     "id": "a-15523",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7180,6 +7620,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15524",
      "sec": 14,
      "field": "met",
      "value": {
@@ -7191,6 +7632,7 @@
      }
     },
     {
+     "id": "a-15525",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7201,6 +7643,7 @@
      }
     },
     {
+     "id": "a-15526",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7211,6 +7654,7 @@
      }
     },
     {
+     "id": "a-15527",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7221,6 +7665,7 @@
      }
     },
     {
+     "id": "a-15528",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -7229,6 +7674,7 @@
      }
     },
     {
+     "id": "a-15529",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -7237,6 +7683,7 @@
      }
     },
     {
+     "id": "a-15530",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7247,6 +7694,7 @@
      }
     },
     {
+     "id": "a-15531",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7259,6 +7707,7 @@
      }
     },
     {
+     "id": "a-15532",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7289,6 +7738,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15533",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7299,6 +7749,7 @@
      }
     },
     {
+     "id": "a-15534",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7306,6 +7757,7 @@
      }
     },
     {
+     "id": "a-15535",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7338,6 +7790,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15536",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7345,6 +7798,7 @@
      }
     },
     {
+     "id": "a-15537",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7374,6 +7828,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15538",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7384,6 +7839,7 @@
      }
     },
     {
+     "id": "a-15539",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7391,6 +7847,7 @@
      }
     },
     {
+     "id": "a-15540",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7420,6 +7877,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15541",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7445,6 +7903,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15542",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7455,6 +7914,7 @@
      }
     },
     {
+     "id": "a-15543",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7462,6 +7922,7 @@
      }
     },
     {
+     "id": "a-15544",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7491,6 +7952,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15545",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7501,6 +7963,7 @@
      }
     },
     {
+     "id": "a-15546",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7508,6 +7971,7 @@
      }
     },
     {
+     "id": "a-15547",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7541,6 +8005,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15548",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7552,6 +8017,7 @@
      }
     },
     {
+     "id": "a-15549",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7559,6 +8025,7 @@
      }
     },
     {
+     "id": "a-15550",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7591,6 +8058,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15551",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7602,6 +8070,7 @@
      }
     },
     {
+     "id": "a-15552",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7609,6 +8078,7 @@
      }
     },
     {
+     "id": "a-15553",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7641,6 +8111,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15554",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7652,6 +8123,7 @@
      }
     },
     {
+     "id": "a-15555",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7680,6 +8152,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15556",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7691,6 +8164,7 @@
      }
     },
     {
+     "id": "a-15557",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7716,6 +8190,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15558",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7727,6 +8202,7 @@
      }
     },
     {
+     "id": "a-15559",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7737,6 +8213,7 @@
      }
     },
     {
+     "id": "a-15560",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7748,6 +8225,7 @@
      }
     },
     {
+     "id": "a-15561",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7778,6 +8256,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15562",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7789,6 +8268,7 @@
      }
     },
     {
+     "id": "a-15563",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7814,6 +8294,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15564",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7825,6 +8306,7 @@
      }
     },
     {
+     "id": "a-15565",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7850,6 +8332,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15566",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7861,6 +8344,7 @@
      }
     },
     {
+     "id": "a-15567",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7868,6 +8352,7 @@
      }
     },
     {
+     "id": "a-15568",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7897,6 +8382,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15569",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7908,6 +8394,7 @@
      }
     },
     {
+     "id": "a-15570",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7933,6 +8420,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15571",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7944,6 +8432,7 @@
      }
     },
     {
+     "id": "a-15572",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7969,6 +8458,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15573",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -7980,6 +8470,7 @@
      }
     },
     {
+     "id": "a-15574",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7987,6 +8478,7 @@
      }
     },
     {
+     "id": "a-15575",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8016,6 +8508,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15576",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8027,6 +8520,7 @@
      }
     },
     {
+     "id": "a-15577",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8052,6 +8546,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15578",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8063,6 +8558,7 @@
      }
     },
     {
+     "id": "a-15579",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8088,6 +8584,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15580",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8099,6 +8596,7 @@
      }
     },
     {
+     "id": "a-15581",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8124,6 +8622,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15582",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8135,6 +8634,7 @@
      }
     },
     {
+     "id": "a-15583",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8160,6 +8660,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15584",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8171,6 +8672,7 @@
      }
     },
     {
+     "id": "a-15585",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8196,6 +8698,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15586",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8207,6 +8710,7 @@
      }
     },
     {
+     "id": "a-15587",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8232,6 +8736,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15588",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8243,6 +8748,7 @@
      }
     },
     {
+     "id": "a-15589",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8268,6 +8774,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15590",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8279,6 +8786,7 @@
      }
     },
     {
+     "id": "a-15591",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8304,6 +8812,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15592",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8315,6 +8824,7 @@
      }
     },
     {
+     "id": "a-15593",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8322,6 +8832,7 @@
      }
     },
     {
+     "id": "a-15594",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8351,6 +8862,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15595",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8362,6 +8874,7 @@
      }
     },
     {
+     "id": "a-15596",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8387,6 +8900,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15597",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8398,6 +8912,7 @@
      }
     },
     {
+     "id": "a-15598",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8423,6 +8938,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15599",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8434,6 +8950,7 @@
      }
     },
     {
+     "id": "a-15600",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8459,6 +8976,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15601",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8470,6 +8988,7 @@
      }
     },
     {
+     "id": "a-15602",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8495,6 +9014,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15603",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8506,6 +9026,7 @@
      }
     },
     {
+     "id": "a-15604",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8531,6 +9052,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15605",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8542,6 +9064,7 @@
      }
     },
     {
+     "id": "a-15606",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8567,6 +9090,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15607",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8578,6 +9102,7 @@
      }
     },
     {
+     "id": "a-15608",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8585,6 +9110,7 @@
      }
     },
     {
+     "id": "a-15609",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8614,6 +9140,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15610",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8625,6 +9152,7 @@
      }
     },
     {
+     "id": "a-15611",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8650,6 +9178,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15612",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8661,6 +9190,7 @@
      }
     },
     {
+     "id": "a-15613",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8686,6 +9216,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15614",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8697,6 +9228,7 @@
      }
     },
     {
+     "id": "a-15615",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8722,6 +9254,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15616",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8733,6 +9266,7 @@
      }
     },
     {
+     "id": "a-15617",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8758,6 +9292,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15618",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8769,6 +9304,7 @@
      }
     },
     {
+     "id": "a-15619",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8794,6 +9330,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15620",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8805,6 +9342,7 @@
      }
     },
     {
+     "id": "a-15621",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8830,6 +9368,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15622",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8841,6 +9380,7 @@
      }
     },
     {
+     "id": "a-15623",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8866,6 +9406,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15624",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8877,6 +9418,7 @@
      }
     },
     {
+     "id": "a-15625",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8902,6 +9444,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15626",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8913,6 +9456,7 @@
      }
     },
     {
+     "id": "a-15627",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8938,6 +9482,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15628",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8949,6 +9494,7 @@
      }
     },
     {
+     "id": "a-15629",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8974,6 +9520,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15630",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -8985,6 +9532,7 @@
      }
     },
     {
+     "id": "a-15631",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9010,6 +9558,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15632",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9021,6 +9570,7 @@
      }
     },
     {
+     "id": "a-15633",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9046,6 +9596,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15634",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9057,6 +9608,7 @@
      }
     },
     {
+     "id": "a-15635",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9064,6 +9616,7 @@
      }
     },
     {
+     "id": "a-15636",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9093,6 +9646,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15637",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9104,6 +9658,7 @@
      }
     },
     {
+     "id": "a-15638",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9111,6 +9666,7 @@
      }
     },
     {
+     "id": "a-15639",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9140,6 +9696,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15640",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9151,6 +9708,7 @@
      }
     },
     {
+     "id": "a-15641",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9176,6 +9734,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15642",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9187,6 +9746,7 @@
      }
     },
     {
+     "id": "a-15643",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9212,6 +9772,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15644",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9223,6 +9784,7 @@
      }
     },
     {
+     "id": "a-15645",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9248,6 +9810,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15646",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9259,6 +9822,7 @@
      }
     },
     {
+     "id": "a-15647",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9284,6 +9848,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15648",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9295,6 +9860,7 @@
      }
     },
     {
+     "id": "a-15649",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9320,6 +9886,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15650",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9331,6 +9898,7 @@
      }
     },
     {
+     "id": "a-15651",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9338,6 +9906,7 @@
      }
     },
     {
+     "id": "a-15652",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9367,6 +9936,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15653",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9378,6 +9948,7 @@
      }
     },
     {
+     "id": "a-15654",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9403,6 +9974,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15655",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9414,6 +9986,7 @@
      }
     },
     {
+     "id": "a-15656",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9439,6 +10012,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15657",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9450,6 +10024,7 @@
      }
     },
     {
+     "id": "a-15658",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9475,6 +10050,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15659",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9486,6 +10062,7 @@
      }
     },
     {
+     "id": "a-15660",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9511,6 +10088,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15661",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9522,6 +10100,7 @@
      }
     },
     {
+     "id": "a-15662",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9547,6 +10126,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15663",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9558,6 +10138,7 @@
      }
     },
     {
+     "id": "a-15664",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9583,6 +10164,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15665",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9594,6 +10176,7 @@
      }
     },
     {
+     "id": "a-15666",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9619,6 +10202,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15667",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9630,6 +10214,7 @@
      }
     },
     {
+     "id": "a-15668",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9655,6 +10240,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15669",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9666,6 +10252,7 @@
      }
     },
     {
+     "id": "a-15670",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9691,6 +10278,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15671",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9702,6 +10290,7 @@
      }
     },
     {
+     "id": "a-15672",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9727,6 +10316,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15673",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9738,6 +10328,7 @@
      }
     },
     {
+     "id": "a-15674",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9745,6 +10336,7 @@
      }
     },
     {
+     "id": "a-15675",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9774,6 +10366,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15676",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9785,6 +10378,7 @@
      }
     },
     {
+     "id": "a-15677",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9810,6 +10404,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15678",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9821,6 +10416,7 @@
      }
     },
     {
+     "id": "a-15679",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9846,6 +10442,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15680",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9857,6 +10454,7 @@
      }
     },
     {
+     "id": "a-15681",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9882,6 +10480,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15682",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9893,6 +10492,7 @@
      }
     },
     {
+     "id": "a-15683",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9918,6 +10518,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15684",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9929,6 +10530,7 @@
      }
     },
     {
+     "id": "a-15685",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9954,6 +10556,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15686",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -9965,6 +10568,7 @@
      }
     },
     {
+     "id": "a-15687",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9972,6 +10576,7 @@
      }
     },
     {
+     "id": "a-15688",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10001,6 +10606,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15689",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10012,6 +10618,7 @@
      }
     },
     {
+     "id": "a-15690",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10019,6 +10626,7 @@
      }
     },
     {
+     "id": "a-15691",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10048,6 +10656,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15692",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10059,6 +10668,7 @@
      }
     },
     {
+     "id": "a-15693",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10084,6 +10694,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15694",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10095,6 +10706,7 @@
      }
     },
     {
+     "id": "a-15695",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10120,6 +10732,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15696",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10131,6 +10744,7 @@
      }
     },
     {
+     "id": "a-15697",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10156,6 +10770,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15698",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10167,6 +10782,7 @@
      }
     },
     {
+     "id": "a-15699",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10174,6 +10790,7 @@
      }
     },
     {
+     "id": "a-15700",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10203,6 +10820,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15701",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10214,6 +10832,7 @@
      }
     },
     {
+     "id": "a-15702",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10221,6 +10840,7 @@
      }
     },
     {
+     "id": "a-15703",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10250,6 +10870,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15704",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10261,6 +10882,7 @@
      }
     },
     {
+     "id": "a-15705",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10286,6 +10908,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15706",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10297,6 +10920,7 @@
      }
     },
     {
+     "id": "a-15707",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10322,6 +10946,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15708",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10333,6 +10958,7 @@
      }
     },
     {
+     "id": "a-15709",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10358,6 +10984,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15710",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10369,6 +10996,7 @@
      }
     },
     {
+     "id": "a-15711",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10394,6 +11022,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15712",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10405,6 +11034,7 @@
      }
     },
     {
+     "id": "a-15713",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10430,6 +11060,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15714",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10441,6 +11072,7 @@
      }
     },
     {
+     "id": "a-15715",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10466,6 +11098,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15716",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10477,6 +11110,7 @@
      }
     },
     {
+     "id": "a-15717",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10502,6 +11136,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15718",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10513,6 +11148,7 @@
      }
     },
     {
+     "id": "a-15719",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10538,6 +11174,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15720",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10549,6 +11186,7 @@
      }
     },
     {
+     "id": "a-15721",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10574,6 +11212,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15722",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10585,6 +11224,7 @@
      }
     },
     {
+     "id": "a-15723",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10610,6 +11250,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15724",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10621,6 +11262,7 @@
      }
     },
     {
+     "id": "a-15725",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10646,6 +11288,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15726",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10657,6 +11300,7 @@
      }
     },
     {
+     "id": "a-15727",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10682,6 +11326,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15728",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10693,6 +11338,7 @@
      }
     },
     {
+     "id": "a-15729",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10718,6 +11364,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15730",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10729,6 +11376,7 @@
      }
     },
     {
+     "id": "a-15731",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10754,6 +11402,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15732",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10765,6 +11414,7 @@
      }
     },
     {
+     "id": "a-15733",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10790,6 +11440,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15734",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10801,6 +11452,7 @@
      }
     },
     {
+     "id": "a-15735",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10826,6 +11478,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15736",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10837,6 +11490,7 @@
      }
     },
     {
+     "id": "a-15737",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10862,6 +11516,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15738",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10873,6 +11528,7 @@
      }
     },
     {
+     "id": "a-15739",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10898,6 +11554,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15740",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10909,6 +11566,7 @@
      }
     },
     {
+     "id": "a-15741",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10934,6 +11592,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15742",
      "sec": 9,
      "field": "spousesNote",
      "value": {
@@ -10945,6 +11604,7 @@
      }
     },
     {
+     "id": "a-15743",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10970,6 +11630,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15744",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10977,6 +11638,7 @@
      }
     },
     {
+     "id": "a-15745",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11006,6 +11668,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15746",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11016,6 +11679,7 @@
      }
     },
     {
+     "id": "a-15747",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11041,6 +11705,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15748",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11048,6 +11713,7 @@
      }
     },
     {
+     "id": "a-15749",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11085,6 +11751,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15750",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11115,6 +11782,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15751",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -11125,6 +11793,7 @@
      }
     },
     {
+     "id": "a-15752",
      "sec": 15,
      "field": "places",
      "value": {
@@ -11137,6 +11806,7 @@
      }
     },
     {
+     "id": "a-15753",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11147,6 +11817,7 @@
      }
     },
     {
+     "id": "a-15754",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11157,6 +11828,7 @@
      }
     },
     {
+     "id": "a-15755",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11169,6 +11841,7 @@
      }
     },
     {
+     "id": "a-15756",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11199,6 +11872,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15757",
      "sec": 12,
      "field": "kinNote",
      "value": {
@@ -11209,6 +11883,7 @@
      }
     },
     {
+     "id": "a-15758",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11234,6 +11909,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15759",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11259,6 +11935,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15760",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11269,6 +11946,7 @@
      }
     },
     {
+     "id": "a-15761",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11276,6 +11954,7 @@
      }
     },
     {
+     "id": "a-15762",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11305,6 +11984,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15763",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11312,6 +11992,7 @@
      }
     },
     {
+     "id": "a-15764",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11342,6 +12023,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15765",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11352,6 +12034,7 @@
      }
     },
     {
+     "id": "a-15766",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11359,6 +12042,7 @@
      }
     },
     {
+     "id": "a-15767",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11388,6 +12072,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15768",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11413,6 +12098,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15769",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11423,6 +12109,7 @@
      }
     },
     {
+     "id": "a-15770",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11448,6 +12135,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15771",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11458,6 +12146,7 @@
      }
     },
     {
+     "id": "a-15772",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11468,6 +12157,7 @@
      }
     },
     {
+     "id": "a-15773",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11493,6 +12183,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15774",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11503,6 +12194,7 @@
      }
     },
     {
+     "id": "a-15775",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11513,6 +12205,7 @@
      }
     },
     {
+     "id": "a-15776",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11538,6 +12231,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15777",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11566,6 +12260,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15778",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11576,6 +12271,7 @@
      }
     },
     {
+     "id": "a-15779",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11586,6 +12282,7 @@
      }
     },
     {
+     "id": "a-15780",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11611,6 +12308,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15781",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11618,6 +12316,7 @@
      }
     },
     {
+     "id": "a-15782",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11647,6 +12346,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15783",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11657,6 +12357,7 @@
      }
     },
     {
+     "id": "a-15784",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11682,6 +12383,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15785",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11689,6 +12391,7 @@
      }
     },
     {
+     "id": "a-15786",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11718,6 +12421,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15787",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11728,6 +12432,7 @@
      }
     },
     {
+     "id": "a-15788",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11738,6 +12443,7 @@
      }
     },
     {
+     "id": "a-15789",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11763,6 +12469,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15790",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11788,6 +12495,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15791",
      "sec": 15,
      "field": "places",
      "value": {
@@ -11799,6 +12507,7 @@
      }
     },
     {
+     "id": "a-15792",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11809,6 +12518,7 @@
      }
     },
     {
+     "id": "a-15793",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11816,6 +12526,7 @@
      }
     },
     {
+     "id": "a-15794",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11846,6 +12557,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15795",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11853,6 +12565,7 @@
      }
     },
     {
+     "id": "a-15796",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11882,6 +12595,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15797",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11892,6 +12606,7 @@
      }
     },
     {
+     "id": "a-15798",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11899,6 +12614,7 @@
      }
     },
     {
+     "id": "a-15799",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11931,6 +12647,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15800",
      "sec": 17,
      "field": "events",
      "value": {
@@ -11941,6 +12658,7 @@
      }
     },
     {
+     "id": "a-15801",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11948,6 +12666,7 @@
      }
     },
     {
+     "id": "a-15802",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11959,6 +12678,7 @@
      }
     },
     {
+     "id": "a-15803",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11989,6 +12709,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15804",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11996,6 +12717,7 @@
      }
     },
     {
+     "id": "a-15805",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12025,6 +12747,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15806",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -12035,6 +12758,7 @@
      }
     },
     {
+     "id": "a-15807",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12045,6 +12769,7 @@
      }
     },
     {
+     "id": "a-15808",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12055,6 +12780,7 @@
      }
     },
     {
+     "id": "a-15809",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12080,6 +12806,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15810",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12090,6 +12817,7 @@
      }
     },
     {
+     "id": "a-15811",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12097,6 +12825,7 @@
      }
     },
     {
+     "id": "a-15812",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12126,6 +12855,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15813",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12133,6 +12863,7 @@
      }
     },
     {
+     "id": "a-15814",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12163,6 +12894,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15815",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12173,6 +12905,7 @@
      }
     },
     {
+     "id": "a-15816",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12183,6 +12916,7 @@
      }
     },
     {
+     "id": "a-15817",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12208,6 +12942,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15818",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12215,6 +12950,7 @@
      }
     },
     {
+     "id": "a-15819",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12244,6 +12980,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15820",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12254,6 +12991,7 @@
      }
     },
     {
+     "id": "a-15821",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12264,6 +13002,7 @@
      }
     },
     {
+     "id": "a-15822",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12289,6 +13028,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15823",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12314,6 +13054,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15824",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12324,6 +13065,7 @@
      }
     },
     {
+     "id": "a-15825",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12334,6 +13076,7 @@
      }
     },
     {
+     "id": "a-15826",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12341,6 +13084,7 @@
      }
     },
     {
+     "id": "a-15827",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12373,6 +13117,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15828",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12401,6 +13146,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15829",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12411,6 +13157,7 @@
      }
     },
     {
+     "id": "a-15830",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12418,6 +13165,7 @@
      }
     },
     {
+     "id": "a-15831",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12450,6 +13198,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15832",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12460,6 +13209,7 @@
      }
     },
     {
+     "id": "a-15833",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12470,6 +13220,7 @@
      }
     },
     {
+     "id": "a-15834",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12477,6 +13228,7 @@
      }
     },
     {
+     "id": "a-15835",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12510,6 +13262,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15836",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12520,6 +13273,7 @@
      }
     },
     {
+     "id": "a-15837",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12530,6 +13284,7 @@
      }
     },
     {
+     "id": "a-15838",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12555,6 +13310,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15839",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12580,6 +13336,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15840",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -12590,6 +13347,7 @@
      }
     },
     {
+     "id": "a-15841",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12600,6 +13358,7 @@
      }
     },
     {
+     "id": "a-15842",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12607,6 +13366,7 @@
      }
     },
     {
+     "id": "a-15843",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12636,6 +13396,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15844",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12643,6 +13404,7 @@
      }
     },
     {
+     "id": "a-15845",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12672,6 +13434,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15846",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12682,6 +13445,7 @@
      }
     },
     {
+     "id": "a-15847",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12707,6 +13471,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15848",
      "sec": 15,
      "field": "places",
      "value": {
@@ -12719,6 +13484,7 @@
      }
     },
     {
+     "id": "a-15849",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12729,6 +13495,7 @@
      }
     },
     {
+     "id": "a-15850",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12736,6 +13503,7 @@
      }
     },
     {
+     "id": "a-15851",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12765,6 +13533,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15852",
      "sec": 15,
      "field": "places",
      "value": {
@@ -12777,6 +13546,7 @@
      }
     },
     {
+     "id": "a-15853",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12787,6 +13557,7 @@
      }
     },
     {
+     "id": "a-15854",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12794,6 +13565,7 @@
      }
     },
     {
+     "id": "a-15855",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12824,6 +13596,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15856",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12849,6 +13622,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15857",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12874,6 +13648,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15858",
      "sec": 15,
      "field": "places",
      "value": {
@@ -12886,6 +13661,7 @@
      }
     },
     {
+     "id": "a-15859",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12896,6 +13672,7 @@
      }
     },
     {
+     "id": "a-15860",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12924,6 +13701,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15861",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12934,6 +13712,7 @@
      }
     },
     {
+     "id": "a-15862",
      "sec": 17,
      "field": "events",
      "value": {
@@ -12944,6 +13723,7 @@
      }
     },
     {
+     "id": "a-15863",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -12955,6 +13735,7 @@
      }
     },
     {
+     "id": "a-15864",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -12986,6 +13767,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15865",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13011,6 +13793,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15866",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13021,6 +13804,7 @@
      }
     },
     {
+     "id": "a-15867",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13046,6 +13830,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15868",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13056,6 +13841,7 @@
      }
     },
     {
+     "id": "a-15869",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13063,6 +13849,7 @@
      }
     },
     {
+     "id": "a-15870",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13095,6 +13882,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15871",
      "sec": 15,
      "field": "places",
      "value": {
@@ -13106,6 +13894,7 @@
      }
     },
     {
+     "id": "a-15872",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13116,6 +13905,7 @@
      }
     },
     {
+     "id": "a-15873",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13123,6 +13913,7 @@
      }
     },
     {
+     "id": "a-15874",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13153,6 +13944,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15875",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13160,6 +13952,7 @@
      }
     },
     {
+     "id": "a-15876",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13189,6 +13982,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15877",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -13199,6 +13993,7 @@
      }
     },
     {
+     "id": "a-15878",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13209,6 +14004,7 @@
      }
     },
     {
+     "id": "a-15879",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13216,6 +14012,7 @@
      }
     },
     {
+     "id": "a-15880",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13245,6 +14042,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15881",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13270,6 +14068,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15882",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13280,6 +14079,7 @@
      }
     },
     {
+     "id": "a-15883",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13305,6 +14105,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15884",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -13315,6 +14116,7 @@
      }
     },
     {
+     "id": "a-15885",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13340,6 +14142,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15886",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13350,6 +14153,7 @@
      }
     },
     {
+     "id": "a-15887",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13357,6 +14161,7 @@
      }
     },
     {
+     "id": "a-15888",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13386,6 +14191,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15889",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13393,6 +14199,7 @@
      }
     },
     {
+     "id": "a-15890",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13422,6 +14229,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15891",
      "sec": 17,
      "field": "events",
      "value": {
@@ -13432,6 +14240,7 @@
      }
     },
     {
+     "id": "a-15892",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13457,6 +14266,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15893",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13467,6 +14277,7 @@
      }
     },
     {
+     "id": "a-15894",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13474,6 +14285,7 @@
      }
     },
     {
+     "id": "a-15895",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13506,6 +14318,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15896",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13517,6 +14330,7 @@
      }
     },
     {
+     "id": "a-15897",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13524,6 +14338,7 @@
      }
     },
     {
+     "id": "a-15898",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13535,6 +14350,7 @@
      }
     },
     {
+     "id": "a-15899",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13567,6 +14383,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15900",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13578,6 +14395,7 @@
      }
     },
     {
+     "id": "a-15901",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13606,6 +14424,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15902",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13617,6 +14436,7 @@
      }
     },
     {
+     "id": "a-15903",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13624,6 +14444,7 @@
      }
     },
     {
+     "id": "a-15904",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13656,6 +14477,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15905",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13667,6 +14489,7 @@
      }
     },
     {
+     "id": "a-15906",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13674,6 +14497,7 @@
      }
     },
     {
+     "id": "a-15907",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13707,6 +14531,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15908",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13718,6 +14543,7 @@
      }
     },
     {
+     "id": "a-15909",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13725,6 +14551,7 @@
      }
     },
     {
+     "id": "a-15910",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13757,6 +14584,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15911",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13768,6 +14596,7 @@
      }
     },
     {
+     "id": "a-15912",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13796,6 +14625,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15913",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13807,6 +14637,7 @@
      }
     },
     {
+     "id": "a-15914",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13814,6 +14645,7 @@
      }
     },
     {
+     "id": "a-15915",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13846,6 +14678,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15916",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13857,6 +14690,7 @@
      }
     },
     {
+     "id": "a-15917",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13864,6 +14698,7 @@
      }
     },
     {
+     "id": "a-15918",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13897,6 +14732,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15919",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13908,6 +14744,7 @@
      }
     },
     {
+     "id": "a-15920",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13915,6 +14752,7 @@
      }
     },
     {
+     "id": "a-15921",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -13947,6 +14785,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15922",
      "sec": 5,
      "field": "status",
      "value": {
@@ -13958,6 +14797,7 @@
      }
     },
     {
+     "id": "a-15923",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -13965,6 +14805,7 @@
      }
     },
     {
+     "id": "a-15924",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14000,6 +14841,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15925",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14011,6 +14853,7 @@
      }
     },
     {
+     "id": "a-15926",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14018,6 +14861,7 @@
      }
     },
     {
+     "id": "a-15927",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14053,6 +14897,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15928",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14064,6 +14909,7 @@
      }
     },
     {
+     "id": "a-15929",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14092,6 +14938,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15930",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14103,6 +14950,7 @@
      }
     },
     {
+     "id": "a-15931",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14110,6 +14958,7 @@
      }
     },
     {
+     "id": "a-15932",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14143,6 +14992,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15933",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14154,6 +15004,7 @@
      }
     },
     {
+     "id": "a-15934",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14161,6 +15012,7 @@
      }
     },
     {
+     "id": "a-15935",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14193,6 +15045,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15936",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14204,6 +15057,7 @@
      }
     },
     {
+     "id": "a-15937",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14211,6 +15065,7 @@
      }
     },
     {
+     "id": "a-15938",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14244,6 +15099,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15939",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14255,6 +15111,7 @@
      }
     },
     {
+     "id": "a-15940",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14262,6 +15119,7 @@
      }
     },
     {
+     "id": "a-15941",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14294,6 +15152,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15942",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14305,6 +15164,7 @@
      }
     },
     {
+     "id": "a-15943",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14312,6 +15172,7 @@
      }
     },
     {
+     "id": "a-15944",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14344,6 +15205,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15945",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14354,6 +15216,7 @@
      }
     },
     {
+     "id": "a-15946",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14361,6 +15224,7 @@
      }
     },
     {
+     "id": "a-15947",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14394,6 +15258,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15948",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14404,6 +15269,7 @@
      }
     },
     {
+     "id": "a-15949",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14411,6 +15277,7 @@
      }
     },
     {
+     "id": "a-15950",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14444,6 +15311,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15951",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14454,6 +15322,7 @@
      }
     },
     {
+     "id": "a-15952",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14461,6 +15330,7 @@
      }
     },
     {
+     "id": "a-15953",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14493,6 +15363,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15954",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14521,6 +15392,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-15955",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14531,6 +15403,7 @@
      }
     },
     {
+     "id": "a-15956",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14541,6 +15414,7 @@
      }
     },
     {
+     "id": "a-15957",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14551,6 +15425,7 @@
      }
     },
     {
+     "id": "a-15958",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -14560,6 +15435,7 @@
      }
     },
     {
+     "id": "a-15959",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14572,6 +15448,7 @@
      }
     },
     {
+     "id": "a-15960",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14585,6 +15462,7 @@
      }
     },
     {
+     "id": "a-15961",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14619,6 +15497,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15962",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14629,6 +15508,7 @@
      }
     },
     {
+     "id": "a-15963",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14639,6 +15519,7 @@
      }
     },
     {
+     "id": "a-15964",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14650,6 +15531,7 @@
      }
     },
     {
+     "id": "a-15965",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14683,6 +15565,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15966",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14694,6 +15577,7 @@
      }
     },
     {
+     "id": "a-15967",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14701,6 +15585,7 @@
      }
     },
     {
+     "id": "a-15968",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14734,6 +15619,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15969",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14745,6 +15631,7 @@
      }
     },
     {
+     "id": "a-15970",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14752,6 +15639,7 @@
      }
     },
     {
+     "id": "a-15971",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14786,6 +15674,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15972",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14797,6 +15686,7 @@
      }
     },
     {
+     "id": "a-15973",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14807,6 +15697,7 @@
      }
     },
     {
+     "id": "a-15974",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14818,6 +15709,7 @@
      }
     },
     {
+     "id": "a-15975",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14851,6 +15743,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15976",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14862,6 +15755,7 @@
      }
     },
     {
+     "id": "a-15977",
      "sec": 17,
      "field": "events",
      "value": {
@@ -14872,6 +15766,7 @@
      }
     },
     {
+     "id": "a-15978",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14883,6 +15778,7 @@
      }
     },
     {
+     "id": "a-15979",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -14917,6 +15813,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15980",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14928,6 +15825,7 @@
      }
     },
     {
+     "id": "a-15981",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14956,6 +15854,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15982",
      "sec": 5,
      "field": "status",
      "value": {
@@ -14967,6 +15866,7 @@
      }
     },
     {
+     "id": "a-15983",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -14995,6 +15895,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15984",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15006,6 +15907,7 @@
      }
     },
     {
+     "id": "a-15985",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15013,6 +15915,7 @@
      }
     },
     {
+     "id": "a-15986",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15045,6 +15948,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15987",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15056,6 +15960,7 @@
      }
     },
     {
+     "id": "a-15988",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15084,6 +15989,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15989",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15095,6 +16001,7 @@
      }
     },
     {
+     "id": "a-15990",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15123,6 +16030,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15991",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15134,6 +16042,7 @@
      }
     },
     {
+     "id": "a-15992",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15141,6 +16050,7 @@
      }
     },
     {
+     "id": "a-15993",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15173,6 +16083,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15994",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15184,6 +16095,7 @@
      }
     },
     {
+     "id": "a-15995",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15212,6 +16124,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15996",
      "sec": 17,
      "field": "events",
      "value": {
@@ -15222,6 +16135,7 @@
      }
     },
     {
+     "id": "a-15997",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15229,6 +16143,7 @@
      }
     },
     {
+     "id": "a-15998",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15242,6 +16157,7 @@
      }
     },
     {
+     "id": "a-15999",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15275,6 +16191,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16000",
      "sec": 17,
      "field": "events",
      "value": {
@@ -15285,6 +16202,7 @@
      }
     },
     {
+     "id": "a-16001",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15292,6 +16210,7 @@
      }
     },
     {
+     "id": "a-16002",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15326,6 +16245,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16003",
      "sec": 17,
      "field": "events",
      "value": {
@@ -15336,6 +16256,7 @@
      }
     },
     {
+     "id": "a-16004",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15343,6 +16264,7 @@
      }
     },
     {
+     "id": "a-16005",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15356,6 +16278,7 @@
      }
     },
     {
+     "id": "a-16006",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15389,6 +16312,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16007",
      "sec": 17,
      "field": "events",
      "value": {
@@ -15399,6 +16323,7 @@
      }
     },
     {
+     "id": "a-16008",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15406,6 +16331,7 @@
      }
     },
     {
+     "id": "a-16009",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15440,6 +16366,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16010",
      "sec": 17,
      "field": "events",
      "value": {
@@ -15450,6 +16377,7 @@
      }
     },
     {
+     "id": "a-16011",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15457,6 +16385,7 @@
      }
     },
     {
+     "id": "a-16012",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15488,6 +16417,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16013",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15498,6 +16428,7 @@
      }
     },
     {
+     "id": "a-16014",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15509,6 +16440,7 @@
      }
     },
     {
+     "id": "a-16015",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15534,6 +16466,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16016",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15544,6 +16477,7 @@
      }
     },
     {
+     "id": "a-16017",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15555,6 +16489,7 @@
      }
     },
     {
+     "id": "a-16018",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15580,6 +16515,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16019",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15590,6 +16526,7 @@
      }
     },
     {
+     "id": "a-16020",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15601,6 +16538,7 @@
      }
     },
     {
+     "id": "a-16021",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15608,6 +16546,7 @@
      }
     },
     {
+     "id": "a-16022",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15637,6 +16576,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16023",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15647,6 +16587,7 @@
      }
     },
     {
+     "id": "a-16024",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15658,6 +16599,7 @@
      }
     },
     {
+     "id": "a-16025",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15683,6 +16625,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16026",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15693,6 +16636,7 @@
      }
     },
     {
+     "id": "a-16027",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15704,6 +16648,7 @@
      }
     },
     {
+     "id": "a-16028",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15729,6 +16674,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16029",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15739,6 +16685,7 @@
      }
     },
     {
+     "id": "a-16030",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15750,6 +16697,7 @@
      }
     },
     {
+     "id": "a-16031",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15775,6 +16723,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16032",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15785,6 +16734,7 @@
      }
     },
     {
+     "id": "a-16033",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15796,6 +16746,7 @@
      }
     },
     {
+     "id": "a-16034",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15821,6 +16772,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16035",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15831,6 +16783,7 @@
      }
     },
     {
+     "id": "a-16036",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15842,6 +16795,7 @@
      }
     },
     {
+     "id": "a-16037",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15849,6 +16803,7 @@
      }
     },
     {
+     "id": "a-16038",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15878,6 +16833,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16039",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15888,6 +16844,7 @@
      }
     },
     {
+     "id": "a-16040",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15899,6 +16856,7 @@
      }
     },
     {
+     "id": "a-16041",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15924,6 +16882,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16042",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15934,6 +16893,7 @@
      }
     },
     {
+     "id": "a-16043",
      "sec": 14,
      "field": "met",
      "value": {
@@ -15945,6 +16905,7 @@
      }
     },
     {
+     "id": "a-16044",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -15952,6 +16913,7 @@
      }
     },
     {
+     "id": "a-16045",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -15982,6 +16944,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16046",
      "sec": 5,
      "field": "status",
      "value": {
@@ -15992,6 +16955,7 @@
      }
     },
     {
+     "id": "a-16047",
      "sec": 14,
      "field": "met",
      "value": {
@@ -16003,6 +16967,7 @@
      }
     },
     {
+     "id": "a-16048",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16028,6 +16993,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16049",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16038,6 +17004,7 @@
      }
     },
     {
+     "id": "a-16050",
      "sec": 14,
      "field": "met",
      "value": {
@@ -16049,6 +17016,7 @@
      }
     },
     {
+     "id": "a-16051",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16074,6 +17042,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16052",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16084,6 +17053,7 @@
      }
     },
     {
+     "id": "a-16053",
      "sec": 14,
      "field": "met",
      "value": {
@@ -16095,6 +17065,7 @@
      }
     },
     {
+     "id": "a-16054",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16102,6 +17073,7 @@
      }
     },
     {
+     "id": "a-16055",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16132,6 +17104,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16056",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16143,6 +17116,7 @@
      }
     },
     {
+     "id": "a-16057",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16150,6 +17124,7 @@
      }
     },
     {
+     "id": "a-16058",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16180,6 +17155,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16059",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16191,6 +17167,7 @@
      }
     },
     {
+     "id": "a-16060",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16198,6 +17175,7 @@
      }
     },
     {
+     "id": "a-16061",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16228,6 +17206,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16062",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16239,6 +17218,7 @@
      }
     },
     {
+     "id": "a-16063",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16246,6 +17226,7 @@
      }
     },
     {
+     "id": "a-16064",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16276,6 +17257,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16065",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16287,6 +17269,7 @@
      }
     },
     {
+     "id": "a-16066",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16294,6 +17277,7 @@
      }
     },
     {
+     "id": "a-16067",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16324,6 +17308,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16068",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16335,6 +17320,7 @@
      }
     },
     {
+     "id": "a-16069",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16360,6 +17346,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16070",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16371,6 +17358,7 @@
      }
     },
     {
+     "id": "a-16071",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16378,6 +17366,7 @@
      }
     },
     {
+     "id": "a-16072",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16408,6 +17397,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16073",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16419,6 +17409,7 @@
      }
     },
     {
+     "id": "a-16074",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16426,6 +17417,7 @@
      }
     },
     {
+     "id": "a-16075",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16456,6 +17448,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16076",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16467,6 +17460,7 @@
      }
     },
     {
+     "id": "a-16077",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16474,6 +17468,7 @@
      }
     },
     {
+     "id": "a-16078",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16503,6 +17498,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16079",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16514,6 +17510,7 @@
      }
     },
     {
+     "id": "a-16080",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16521,6 +17518,7 @@
      }
     },
     {
+     "id": "a-16081",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16552,6 +17550,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16082",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16563,6 +17562,7 @@
      }
     },
     {
+     "id": "a-16083",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16588,6 +17588,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16084",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16599,6 +17600,7 @@
      }
     },
     {
+     "id": "a-16085",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16624,6 +17626,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16086",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16635,6 +17638,7 @@
      }
     },
     {
+     "id": "a-16087",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16642,6 +17646,7 @@
      }
     },
     {
+     "id": "a-16088",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16672,6 +17677,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16089",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16683,6 +17689,7 @@
      }
     },
     {
+     "id": "a-16090",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16690,6 +17697,7 @@
      }
     },
     {
+     "id": "a-16091",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16719,6 +17727,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16092",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16730,6 +17739,7 @@
      }
     },
     {
+     "id": "a-16093",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16737,6 +17747,7 @@
      }
     },
     {
+     "id": "a-16094",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16767,6 +17778,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16095",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16778,6 +17790,7 @@
      }
     },
     {
+     "id": "a-16096",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16785,6 +17798,7 @@
      }
     },
     {
+     "id": "a-16097",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16814,6 +17828,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16098",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16825,6 +17840,7 @@
      }
     },
     {
+     "id": "a-16099",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16832,6 +17848,7 @@
      }
     },
     {
+     "id": "a-16100",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16861,6 +17878,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16101",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16872,6 +17890,7 @@
      }
     },
     {
+     "id": "a-16102",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16897,6 +17916,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16103",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16908,6 +17928,7 @@
      }
     },
     {
+     "id": "a-16104",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16915,6 +17936,7 @@
      }
     },
     {
+     "id": "a-16105",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16945,6 +17967,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16106",
      "sec": 5,
      "field": "status",
      "value": {
@@ -16956,6 +17979,7 @@
      }
     },
     {
+     "id": "a-16107",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -16963,6 +17987,7 @@
      }
     },
     {
+     "id": "a-16108",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -16992,6 +18017,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16109",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17003,6 +18029,7 @@
      }
     },
     {
+     "id": "a-16110",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17028,6 +18055,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16111",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17039,6 +18067,7 @@
      }
     },
     {
+     "id": "a-16112",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17064,6 +18093,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16113",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17075,6 +18105,7 @@
      }
     },
     {
+     "id": "a-16114",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17082,6 +18113,7 @@
      }
     },
     {
+     "id": "a-16115",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17112,6 +18144,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16116",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17123,6 +18156,7 @@
      }
     },
     {
+     "id": "a-16117",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17130,6 +18164,7 @@
      }
     },
     {
+     "id": "a-16118",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17159,6 +18194,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16119",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17170,6 +18206,7 @@
      }
     },
     {
+     "id": "a-16120",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17195,6 +18232,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16121",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17206,6 +18244,7 @@
      }
     },
     {
+     "id": "a-16122",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17231,6 +18270,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16123",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17242,6 +18282,7 @@
      }
     },
     {
+     "id": "a-16124",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17249,6 +18290,7 @@
      }
     },
     {
+     "id": "a-16125",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17278,6 +18320,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16126",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17289,6 +18332,7 @@
      }
     },
     {
+     "id": "a-16127",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17296,6 +18340,7 @@
      }
     },
     {
+     "id": "a-16128",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17325,6 +18370,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16129",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17336,6 +18382,7 @@
      }
     },
     {
+     "id": "a-16130",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17343,6 +18390,7 @@
      }
     },
     {
+     "id": "a-16131",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17372,6 +18420,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16132",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17383,6 +18432,7 @@
      }
     },
     {
+     "id": "a-16133",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17408,6 +18458,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16134",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17419,6 +18470,7 @@
      }
     },
     {
+     "id": "a-16135",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17426,6 +18478,7 @@
      }
     },
     {
+     "id": "a-16136",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17456,6 +18509,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16137",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17467,6 +18521,7 @@
      }
     },
     {
+     "id": "a-16138",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17492,6 +18547,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16139",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17503,6 +18559,7 @@
      }
     },
     {
+     "id": "a-16140",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17510,6 +18567,7 @@
      }
     },
     {
+     "id": "a-16141",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17539,6 +18597,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16142",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17550,6 +18609,7 @@
      }
     },
     {
+     "id": "a-16143",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17557,6 +18617,7 @@
      }
     },
     {
+     "id": "a-16144",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17587,6 +18648,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-16145",
      "sec": 5,
      "field": "status",
      "value": {
@@ -17597,6 +18659,7 @@
      }
     },
     {
+     "id": "a-16146",
      "sec": 14,
      "field": "met",
      "value": {
@@ -17608,6 +18671,7 @@
      }
     },
     {
+     "id": "a-16147",
      "sec": 14,
      "field": "met",
      "value": {
@@ -17619,6 +18683,7 @@
      }
     },
     {
+     "id": "a-16148",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -17629,6 +18694,7 @@
      }
     },
     {
+     "id": "a-16149",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17639,6 +18705,7 @@
      }
     },
     {
+     "id": "a-16150",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17667,6 +18734,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16151",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17677,6 +18745,7 @@
      }
     },
     {
+     "id": "a-16152",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17684,6 +18753,7 @@
      }
     },
     {
+     "id": "a-16153",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17713,6 +18783,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16154",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17723,6 +18794,7 @@
      }
     },
     {
+     "id": "a-16155",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17730,6 +18802,7 @@
      }
     },
     {
+     "id": "a-16156",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17760,6 +18833,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16157",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17770,6 +18844,7 @@
      }
     },
     {
+     "id": "a-16158",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17777,6 +18852,7 @@
      }
     },
     {
+     "id": "a-16159",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17789,6 +18865,7 @@
      }
     },
     {
+     "id": "a-16160",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17818,6 +18895,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16161",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17828,6 +18906,7 @@
      }
     },
     {
+     "id": "a-16162",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17835,6 +18914,7 @@
      }
     },
     {
+     "id": "a-16163",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17865,6 +18945,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16164",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17875,6 +18956,7 @@
      }
     },
     {
+     "id": "a-16165",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17882,6 +18964,7 @@
      }
     },
     {
+     "id": "a-16166",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17912,6 +18995,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16167",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17922,6 +19006,7 @@
      }
     },
     {
+     "id": "a-16168",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17929,6 +19014,7 @@
      }
     },
     {
+     "id": "a-16169",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -17959,6 +19045,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16170",
      "sec": 17,
      "field": "events",
      "value": {
@@ -17969,6 +19056,7 @@
      }
     },
     {
+     "id": "a-16171",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -17976,6 +19064,7 @@
      }
     },
     {
+     "id": "a-16172",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18006,6 +19095,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16173",
      "sec": 17,
      "field": "events",
      "value": {
@@ -18016,6 +19106,7 @@
      }
     },
     {
+     "id": "a-16174",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18023,6 +19114,7 @@
      }
     },
     {
+     "id": "a-16175",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18056,6 +19148,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16176",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18063,6 +19156,7 @@
      }
     },
     {
+     "id": "a-16177",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18097,6 +19191,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16178",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18126,6 +19221,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16179",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18136,6 +19232,7 @@
      }
     },
     {
+     "id": "a-16180",
      "sec": 17,
      "field": "events",
      "value": {
@@ -18147,6 +19244,7 @@
      }
     },
     {
+     "id": "a-16181",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18157,6 +19255,7 @@
      }
     },
     {
+     "id": "a-16182",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18191,6 +19290,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16183",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18201,6 +19301,7 @@
      }
     },
     {
+     "id": "a-16184",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18208,6 +19309,7 @@
      }
     },
     {
+     "id": "a-16185",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18219,6 +19321,7 @@
      }
     },
     {
+     "id": "a-16186",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18252,6 +19355,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16187",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18262,6 +19366,7 @@
      }
     },
     {
+     "id": "a-16188",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18269,6 +19374,7 @@
      }
     },
     {
+     "id": "a-16189",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18302,6 +19408,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16190",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18312,6 +19419,7 @@
      }
     },
     {
+     "id": "a-16191",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18319,6 +19427,7 @@
      }
     },
     {
+     "id": "a-16192",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18352,6 +19461,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16193",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18362,6 +19472,7 @@
      }
     },
     {
+     "id": "a-16194",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18369,6 +19480,7 @@
      }
     },
     {
+     "id": "a-16195",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18402,6 +19514,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16196",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18412,6 +19525,7 @@
      }
     },
     {
+     "id": "a-16197",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18419,6 +19533,7 @@
      }
     },
     {
+     "id": "a-16198",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18452,6 +19567,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16199",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18462,6 +19578,7 @@
      }
     },
     {
+     "id": "a-16200",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18469,6 +19586,7 @@
      }
     },
     {
+     "id": "a-16201",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18502,6 +19620,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16202",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18512,6 +19631,7 @@
      }
     },
     {
+     "id": "a-16203",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18519,6 +19639,7 @@
      }
     },
     {
+     "id": "a-16204",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18552,6 +19673,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16205",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18562,6 +19684,7 @@
      }
     },
     {
+     "id": "a-16206",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18569,6 +19692,7 @@
      }
     },
     {
+     "id": "a-16207",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18601,6 +19725,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16208",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18611,6 +19736,7 @@
      }
     },
     {
+     "id": "a-16209",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18639,6 +19765,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16210",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18649,6 +19776,7 @@
      }
     },
     {
+     "id": "a-16211",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18677,6 +19805,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16212",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18687,6 +19816,7 @@
      }
     },
     {
+     "id": "a-16213",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18694,6 +19824,7 @@
      }
     },
     {
+     "id": "a-16214",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18726,6 +19857,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16215",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18736,6 +19868,7 @@
      }
     },
     {
+     "id": "a-16216",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18764,6 +19897,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16217",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18774,6 +19908,7 @@
      }
     },
     {
+     "id": "a-16218",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18802,6 +19937,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16219",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18812,6 +19948,7 @@
      }
     },
     {
+     "id": "a-16220",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18840,6 +19977,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16221",
      "sec": 5,
      "field": "status",
      "value": {
@@ -18850,6 +19988,7 @@
      }
     },
     {
+     "id": "a-16222",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18875,6 +20014,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16223",
      "sec": 17,
      "field": "events",
      "value": {
@@ -18886,6 +20026,7 @@
      }
     },
     {
+     "id": "a-16224",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18893,6 +20034,7 @@
      }
     },
     {
+     "id": "a-16225",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18904,6 +20046,7 @@
      }
     },
     {
+     "id": "a-16226",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18933,6 +20076,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16227",
      "sec": 17,
      "field": "events",
      "value": {
@@ -18944,6 +20088,7 @@
      }
     },
     {
+     "id": "a-16228",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18951,6 +20096,7 @@
      }
     },
     {
+     "id": "a-16229",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -18980,6 +20126,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16230",
      "sec": 17,
      "field": "events",
      "value": {
@@ -18991,6 +20138,7 @@
      }
     },
     {
+     "id": "a-16231",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -18998,6 +20146,7 @@
      }
     },
     {
+     "id": "a-16232",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19027,6 +20176,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16233",
      "sec": 17,
      "field": "events",
      "value": {
@@ -19038,6 +20188,7 @@
      }
     },
     {
+     "id": "a-16234",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19045,6 +20196,7 @@
      }
     },
     {
+     "id": "a-16235",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19074,6 +20226,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16236",
      "sec": 17,
      "field": "events",
      "value": {
@@ -19085,6 +20238,7 @@
      }
     },
     {
+     "id": "a-16237",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19092,6 +20246,7 @@
      }
     },
     {
+     "id": "a-16238",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19121,6 +20276,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16239",
      "sec": 17,
      "field": "events",
      "value": {
@@ -19132,6 +20288,7 @@
      }
     },
     {
+     "id": "a-16240",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19139,6 +20296,7 @@
      }
     },
     {
+     "id": "a-16241",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19168,6 +20326,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16242",
      "sec": 17,
      "field": "events",
      "value": {
@@ -19179,6 +20338,7 @@
      }
     },
     {
+     "id": "a-16243",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19186,6 +20346,7 @@
      }
     },
     {
+     "id": "a-16244",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19197,6 +20358,7 @@
      }
     },
     {
+     "id": "a-16245",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19226,6 +20388,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16246",
      "sec": 17,
      "field": "events",
      "value": {
@@ -19237,6 +20400,7 @@
      }
     },
     {
+     "id": "a-16247",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19244,6 +20408,7 @@
      }
     },
     {
+     "id": "a-16248",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19277,6 +20442,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16249",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -19287,6 +20453,7 @@
      }
     },
     {
+     "id": "a-16250",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19294,6 +20461,7 @@
      }
     },
     {
+     "id": "a-16251",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19326,6 +20494,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16252",
      "sec": 5,
      "field": "status",
      "value": {
@@ -19336,6 +20505,7 @@
      }
     },
     {
+     "id": "a-16253",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -19346,6 +20516,7 @@
      }
     },
     {
+     "id": "a-16254",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19374,6 +20545,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16255",
      "sec": 5,
      "field": "status",
      "value": {
@@ -19384,6 +20556,7 @@
      }
     },
     {
+     "id": "a-16256",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -19394,6 +20567,7 @@
      }
     },
     {
+     "id": "a-16257",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19401,6 +20575,7 @@
      }
     },
     {
+     "id": "a-16258",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19434,6 +20609,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16259",
      "sec": 5,
      "field": "status",
      "value": {
@@ -19444,6 +20620,7 @@
      }
     },
     {
+     "id": "a-16260",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -19454,6 +20631,7 @@
      }
     },
     {
+     "id": "a-16261",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19479,6 +20657,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16262",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19486,6 +20665,7 @@
      }
     },
     {
+     "id": "a-16263",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19516,6 +20696,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16264",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -19523,6 +20704,7 @@
      }
     },
     {
+     "id": "a-16265",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -19552,6 +20734,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-16266",
      "sec": 5,
      "field": "status",
      "value": {
@@ -19562,6 +20745,7 @@
      }
     },
     {
+     "id": "a-16267",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -19572,6 +20756,7 @@
      }
     },
     {
+     "id": "a-16268",
      "sec": 23,
      "field": "scripture",
      "value": {

@@ -11,6 +11,7 @@ import { STEPS, makeCtx, type Step } from '../tools/base/corrections.ts';
 import { ADDITIONS } from '../tools/base/additions.ts';
 import { STEPS_D3 } from '../tools/base/corrections-d3.ts';
 import { validate } from '../tools/base/validate.ts';
+import { finishIds, loadIds, startIds } from '../tools/base/ids.ts';
 
 const DATA = join(import.meta.dirname, '..', 'data');
 const read = (f: string) => JSON.parse(readFileSync(join(DATA, f), 'utf8'));
@@ -29,7 +30,10 @@ describe('перенос в базу', () => {
 
   it('каждый шаг исправления меняет только записи своей области', () => {
     const { base, hints } = exact();
+    // номера — как в сборке: заготовки до шагов, выдача после (К-1); таблица — с диска, чтобы номера совпали с base/
+    startIds(base, loadIds(join(import.meta.dirname, '..', 'base')), '2026-10-11');
     for (const s of [...STEPS, ADDITIONS, ...STEPS_D3]) expect([s.id, stepChanges(base, hints, s).stray]).toEqual([s.id, []]);
+    expect(finishIds(base)!.errors).toEqual([]);
     expect(validate(base).filter((i) => i.level === 'error')).toEqual([]);
   }, 60_000);
 

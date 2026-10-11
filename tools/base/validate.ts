@@ -19,6 +19,7 @@ import { admission, loadChecks, validateChecks } from './admit.ts';
 import { checkSourceIssues, issuesAt, KIND_WORD } from './source-issues.ts';
 import { namedVerses, ownRefs } from './own-verses.ts';
 import { validateRegistry } from './sources.ts';
+import { loadIds, PREFIX, type IdKind } from './ids.ts';
 
 export interface Issue { level: 'error' | 'warn'; check: string; where: string; msg: string }
 
@@ -78,6 +79,7 @@ export function loadBase(dir = join(ROOT, 'base')): Base {
     files, fileSources,
     sources: existsSync(join(dir, 'sources.json')) ? items('sources.json') : [],
     checks: loadChecks(dir),
+    ids: loadIds(dir),
   };
 }
 
@@ -292,13 +294,49 @@ export function validate(base: Base): Issue[] {
     for (const r of [e.startRule, e.endRule]) has('целостность', `эпоха ${e.id}`, r?.person);
     walk(`эпоха ${e.id}`, e);
   }
+  // ссылка на эпоху во времени прежнего вида — на действующий номер эпохи (К-1: era-…)
+  const epochSet = new Set(base.epochs.map((e) => e.id));
+  for (const c of base.chrono as { actor: string; chrono: any }[]) {
+    const ep = c.chrono?.epoch;
+    if (typeof ep === 'string' && !epochSet.has(ep)) err('целостность', `время ${c.actor}`, `нет эпохи «${ep}»`);
+  }
   walk('якоря', base.anchors);
   for (const a of base.anchors.anchors ?? []) if (a.verse) texts(`якорь ${a.id}`, a.verse);
-  // переадресация: старый номер не занят, цели есть, петель нет
+  // ---------- номера рёбер, утверждений, родства, эпох (02 § 3.3.1; К-1) ----------
+  const allIds = new Map<string, string>();
+  const numbered: [IdKind, string, string | undefined][] = [
+    ...base.origins.map((o) => ['origin', `${o.child} ← ${o.parent ?? '?'}`, o.id] as [IdKind, string, string | undefined]),
+    ...base.kin.map((k) => ['kin', `${k.from} — ${k.to}`, k.id] as [IdKind, string, string | undefined]),
+    ...[...actors.values()].flatMap((a) => a.facts.map((f) => ['fact', `${a.id} § ${f.sec} ${f.field}`, f.id] as [IdKind, string, string | undefined])),
+    ...base.epochs.map((e) => ['epoch', `эпоха ${e.id}`, e.id] as [IdKind, string, string | undefined]),
+  ];
+  const issued = base.ids?.length ? new Map(base.ids.map((e) => [e.id, e])) : undefined;
+  for (const [kind, where, id] of numbered) {
+    if (!id) {
+      err('номер', where, `запись без номера ${PREFIX[kind]}… (К-1)`);
+      continue;
+    }
+    if (!id.startsWith(PREFIX[kind])) err('номер', where, `номер «${id}» без префикса ${PREFIX[kind]}`);
+    if (allIds.has(id)) err('номер', where, `номер «${id}» повторяется (${allIds.get(id)})`);
+    allIds.set(id, where);
+    const e = issued?.get(id);
+    if (issued && !e) err('номер', where, `номера «${id}» нет в base/ids.json (выдаёт только npm run -s base)`);
+    else if (e && (e.kind !== kind || e.state !== 'active')) err('номер', where, `номер «${id}» в base/ids.json: вид ${e.kind}, состояние ${e.state}`);
+  }
+  if (issued) {
+    const redirected = new Set(base.redirects.map((r) => r.from));
+    for (const e of issued.values()) {
+      if (e.state === 'active' && !allIds.has(e.id) && !redirected.has(e.id)) warn('номер', e.id, `выданный номер без записи и без переадресации (${e.key})`);
+    }
+  }
+  // переадресация: старый номер не занят, цели есть (запись любого вида), петель нет
+  const recordIds = new Set<string>([
+    ...actors.keys(), ...base.unions.map((u) => u.id), ...base.readings.map((r) => r.id), ...base.areas.map((a) => a.id), ...allIds.keys(),
+  ]);
   const redirectFrom = new Map(base.redirects.map((r) => [r.from, r]));
   for (const r of base.redirects) {
-    if (actors.has(r.from)) err('переадресация', r.from, 'переадресуемый номер занят лицом');
-    for (const t of r.to) if (!actors.has(t) && !redirectFrom.has(t)) err('переадресация', r.from, `нет цели «${t}»`);
+    if (recordIds.has(r.from)) err('переадресация', r.from, 'переадресуемый номер занят записью');
+    for (const t of r.to) if (!recordIds.has(t) && !redirectFrom.has(t)) err('переадресация', r.from, `нет цели «${t}»`);
     const seen = new Set<string>([r.from]);
     let cur = r.to.length === 1 ? r.to[0] : undefined;
     while (cur && redirectFrom.has(cur)) {

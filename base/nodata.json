@@ -3,11 +3,11 @@
  "title": "Нет сведений",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [

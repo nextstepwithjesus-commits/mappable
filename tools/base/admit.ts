@@ -50,6 +50,22 @@ export interface Rec {
   /** Содержащая запись (лицо у утверждения): её явный статус наследуется. */
   parent?: any;
   deps: string[];
+  /**
+   * Прежний ключ — до номеров (02 § 3.3.3): `origin:<ребёнок>|<родитель>|<роль>|<p|o>`, `fact:<лицо>|<раздел>|<поле>`,
+   * `kin:<от>|<к>|<слово>`, `epoch:<номер без era->`; по нему `base:mark --rekey` находит подпись. У прочих — как `key`.
+   */
+  legacy: string;
+}
+
+/** Прежняя функция ключей (до номеров `o-`, `a-`, `k-`, `era-`): без порядкового «#2» — его добавляет `records`. */
+export function legacyKey(coll: Coll, rec: any, parent?: any): string | undefined {
+  switch (coll) {
+    case 'origin': return `origin:${rec.child}|${rec.parent ?? '?'}|${rec.role}|${rec.primary ? 'p' : 'o'}`;
+    case 'fact': return `fact:${parent.id}|${rec.sec}|${rec.field}`;
+    case 'kin': return `kin:${rec.from}|${rec.to}|${rec.rel}`;
+    case 'epoch': return `epoch:${String(rec.id).replace(/^era-/, '')}`;
+    default: return undefined;
+  }
 }
 
 /**
@@ -59,12 +75,38 @@ export interface Rec {
 export function records(base: Base): Rec[] {
   const out: Rec[] = [];
   const seen = new Map<string, number>();
-  const actorIds = new Set(base.volumes.flatMap((v) => v.actors.map((a) => a.id)));
-  const add = (coll: Coll, k: string, rec: any, file: string, deps: (string | undefined | false)[], parent?: any) => {
-    const n = (seen.get(k) ?? 0) + 1;
-    seen.set(k, n);
-    out.push({ key: n > 1 ? `${k}#${n}` : k, coll, rec, file, deps: deps.filter((d): d is string => !!d), ...(parent && { parent }) });
+  const seenLegacy = new Map<string, number>();
+  const nth = (m: Map<string, number>, k: string) => {
+    const n = (m.get(k) ?? 0) + 1;
+    m.set(k, n);
+    return n > 1 ? `${k}#${n}` : k;
   };
+  // запись с номером — по номеру; без номера (база до К-1) — прежним ключом
+  const add = (coll: Coll, k: string, rec: any, file: string, deps: (string | undefined | false)[], parent?: any) => {
+    const own = rec.id && ['origin', 'fact', 'kin'].includes(coll) ? `${coll}:${rec.id}` : k;
+    const key = nth(seen, own);
+    const legacy = legacyKey(coll, rec, parent);
+    // ссылка на запись того же вида — не зависимость (02 § 3.17, Р-3; К-4): цель не допущена — ссылка не выводится
+    const ds = [...new Set(deps.filter((d): d is string => !!d && !d.startsWith(`${coll}:`)))];
+    out.push({ key, coll, rec, file, deps: ds, legacy: legacy ? nth(seenLegacy, legacy) : key, ...(parent && { parent }) });
+  };
+  // переадресация — к записи-цели любого вида (02 § 3.3.1); цепочка переадресаций — до конечной цели
+  const target = new Map<string, string>();
+  for (const v of base.volumes) for (const a of v.actors) target.set(a.id, `actor:${a.id}`);
+  for (const u of base.unions) target.set(u.id, `union:${u.id}`);
+  for (const r of base.readings) target.set(r.id, `reading:${r.id}`);
+  for (const a of base.areas) target.set(a.id, `area:${a.id}`);
+  for (const e of base.epochs) target.set(e.id, `epoch:${e.id}`);
+  for (const o of base.origins) if (o.id) target.set(o.id, `origin:${o.id}`);
+  for (const k of base.kin) if (k.id) target.set(k.id, `kin:${k.id}`);
+  for (const v of base.volumes) for (const a of v.actors) for (const f of a.facts) if (f.id) target.set(f.id, `fact:${f.id}`);
+  const redirectTo = new Map(base.redirects.map((r) => [r.from, r.to]));
+  const finalTargets = (to: string[], path = new Set<string>()): string[] =>
+    to.flatMap((t) => {
+      if (target.has(t)) return [target.get(t)!];
+      if (redirectTo.has(t) && !path.has(t)) return finalTargets(redirectTo.get(t)!, new Set([...path, t]));
+      return [`missing:${t}`];
+    });
   const A = (id?: string) => id && `actor:${id}`;
   for (const v of base.volumes) {
     const file = `actors/${v.file}`;
@@ -87,7 +129,7 @@ export function records(base: Base): Rec[] {
   }
   for (const n of base.nodata) add('nodata', `nodata:${n.actor}|${n.sec}|${n.kind}`, n, 'nodata.json', [A(n.actor)]);
   for (const c of base.chrono) add('chrono', `chrono:${c.actor}`, c, 'chrono.json', [A(c.actor)]);
-  for (const r of base.redirects) add('redirect', `redirect:${r.from}`, r, 'redirects.json', r.to.map((t) => (actorIds.has(t) ? A(t) : `redirect:${t}`)));
+  for (const r of base.redirects) add('redirect', `redirect:${r.from}`, r, 'redirects.json', finalTargets(r.to, new Set([r.from])));
   for (const [k, l] of Object.entries<any>(base.lines)) {
     add('line', `line:${k}`, l, `lines/${k}.json`, [...(l.persons ?? []).map((s: any) => A(s.id)), ...Object.keys(l.readings ?? {}).map((s) => `reading:${s}`)]);
   }
@@ -191,6 +233,8 @@ export function recordSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | '
     if (!x || typeof x !== 'object') return;
     for (const [k, v] of Object.entries(x)) {
       if (k === 'facts' && x === r.rec) continue; // утверждения лица — свои записи со своими источниками
+      // ссылки на труды — не источник материала: право распространять у труда не проверяется (02 § 5.2, Р-2; К-3)
+      if (k === 'works') continue;
       if ((k === 'source' || k === 'sources') && (typeof v === 'string' || Array.isArray(v))) {
         for (const s of [v].flat()) if (typeof s === 'string' && (reg.has(s) || s.startsWith('src-'))) ids.add(s);
       }
@@ -201,10 +245,46 @@ export function recordSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | '
   return [...ids].sort();
 }
 
-/** Источники записи, которые не разрешают попасть в сборку (`redistribute` не true или источника нет в реестре). */
+/**
+ * Части записи со своим источником (02 § 3.13.3; К-15): положения, имена в других источниках, современное название,
+ * точка подписи, сопоставление со сводкой. Часть с закрытым источником снимается, запись остаётся.
+ */
+export const PART_FIELDS = ['names', 'positions', 'modernName', 'labelPoint', 'match'] as const;
+
+/** Номера источников самой части: `source`, `sources`, `coordSource.source`. */
+function partSourceIds(p: any): string[] {
+  if (!p || typeof p !== 'object') return [];
+  return [p.source, p.sources, p.coordSource?.source].flat().filter((s): s is string => typeof s === 'string');
+}
+
+/** Часть закрыта: у неё есть свой источник, и хоть один из них не разрешает распространение или его нет в реестре. */
+export function closedPart(p: unknown, base: Base): boolean {
+  const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
+  return partSourceIds(p).some((id) => reg.get(id)?.redistribute !== true);
+}
+
+/** Запись без закрытых частей — её видит выпуск (К-15). Записи без таких частей возвращаются как есть. */
+export function openView<T>(rec: T, base: Base): T {
+  if (!rec || typeof rec !== 'object') return rec;
+  let out: any = rec;
+  for (const f of PART_FIELDS) {
+    const v = (rec as any)[f];
+    if (Array.isArray(v) ? v.some((p) => closedPart(p, base)) : v && typeof v === 'object' && closedPart(v, base)) {
+      if (out === rec) out = { ...rec };
+      if (Array.isArray(v)) out[f] = v.filter((p) => !closedPart(p, base));
+      else delete out[f];
+    }
+  }
+  return out;
+}
+
+/**
+ * Источники записи, которые не разрешают попасть в сборку (`redistribute` не true или источника нет в реестре). Закрытые
+ * части снимаются до этой проверки (02 § 3.13.3; К-15): они не закрывают запись.
+ */
 export function blockedSources(r: Pick<Rec, 'rec'> & Partial<Pick<Rec, 'file' | 'parent'>>, base: Base): string[] {
   const reg = new Map((base.sources ?? []).map((s) => [s.id, s]));
-  return recordSources(r, base).filter((id) => reg.get(id)?.redistribute !== true);
+  return recordSources({ ...r, rec: openView(r.rec, base) }, base).filter((id) => reg.get(id)?.redistribute !== true);
 }
 
 export function inputsOf(r: Pick<Rec, 'coll' | 'rec'> & Partial<Pick<Rec, 'file' | 'parent'>>, base: Base, env: TextEnv = fileEnv()): CheckInputs {
@@ -275,8 +355,13 @@ export interface Admission {
   /** Допущена ли запись (по самому объекту записи). */
   ok(rec: object): boolean;
   okKey(key: string): boolean;
-  /** Часть записи (обозначение союза, имя лица) идёт с записью, кроме явного карантина. */
+  /**
+   * Часть записи (обозначение союза, имя лица, положение места) идёт с записью, кроме явного карантина; в выпуске — и
+   * кроме части с закрытым источником (К-15).
+   */
   part(p: { prov?: Partial<Prov> } | undefined): boolean;
+  /** Запись, какой её видит этот уровень: в выпуске — без закрытых частей (К-15). */
+  view<T>(rec: T): T;
   status: Map<string, RecStatus>;
   /** Записи, не допущенные из-за прав источника (уровень «выпуск»): ключ → номера источников. */
   rights: Map<string, string[]>;
@@ -325,7 +410,8 @@ export function admission(base: Base, level: Level, env: TextEnv = fileEnv()): A
     level,
     ok: (rec) => admitted.has(rec),
     okKey: (k) => okKey(k),
-    part: (p) => p?.prov?.status !== 'quarantine',
+    part: (p) => p?.prov?.status !== 'quarantine' && !(level === 'release' && closedPart(p, base)),
+    view: (rec) => (level === 'release' ? openView(rec, base) : rec),
     status,
     rights,
     counts,
@@ -384,4 +470,52 @@ export function validateChecks(base: Base, env: TextEnv = fileEnv()): { where: s
     if (s.status === 'quarantine' && (led.has(r.key) || r.rec.prov?.check)) out.push({ where: r.key, msg: 'подпись проверки у записи в карантине' });
   }
   return out;
+}
+
+// ---------- перенос подписей при смене ключа (02 § 3.3.3; К-2) ----------
+
+export interface RekeyResult {
+  /** Журнал после переноса. */
+  entries: CheckEntry[];
+  moved: { from: string; to: string }[];
+  /** Подпись не перенесена: запись изменилась (или не найдена); подпись остаётся под прежним ключом. */
+  failed: { key: string; why: string }[];
+}
+
+/**
+ * `base:mark --rekey`: подпись с прежним ключом находит запись, которая давала этот ключ до номера, и сверяет отпечаток
+ * записи без поля номера. Совпал — подпись переписывается на новый ключ с новым отпечатком, прежняя уходит в историю с
+ * пометкой «перенос номера». Не совпал — не переносится, причина печатается, запись остаётся черновиком.
+ */
+export function rekey(base: Base, env: TextEnv = fileEnv()): RekeyResult {
+  const recs = records(base);
+  const byKey = new Map(recs.map((r) => [r.key, r]));
+  const byLegacy = new Map(recs.filter((r) => r.legacy !== r.key).map((r) => [r.legacy, r]));
+  const out = new Map((base.checks ?? []).map((c) => [c.key, c]));
+  const moved: RekeyResult['moved'] = [];
+  const failed: RekeyResult['failed'] = [];
+  for (const c of base.checks ?? []) {
+    if (byKey.has(c.key)) continue;
+    const r = byLegacy.get(c.key);
+    if (!r) {
+      failed.push({ key: c.key, why: 'нет записи ни с этим ключом, ни с этим прежним ключом' });
+      continue;
+    }
+    if (out.has(r.key)) {
+      failed.push({ key: c.key, why: `у записи ${r.key} уже есть подпись под новым ключом` });
+      continue;
+    }
+    const { id: _id, ...noId } = r.rec;
+    const was = { coll: r.coll, rec: noId };
+    const inputs = inputsOf(r, base, env);
+    if (recordHash(was, inputs) !== c.hash) {
+      failed.push({ key: c.key, why: staleReason(c, inputsOf({ ...r, rec: noId }, base, env)) });
+      continue;
+    }
+    const prev = { by: c.by, kind: c.kind, at: c.at, hash: c.hash, ...(c.inputs && { inputs: c.inputs }), note: `перенос номера: ${c.key}` };
+    out.delete(c.key);
+    out.set(r.key, { key: r.key, by: c.by, kind: c.kind, at: c.at, hash: recordHash(r, inputs), inputs, history: [...(c.history ?? []), prev] });
+    moved.push({ from: c.key, to: r.key });
+  }
+  return { entries: [...out.values()], moved, failed };
 }

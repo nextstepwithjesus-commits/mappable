@@ -864,11 +864,49 @@
    }
   },
   {
-   "key": "fact:p-desyat-prokazhennykh|17|events",
+   "key": "fact:a-1453",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "8dbd5e6a99fe692ea93f6f75d7c79c9fe082909263fe501a5973d426da5d3eca",
+   "hash": "3d3799ee80045b044d1e40c079c8178572229b11d98df9b59b174965da0359ca",
+   "inputs": {
+    "verses": [
+     "Быт 48:5"
+    ],
+    "text": "15e35dbcf517bb833705c0a362302507f9d6f3c24e5d4d78e521e513b5e57759",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "7cb931dda20fbf9379f6974f1292774c10d52f16bb19fad5e1e02f2059028011",
+     "inputs": {
+      "verses": [
+       "Быт 48:5"
+      ],
+      "text": "15e35dbcf517bb833705c0a362302507f9d6f3c24e5d4d78e521e513b5e57759",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-iakov|10|childrenNote#5"
+    }
+   ]
+  },
+  {
+   "key": "fact:a-16273",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "780af9782111d7ea559874e0fcd6adaa439c4a298f897f62b5af875e1928759a",
    "inputs": {
     "verses": [
      "Лк 17:12",
@@ -881,89 +919,36 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
-  },
-  {
-   "key": "fact:p-efrem|6|parentsNote",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "080727d894eb0b8f502c2d08c9bdac714ebd78ba45c1f16d13bd4997b787998a",
-   "inputs": {
-    "verses": [
-     "Быт 48:5",
-     "Быт 48:6"
-    ],
-    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "8dbd5e6a99fe692ea93f6f75d7c79c9fe082909263fe501a5973d426da5d3eca",
+     "inputs": {
+      "verses": [
+       "Лк 17:12",
+       "Лк 17:13",
+       "Лк 17:14"
+      ],
+      "text": "34c192a8c88c25fcbdbfc0c8efbfc2d7a4b9f550b400784b934d17b48b31a627",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-desyat-prokazhennykh|17|events"
     }
-   }
+   ]
   },
   {
-   "key": "fact:p-iakov|10|childrenNote#5",
+   "key": "fact:a-16274",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "7cb931dda20fbf9379f6974f1292774c10d52f16bb19fad5e1e02f2059028011",
-   "inputs": {
-    "verses": [
-     "Быт 48:5"
-    ],
-    "text": "15e35dbcf517bb833705c0a362302507f9d6f3c24e5d4d78e521e513b5e57759",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "fact:p-iosif|10|childrenNote#2",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "1f546b2cbb498620d2c326e2e6dae655f9f3fa33745c0e774268925a6c42f3ad",
-   "inputs": {
-    "verses": [
-     "Быт 48:5",
-     "Быт 48:6"
-    ],
-    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "fact:p-manassiya|6|parentsNote",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "080727d894eb0b8f502c2d08c9bdac714ebd78ba45c1f16d13bd4997b787998a",
-   "inputs": {
-    "verses": [
-     "Быт 48:5",
-     "Быт 48:6"
-    ],
-    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "fact:p-samaryanin-iz-desyati-prokazhennykh|17|events",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "af5d485077e89156f385f3d6833544af68ff82d105b0452a5e0292bd3d9ff99a",
+   "hash": "0dfee0fcdb8208ddf9a1d9a1634839e734ec99dad1d9f90fea7b335dd700c221",
    "inputs": {
     "verses": [
      "Лк 17:15",
@@ -978,14 +963,158 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "af5d485077e89156f385f3d6833544af68ff82d105b0452a5e0292bd3d9ff99a",
+     "inputs": {
+      "verses": [
+       "Лк 17:15",
+       "Лк 17:16",
+       "Лк 17:17",
+       "Лк 17:18",
+       "Лк 17:19"
+      ],
+      "text": "52969698ac55a7eb7d29664c5e17f5138955bc123d285fabe13b8922482c6644",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-samaryanin-iz-desyati-prokazhennykh|17|events"
+    }
+   ]
   },
   {
-   "key": "kin:p-famar|p-iuda|невестка",
+   "key": "fact:a-2545",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "ae3e5d1b4f1c9516029c0105dfe2103d2d8fa605ba1ea30a64fb1872852af54c",
+   "hash": "2b133973ef788f4254848f17cf3ca6f4319aa374bd87fb260985ba6304f70488",
+   "inputs": {
+    "verses": [
+     "Быт 48:5",
+     "Быт 48:6"
+    ],
+    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "1f546b2cbb498620d2c326e2e6dae655f9f3fa33745c0e774268925a6c42f3ad",
+     "inputs": {
+      "verses": [
+       "Быт 48:5",
+       "Быт 48:6"
+      ],
+      "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-iosif|10|childrenNote#2"
+    }
+   ]
+  },
+  {
+   "key": "fact:a-2925",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "6eb545e79bbfc5e8aefd5b2cc6d9a4c348c84d8e23f03f295f3bf680510e76d7",
+   "inputs": {
+    "verses": [
+     "Быт 48:5",
+     "Быт 48:6"
+    ],
+    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "080727d894eb0b8f502c2d08c9bdac714ebd78ba45c1f16d13bd4997b787998a",
+     "inputs": {
+      "verses": [
+       "Быт 48:5",
+       "Быт 48:6"
+      ],
+      "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-manassiya|6|parentsNote"
+    }
+   ]
+  },
+  {
+   "key": "fact:a-2947",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "e8d89ee7ee6d3cc133ec65c60367b53b9379ba1fbab4cde5c25e0ca10d732ff9",
+   "inputs": {
+    "verses": [
+     "Быт 48:5",
+     "Быт 48:6"
+    ],
+    "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "080727d894eb0b8f502c2d08c9bdac714ebd78ba45c1f16d13bd4997b787998a",
+     "inputs": {
+      "verses": [
+       "Быт 48:5",
+       "Быт 48:6"
+      ],
+      "text": "af21ff5c95f5057b7f43ff66d15c64c2ad8b58fb51976ff3737a47e47de45d80",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: fact:p-efrem|6|parentsNote"
+    }
+   ]
+  },
+  {
+   "key": "kin:k-10",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "2c83f12e0dabee78290536f7987a3f8e852a8d86a8e098357c8c72de562bf2e7",
    "inputs": {
     "verses": [
      "1Пар 2:4",
@@ -998,14 +1127,112 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "ae3e5d1b4f1c9516029c0105dfe2103d2d8fa605ba1ea30a64fb1872852af54c",
+     "inputs": {
+      "verses": [
+       "1Пар 2:4",
+       "Быт 38:11",
+       "Быт 38:24"
+      ],
+      "text": "f2619ec2d05d5922a4ccf6a955b91d06ec82c50a1598fd187c44d8bbc5d684ee",
+      "brackets": "33fcf2c364990be0ed45496ac4a3997db81839947b90e6493293b6866190b0a3",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-famar|p-iuda|невестка"
+    }
+   ]
   },
   {
-   "key": "kin:p-lazar|p-marfa|брат",
+   "key": "kin:k-3",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "a8d62562351ed3bc50a879bf1bd2753fa729c338eb216fcc0e623ea8bb7cc528",
+   "hash": "5c0ea5c6dd32fca2b2ea6767851a6e5fe6f9604f2ddf819878edfef907d8f2a4",
+   "inputs": {
+    "verses": [
+     "Быт 20:12"
+    ],
+    "text": "d67eff7e4598d55d95ded9ee2e495d6d7290953e6008faf10f1da73fe1429d4b",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "6047a67ce2c0dbf59f29cc68c0771fcb00a81884aaf3438c006481c321e8c15f",
+     "inputs": {
+      "verses": [
+       "Быт 20:12"
+      ],
+      "text": "d67eff7e4598d55d95ded9ee2e495d6d7290953e6008faf10f1da73fe1429d4b",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-sarra|p-avraam|сестра"
+    }
+   ]
+  },
+  {
+   "key": "kin:k-4",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "f87d67b74e4954c2fe62c2eb0dd4b2b11123290b1c4c5ab3ac2cd787e949f165",
+   "inputs": {
+    "verses": [
+     "Быт 11:31"
+    ],
+    "text": "4849056f6342804c24150812ba95a3d74c45e881769c0b8ddd9b790b03cae67b",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "ee72844ba725c31f0939214301b7265324a7dbb180cd0217172fd64df3fef268",
+     "inputs": {
+      "verses": [
+       "Быт 11:31"
+      ],
+      "text": "4849056f6342804c24150812ba95a3d74c45e881769c0b8ddd9b790b03cae67b",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-sarra|p-farra|невестка"
+    }
+   ]
+  },
+  {
+   "key": "kin:k-61",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "1639542c415c9acf40829a62b239414977bf6cff379fcd9ff0bf4c006d83908e",
    "inputs": {
     "verses": [
      "Ин 11:1",
@@ -1019,14 +1246,37 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "a8d62562351ed3bc50a879bf1bd2753fa729c338eb216fcc0e623ea8bb7cc528",
+     "inputs": {
+      "verses": [
+       "Ин 11:1",
+       "Ин 11:19",
+       "Ин 11:21",
+       "Ин 11:39"
+      ],
+      "text": "3922f035575bd9870eafc71907e635341cee79d123707905dd98a7e7b1a7ec41",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-lazar|p-marfa|брат"
+    }
+   ]
   },
   {
-   "key": "kin:p-lazar|p-mariya-iz-vifanii|брат",
+   "key": "kin:k-62",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "9da1f7df02e94aff7e2cfb4d2c77bf181da465243e1887b64c6ca3bae968f20f",
+   "hash": "a9d8aecb83af86ce94bb485939ba05def254efe1bbb668f01aab2fb971dd7dcb",
    "inputs": {
     "verses": [
      "Ин 11:1",
@@ -1040,14 +1290,37 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "9da1f7df02e94aff7e2cfb4d2c77bf181da465243e1887b64c6ca3bae968f20f",
+     "inputs": {
+      "verses": [
+       "Ин 11:1",
+       "Ин 11:19",
+       "Ин 11:2",
+       "Ин 11:32"
+      ],
+      "text": "1f4142dc6ced6b2ddde74017336432a9904bacf9ce62cec7c60745eb02f2c0a9",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-lazar|p-mariya-iz-vifanii|брат"
+    }
+   ]
   },
   {
-   "key": "kin:p-marfa|p-mariya-iz-vifanii|сестра",
+   "key": "kin:k-63",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "054808442bb2ade3dfb48f6fbc514d31c1fd35e9a1c715618679c506ceb04093",
+   "hash": "a8411f7fdc5fdee893661dadf9736b24acbbc0edc9754d29dc241e550dd54af6",
    "inputs": {
     "verses": [
      "Ин 11:1",
@@ -1061,43 +1334,30 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
-  },
-  {
-   "key": "kin:p-sarra|p-avraam|сестра",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "6047a67ce2c0dbf59f29cc68c0771fcb00a81884aaf3438c006481c321e8c15f",
-   "inputs": {
-    "verses": [
-     "Быт 20:12"
-    ],
-    "text": "d67eff7e4598d55d95ded9ee2e495d6d7290953e6008faf10f1da73fe1429d4b",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "054808442bb2ade3dfb48f6fbc514d31c1fd35e9a1c715618679c506ceb04093",
+     "inputs": {
+      "verses": [
+       "Ин 11:1",
+       "Ин 11:28",
+       "Ин 11:5",
+       "Лк 10:39"
+      ],
+      "text": "e699f54e70ff7e0642c36fe22dcfe3c42790de9c0abf12fd415bc1c447cb69e8",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: kin:p-marfa|p-mariya-iz-vifanii|сестра"
     }
-   }
-  },
-  {
-   "key": "kin:p-sarra|p-farra|невестка",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "ee72844ba725c31f0939214301b7265324a7dbb180cd0217172fd64df3fef268",
-   "inputs": {
-    "verses": [
-     "Быт 11:31"
-    ],
-    "text": "4849056f6342804c24150812ba95a3d74c45e881769c0b8ddd9b790b03cae67b",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
+   ]
   },
   {
    "key": "membership:p-samaryanin-iz-desyati-prokazhennykh|p-desyat-prokazhennykh",
@@ -1118,11 +1378,621 @@
    }
   },
   {
-   "key": "origin:p-avraam|p-farra|father|p",
+   "key": "origin:o-agar--izmail",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "19f2a36fdd52d5c964df7b05fd7ff90775c6884e6474fe10fcded4c7d8e83035",
+   "hash": "641a501cb826cdac1c0746b2f6b65cf02604b0f5f9102b678b806c39f07d19ad",
+   "inputs": {
+    "verses": [
+     "1Пар 1:28",
+     "Быт 16:15",
+     "Быт 16:16",
+     "Быт 25:12"
+    ],
+    "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
+    "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "5c84c5987e11000a69515653ac5a488e3934b2b5edc7018df7557afc9343347c",
+     "inputs": {
+      "verses": [
+       "1Пар 1:28",
+       "Быт 16:15",
+       "Быт 16:16",
+       "Быт 25:12"
+      ],
+      "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
+      "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-izmail|p-agar|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-asenefa--efrem",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "f41e9df747c9c60ef9699a1c16d1b15fbe04e21e75e3f3d7eed66fcc91c08028",
+   "inputs": {
+    "verses": [
+     "Быт 41:50",
+     "Быт 41:52",
+     "Быт 46:20",
+     "Чис 26:28"
+    ],
+    "text": "c96b0dc0eaa9c486fc85366e746210bbd7d4edb0d662e121be9a0faa5abdb2a6",
+    "brackets": "0ea733da19e464c3d00e4fbbea6b78c3db91bfefa214b8d2f6cae3ecb212dfb1",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "e8633937fec68bb8295c303d7e323d7a656acdcbcc5a0c65332787e833a08981",
+     "inputs": {
+      "verses": [
+       "Быт 41:50",
+       "Быт 41:52",
+       "Быт 46:20",
+       "Чис 26:28"
+      ],
+      "text": "c96b0dc0eaa9c486fc85366e746210bbd7d4edb0d662e121be9a0faa5abdb2a6",
+      "brackets": "0ea733da19e464c3d00e4fbbea6b78c3db91bfefa214b8d2f6cae3ecb212dfb1",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-efrem|p-asenefa|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-asenefa--manassiya",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "6c5743eb8799125945b83e0295554ac59facf420f1a4d6ebdb39cc55de9dfb55",
+   "inputs": {
+    "verses": [
+     "Быт 41:50",
+     "Быт 41:51",
+     "Быт 46:20",
+     "Чис 26:28"
+    ],
+    "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
+    "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "b1b32b8b491706e4448f81a27cbed5ee26037dca03e41b0885c520051821f921",
+     "inputs": {
+      "verses": [
+       "Быт 41:50",
+       "Быт 41:51",
+       "Быт 46:20",
+       "Чис 26:28"
+      ],
+      "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
+      "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-manassiya|p-asenefa|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avikhail-syn-khuriya--mikhail-syn-avikhaila",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "4258afabcc2464d1bf626089736c7508ab9b40252fb7013a0ed94d6152a5229c",
+   "inputs": {
+    "verses": [
+     "1Пар 5:13",
+     "1Пар 5:14"
+    ],
+    "text": "55256e7737b937ea4aadaad0105dded4889dd1bc0fb9624c0014ca17188f7578",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "7cbc476463d2e173d365fffc25e93bc67fb4c199274d587748b885214ef65f98",
+     "inputs": {
+      "verses": [
+       "1Пар 5:13",
+       "1Пар 5:14"
+      ],
+      "text": "55256e7737b937ea4aadaad0105dded4889dd1bc0fb9624c0014ca17188f7578",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-mikhail-syn-avikhaila|p-avikhail-syn-khuriya|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--iokshan",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "6a32d560d5d24c7fc5974400dc6eb081dd6d4b0b61dcb957c2245ec60f7dd779",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "ab215a94f6df31d9881299477a372348b6a9280b9f05af0ffb70337ae828d791",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iokshan|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--isaak",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "df25982830e88264aabe003f5b978a5d7ec24482821321875e2cdea0d3600d88",
+   "inputs": {
+    "verses": [
+     "1Пар 1:28",
+     "1Пар 1:34",
+     "Быт 21:2",
+     "Быт 21:3",
+     "Быт 25:19",
+     "Лк 3:34",
+     "Мф 1:2"
+    ],
+    "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "ccc1eef626b003f8b5f1cde823c8f7e35c292ed9ebfa8dd1c86049e863a7ac70",
+     "inputs": {
+      "verses": [
+       "1Пар 1:28",
+       "1Пар 1:34",
+       "Быт 21:2",
+       "Быт 21:3",
+       "Быт 25:19",
+       "Лк 3:34",
+       "Мф 1:2"
+      ],
+      "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-isaak|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--ishbak",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "80c2e00aeda935aae184e43c190f7b4cf438afce191c82e498e962ac5c02fd95",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "2e7a877e7497b03b984facf8d5463cf434bafa8c0ca334ad5d4350b589a4c344",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-ishbak|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--izmail",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "5217b24ee29be49b61a886a9a5839d89d5afc5240edd098e9e1fcebd4f3bf511",
+   "inputs": {
+    "verses": [
+     "1Пар 1:28",
+     "Быт 16:15",
+     "Быт 16:16",
+     "Быт 25:12"
+    ],
+    "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
+    "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "c1a30d7d6888462b5bc7c644789059458de277d5fd22157649425b26080af697",
+     "inputs": {
+      "verses": [
+       "1Пар 1:28",
+       "Быт 16:15",
+       "Быт 16:16",
+       "Быт 25:12"
+      ],
+      "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
+      "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-izmail|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--madian",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "78952a06e41ffa1f5e1396654da6f766926fcad3614fa319989198e25758bf67",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "57629055d7c673273a17db7860e28f205086f4d157835a6a8ad24c0ad80924ed",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-madian|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--medan",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "ea54e6a24dc05e58ba40d8a9d29a9543b562c4a7eaf16da71d182e5fb8f37a71",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "c63efc25b082faa64d52a894f5f27a69459024ca630e684f04cb136664c72105",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-medan|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--shuakh",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "3730ed539d28d2fcb611b17f176fb4044d2223160339833eb2c1e5700b5c7c0a",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "c23b3f2fa5935cc54b2c20e7707faa231e44bc1cbe21a8fc726fb77041f355fd",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-shuakh|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-avraam--zimran",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "5d93e4439aaa32955498422c1f9afe8b3d3135880b89662a740f57e2a96f17cb",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "cb7e0a4c45797a78fa69807f0a6d236e3cb8ac1b02c537e7cc8bbe15a8c81758",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-zimran|p-avraam|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-famar--fares",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "302c3f2598891075dbe8d993295b8a997e39d1a4f75e5776de0002edb2e0bd26",
+   "inputs": {
+    "verses": [
+     "1Пар 2:4",
+     "1Пар 4:1",
+     "Быт 38:27",
+     "Быт 38:28",
+     "Быт 38:29",
+     "Быт 46:12",
+     "Лк 3:33",
+     "Мф 1:3",
+     "Руф 4:12"
+    ],
+    "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
+    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "0ed224f1a313f80a4b24cb72485cefabb269431d7425f98e59471c8c6be1b1f9",
+     "inputs": {
+      "verses": [
+       "1Пар 2:4",
+       "1Пар 4:1",
+       "Быт 38:27",
+       "Быт 38:28",
+       "Быт 38:29",
+       "Быт 46:12",
+       "Лк 3:33",
+       "Мф 1:3",
+       "Руф 4:12"
+      ],
+      "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
+      "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-fares|p-famar|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-famar--zara",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "f8a3c404557512936cf42aeecc63aaafee5ad8efa65ad911ae86651509abeed8",
+   "inputs": {
+    "verses": [
+     "1Пар 2:4",
+     "Быт 38:27",
+     "Быт 38:28",
+     "Быт 38:29",
+     "Быт 38:30",
+     "Быт 46:12",
+     "Мф 1:3"
+    ],
+    "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
+    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "c2c74c82a55d26413964ae72f42ecd5cd261f0b6ec4cc184b039044abee99135",
+     "inputs": {
+      "verses": [
+       "1Пар 2:4",
+       "Быт 38:27",
+       "Быт 38:28",
+       "Быт 38:29",
+       "Быт 38:30",
+       "Быт 46:12",
+       "Мф 1:3"
+      ],
+      "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
+      "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-zara|p-famar|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-farra--avraam",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "2f4204957635bd89f5661d548415f2a20aca57fb5db402830304202168dc2497",
    "inputs": {
     "verses": [
      "1Пар 1:26",
@@ -1138,33 +2008,195 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "19f2a36fdd52d5c964df7b05fd7ff90775c6884e6474fe10fcded4c7d8e83035",
+     "inputs": {
+      "verses": [
+       "1Пар 1:26",
+       "1Пар 1:27",
+       "Быт 11:26",
+       "Быт 11:27",
+       "Лк 3:34",
+       "Нав 24:2"
+      ],
+      "text": "b02bdb071823dc167545763fea37c53c14fb33e15cab439ed0157ec7e693e180",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-avraam|p-farra|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-beera-syn-vaala|p-vaal-syn-reaii|father|p",
+   "key": "origin:o-farra--sarra",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "9887ba97ccc57718e5cdce9cf70c054aacc990fa3dfbafa8ab03d53ab6c4e3fb",
+   "hash": "9f9487c7fc363e3eae2221a6a3ac6e6feec785d0c60a036c510f149152a972bf",
    "inputs": {
     "verses": [
-     "1Пар 5:5",
-     "1Пар 5:6"
+     "Быт 11:27",
+     "Быт 20:12",
+     "Быт 20:2"
     ],
-    "text": "c0d2f18428c0c2773049fb8010f62c83e2baf8bb12aad3e7292193cde6f0914a",
+    "text": "2fa584b13ca803dcf703a0002b1db77f179621c4d461a1bdbab163be459876e4",
+    "brackets": "0f1294473aa1edb6745188ef51ffb88bd19b535dab314176738a0f50c6e2f59b",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "b4275fb9d5ddc6afcd6d1c7a11d9230e82b87cecfa2173ad05f72214c4fe1316",
+     "inputs": {
+      "verses": [
+       "Быт 11:27",
+       "Быт 20:12",
+       "Быт 20:2"
+      ],
+      "text": "2fa584b13ca803dcf703a0002b1db77f179621c4d461a1bdbab163be459876e4",
+      "brackets": "0f1294473aa1edb6745188ef51ffb88bd19b535dab314176738a0f50c6e2f59b",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-sarra|p-farra|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-iakov-otets-iosifa--iosif-muzh-marii",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "cbc57533a86c9fb0c0950843a5c688c26f8fd42bedad8ad5e40b393305bd6b11",
+   "inputs": {
+    "verses": [
+     "Мф 1:16"
+    ],
+    "text": "97c1bafd9ead0b4d69bb1389468e7cfe77aab6074b0d7902ffb901fbd4ea433e",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "94e935431b9fd5ce758f666898946cd9c878a4e76aafc6d9ffb00ec360780b1d",
+     "inputs": {
+      "verses": [
+       "Мф 1:16"
+      ],
+      "text": "97c1bafd9ead0b4d69bb1389468e7cfe77aab6074b0d7902ffb901fbd4ea433e",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iosif-muzh-marii|p-iakov-otets-iosifa|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-efrem|p-asenefa|mother|p",
+   "key": "origin:o-ieshishay--mikhail-syn-ieshishaya",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "e8633937fec68bb8295c303d7e323d7a656acdcbcc5a0c65332787e833a08981",
+   "hash": "a9ad76265b7e2018646e0a0a31f6dc4627cb508090b564f6d4c2e034b65ad7c5",
+   "inputs": {
+    "verses": [
+     "1Пар 5:14"
+    ],
+    "text": "f1ce1ceae23baf4b9cd7605b116e2bc7bb4b8b5491a38d8805e323048ff6634a",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "ac4f7d514e60922634652c47943a458a28213ac66e64daf3fed0df7e0cfa9923",
+     "inputs": {
+      "verses": [
+       "1Пар 5:14"
+      ],
+      "text": "f1ce1ceae23baf4b9cd7605b116e2bc7bb4b8b5491a38d8805e323048ff6634a",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-mikhail-syn-ieshishaya|p-ieshishay|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-iliy-syn-matfata--iosif-muzh-marii",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "89e9ea87b110039f3da2b63d3950f3311bebd877369842e9e8326a37a7d55f67",
+   "inputs": {
+    "verses": [
+     "Лк 3:23"
+    ],
+    "text": "386c8dd3d29671fb9bc5dd88361aa29ca2591757e2c4efc17986ab01a4a39ae5",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "2b6869c370bae7362e6f7286bb2f846aeb6a365bfc4c264e7a786a99e71f43c6",
+     "inputs": {
+      "verses": [
+       "Лк 3:23"
+      ],
+      "text": "386c8dd3d29671fb9bc5dd88361aa29ca2591757e2c4efc17986ab01a4a39ae5",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iosif-muzh-marii|p-iliy-syn-matfata|father|o"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-iosif--efrem",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "258c0f0574fb30a4eecb4621c02c599db6bb8912c0b98635679fb0cff9432693",
    "inputs": {
     "verses": [
      "Быт 41:50",
@@ -1178,35 +2210,185 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "1e39bf8dc3414cdb563f207d0afb55a176b74fb594797f824fcd00cda3ad26ab",
+     "inputs": {
+      "verses": [
+       "Быт 41:50",
+       "Быт 41:52",
+       "Быт 46:20",
+       "Чис 26:28"
+      ],
+      "text": "c96b0dc0eaa9c486fc85366e746210bbd7d4edb0d662e121be9a0faa5abdb2a6",
+      "brackets": "0ea733da19e464c3d00e4fbbea6b78c3db91bfefa214b8d2f6cae3ecb212dfb1",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-efrem|p-iosif|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-efrem|p-iosif|father|p",
+   "key": "origin:o-iosif--manassiya",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "1e39bf8dc3414cdb563f207d0afb55a176b74fb594797f824fcd00cda3ad26ab",
+   "hash": "f4e3692afbbd374c3b98da1e1a326fb4e64073388a38af4e86f8af47a2b10dc9",
    "inputs": {
     "verses": [
      "Быт 41:50",
-     "Быт 41:52",
+     "Быт 41:51",
      "Быт 46:20",
      "Чис 26:28"
     ],
-    "text": "c96b0dc0eaa9c486fc85366e746210bbd7d4edb0d662e121be9a0faa5abdb2a6",
-    "brackets": "0ea733da19e464c3d00e4fbbea6b78c3db91bfefa214b8d2f6cae3ecb212dfb1",
+    "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
+    "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "e5d49f92fcf783a747a83e8f3adb8b2a40635f00b5474f63778f0374853dc709",
+     "inputs": {
+      "verses": [
+       "Быт 41:50",
+       "Быт 41:51",
+       "Быт 46:20",
+       "Чис 26:28"
+      ],
+      "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
+      "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-manassiya|p-iosif|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-enokh-syn-kaina|p-kain|father|p",
+   "key": "origin:o-iuda--fares",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "a774f748af3aa29a3a93b4f8eb560ae8bc58ef3b71d41b400d0e91ef4dcfb0e8",
+   "hash": "d5e9b921759ce222ae10a91de685d6ad9215dd5cfde3ad3052418e253d949ae5",
+   "inputs": {
+    "verses": [
+     "1Пар 2:4",
+     "1Пар 4:1",
+     "Быт 38:27",
+     "Быт 38:28",
+     "Быт 38:29",
+     "Быт 46:12",
+     "Лк 3:33",
+     "Мф 1:3",
+     "Руф 4:12"
+    ],
+    "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
+    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "26ce84266e2c1242eeaeaea9ee4c16822ea61e1199395fa2d7b15c6fbe9fdbaa",
+     "inputs": {
+      "verses": [
+       "1Пар 2:4",
+       "1Пар 4:1",
+       "Быт 38:27",
+       "Быт 38:28",
+       "Быт 38:29",
+       "Быт 46:12",
+       "Лк 3:33",
+       "Мф 1:3",
+       "Руф 4:12"
+      ],
+      "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
+      "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-fares|p-iuda|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-iuda--zara",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "952d93acad2112a2b9c0b25b314d4a3f419a7287ef86808b53773c145f4f25dd",
+   "inputs": {
+    "verses": [
+     "1Пар 2:4",
+     "Быт 38:27",
+     "Быт 38:28",
+     "Быт 38:29",
+     "Быт 38:30",
+     "Быт 46:12",
+     "Мф 1:3"
+    ],
+    "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
+    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "be8746a90b7bc37952da710afa5d5fdf78d45b036f6497be80efbc3377b49c21",
+     "inputs": {
+      "verses": [
+       "1Пар 2:4",
+       "Быт 38:27",
+       "Быт 38:28",
+       "Быт 38:29",
+       "Быт 38:30",
+       "Быт 46:12",
+       "Мф 1:3"
+      ],
+      "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
+      "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-zara|p-iuda|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-kain--enokh-syn-kaina",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "0f9795ee2b69cfb108429da526f96cbbda42a126b9d44dac6a3619506687529e",
    "inputs": {
     "verses": [
      "Быт 4:17"
@@ -1217,32 +2399,404 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "a774f748af3aa29a3a93b4f8eb560ae8bc58ef3b71d41b400d0e91ef4dcfb0e8",
+     "inputs": {
+      "verses": [
+       "Быт 4:17"
+      ],
+      "text": "ab18dd24c5fc192da0cbe1dc012bdc00b5e515cd8d34300a16c65097f02642b3",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-enokh-syn-kaina|p-kain|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-enokh-syn-kaina|p-zhena-kaina|mother|p",
+   "key": "origin:o-khettura--iokshan",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "337f456e604d2386bbc6eea813fe8cd06eec24091c2305344d17c60477541080",
+   "hash": "033036cf893d4ce7c4f2f3745ff9b64c333db23f386b27e441cd2436224dbbc3",
    "inputs": {
     "verses": [
-     "Быт 4:17"
+     "1Пар 1:32",
+     "Быт 25:2"
     ],
-    "text": "ab18dd24c5fc192da0cbe1dc012bdc00b5e515cd8d34300a16c65097f02642b3",
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "274e9fc29fc01e77d144a62eb3930803b2c97eced66a7ee7da3db038b1d53877",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iokshan|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-khettura--ishbak",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "018c3c04750b626a43f1fa8dece68887705136aa993decd3dab38001d9bdc09d",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "d56e56a9f953cfd401566db46aa9adc39d50405663634d583efa11d4ba52485b",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-ishbak|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-khettura--madian",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "c447b77d621e2a639d75e85b792830c30f1c1d170fe5d48a704e490b1bd7f3e7",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "87b10e1fb6289f014c0afe26140c264de53c753a5f3fec4e51386d344d8b017f",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-madian|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-khettura--medan",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "538b45a5dee477d471bd699bc06a100b2f9c5ecbb0e4aab5e6845022a54f68ec",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "b14e03af95d9f91cc356e7cd74450d08d1704fa32ad18212775710506862ffe2",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-medan|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-khettura--shuakh",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "40aa01c2224c699c3390d6ca8228c1ca36d6a855092a2ff35fff3a42e772e512",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "3c8febd4dade9158774acb5e69c88be122bcb4ebd1740ff7e9116fe8f692ba93",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-shuakh|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-khettura--zimran",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "457955514a9de1cf9102bd381ea5705e54a8ce60c474df051cd2a3e4561c3878",
+   "inputs": {
+    "verses": [
+     "1Пар 1:32",
+     "Быт 25:2"
+    ],
+    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "a5b45d355b25bf4483bfae8910807e0b7e13fae93d1c60dec42e46969cd24552",
+     "inputs": {
+      "verses": [
+       "1Пар 1:32",
+       "Быт 25:2"
+      ],
+      "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
+      "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-zimran|p-khettura|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-matfan--iakov-otets-iosifa",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "4a0a25ca65d9a63dcf219429a8b4dd7cd01ef5a9de2091b904cb2c81de92d793",
+   "inputs": {
+    "verses": [
+     "Мф 1:15",
+     "Мф 1:16"
+    ],
+    "text": "f8d583df88c3aa78160332fbda9e77e05567ca65742f93166ae88a06f15b6b3d",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "fd9abbf615596e1bdb967c82768b923b5c5e37facad74fdcfe409006cda9718b",
+     "inputs": {
+      "verses": [
+       "Мф 1:15",
+       "Мф 1:16"
+      ],
+      "text": "f8d583df88c3aa78160332fbda9e77e05567ca65742f93166ae88a06f15b6b3d",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iakov-otets-iosifa|p-matfan|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-enos|p-sif|father|p",
+   "key": "origin:o-matfat-lk3-24--iliy-syn-matfata",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "168f21e8df7b2062029e1c66f157fb7eeca8df7476d3a20a40a3ea3df841044c",
+   "hash": "e0f9d02aa816ae5410754966323536c775fb3b0ceed43dbc3ae6889510000535",
+   "inputs": {
+    "verses": [
+     "Лк 3:23",
+     "Лк 3:24"
+    ],
+    "text": "f87708abb76c8200b296a7caadd4e80ebf8df7747cb1b1a90e9bf4b85ce0b075",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "b1f7c6908ed6ddfa5ece8e1895c03952b4eaacdb0f8a52202594dbba9d469262",
+     "inputs": {
+      "verses": [
+       "Лк 3:23",
+       "Лк 3:24"
+      ],
+      "text": "f87708abb76c8200b296a7caadd4e80ebf8df7747cb1b1a90e9bf4b85ce0b075",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-iliy-syn-matfata|p-matfat-lk3-24|father|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-sarra--isaak",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "f0b35574a09e3a9fae4900e6894c2f675403ed88aec36881b51eca11893f382f",
+   "inputs": {
+    "verses": [
+     "1Пар 1:28",
+     "1Пар 1:34",
+     "Быт 21:2",
+     "Быт 21:3",
+     "Быт 25:19",
+     "Лк 3:34",
+     "Мф 1:2"
+    ],
+    "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "442b96927555f1b4c95bd6f94d9ca98c3e895a60adcc0ac51e81ca6d802ec63f",
+     "inputs": {
+      "verses": [
+       "1Пар 1:28",
+       "1Пар 1:34",
+       "Быт 21:2",
+       "Быт 21:3",
+       "Быт 25:19",
+       "Лк 3:34",
+       "Мф 1:2"
+      ],
+      "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-isaak|p-sarra|mother|p"
+    }
+   ]
+  },
+  {
+   "key": "origin:o-sif--enos",
+   "by": "сверщик-агент",
+   "kind": "agent",
+   "at": "2026-10-10",
+   "hash": "026a355394ae679b0d3c001f55df74c5bb1a360f4ddea2ebb6519156b006d5f2",
    "inputs": {
     "verses": [
      "1Пар 1:1",
@@ -1256,598 +2810,108 @@
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
-  },
-  {
-   "key": "origin:p-fares|p-famar|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "0ed224f1a313f80a4b24cb72485cefabb269431d7425f98e59471c8c6be1b1f9",
-   "inputs": {
-    "verses": [
-     "1Пар 2:4",
-     "1Пар 4:1",
-     "Быт 38:27",
-     "Быт 38:28",
-     "Быт 38:29",
-     "Быт 46:12",
-     "Лк 3:33",
-     "Мф 1:3",
-     "Руф 4:12"
-    ],
-    "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
-    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "168f21e8df7b2062029e1c66f157fb7eeca8df7476d3a20a40a3ea3df841044c",
+     "inputs": {
+      "verses": [
+       "1Пар 1:1",
+       "Быт 4:26",
+       "Быт 5:6",
+       "Лк 3:38"
+      ],
+      "text": "fe0c1b4d512e2a4aa31dc0fd5086a0c935c4e336ac9d906ac88f7e30468b9fff",
+      "brackets": "d44e1d12d953fdbb8ec625aaf1ea88cf7e508f223f96ad290349e1b0e604919c",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-enos|p-sif|father|p"
     }
-   }
+   ]
   },
   {
-   "key": "origin:p-fares|p-iuda|father|p",
+   "key": "origin:o-vaal-syn-reaii--beera-syn-vaala",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "26ce84266e2c1242eeaeaea9ee4c16822ea61e1199395fa2d7b15c6fbe9fdbaa",
+   "hash": "ea996afdb02676b84b30b41614b3d615c21ad16b4ae32852e11f38d8fb53b777",
    "inputs": {
     "verses": [
-     "1Пар 2:4",
-     "1Пар 4:1",
-     "Быт 38:27",
-     "Быт 38:28",
-     "Быт 38:29",
-     "Быт 46:12",
-     "Лк 3:33",
-     "Мф 1:3",
-     "Руф 4:12"
+     "1Пар 5:5",
+     "1Пар 5:6"
     ],
-    "text": "7eea82537adab896318f154e10e4e70cfb6769eb8f8d1a681cff8e504da245ce",
-    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-iakov-otets-iosifa|p-matfan|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "fd9abbf615596e1bdb967c82768b923b5c5e37facad74fdcfe409006cda9718b",
-   "inputs": {
-    "verses": [
-     "Мф 1:15",
-     "Мф 1:16"
-    ],
-    "text": "f8d583df88c3aa78160332fbda9e77e05567ca65742f93166ae88a06f15b6b3d",
+    "text": "c0d2f18428c0c2773049fb8010f62c83e2baf8bb12aad3e7292193cde6f0914a",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "9887ba97ccc57718e5cdce9cf70c054aacc990fa3dfbafa8ab03d53ab6c4e3fb",
+     "inputs": {
+      "verses": [
+       "1Пар 5:5",
+       "1Пар 5:6"
+      ],
+      "text": "c0d2f18428c0c2773049fb8010f62c83e2baf8bb12aad3e7292193cde6f0914a",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-beera-syn-vaala|p-vaal-syn-reaii|father|p"
+    }
+   ]
   },
   {
-   "key": "origin:p-iliy-syn-matfata|p-matfat-lk3-24|father|p",
+   "key": "origin:o-zhena-kaina--enokh-syn-kaina",
    "by": "сверщик-агент",
    "kind": "agent",
    "at": "2026-10-10",
-   "hash": "b1f7c6908ed6ddfa5ece8e1895c03952b4eaacdb0f8a52202594dbba9d469262",
+   "hash": "a0aab88c53539095c0abc4409891602047a14d5b9fa3e32ebc3ecc2704249f79",
    "inputs": {
     "verses": [
-     "Лк 3:23",
-     "Лк 3:24"
+     "Быт 4:17"
     ],
-    "text": "f87708abb76c8200b296a7caadd4e80ebf8df7747cb1b1a90e9bf4b85ce0b075",
+    "text": "ab18dd24c5fc192da0cbe1dc012bdc00b5e515cd8d34300a16c65097f02642b3",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
      "src-synodal": "tools/bible/synodal.tsv"
     }
-   }
-  },
-  {
-   "key": "origin:p-iokshan|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "ab215a94f6df31d9881299477a372348b6a9280b9f05af0ffb70337ae828d791",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
+   },
+   "history": [
+    {
+     "by": "сверщик-агент",
+     "kind": "agent",
+     "at": "2026-10-10",
+     "hash": "337f456e604d2386bbc6eea813fe8cd06eec24091c2305344d17c60477541080",
+     "inputs": {
+      "verses": [
+       "Быт 4:17"
+      ],
+      "text": "ab18dd24c5fc192da0cbe1dc012bdc00b5e515cd8d34300a16c65097f02642b3",
+      "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "sources": {
+       "src-synodal": "tools/bible/synodal.tsv"
+      }
+     },
+     "note": "перенос номера: origin:p-enokh-syn-kaina|p-zhena-kaina|mother|p"
     }
-   }
-  },
-  {
-   "key": "origin:p-iokshan|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "274e9fc29fc01e77d144a62eb3930803b2c97eced66a7ee7da3db038b1d53877",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-iosif-muzh-marii|p-iakov-otets-iosifa|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "94e935431b9fd5ce758f666898946cd9c878a4e76aafc6d9ffb00ec360780b1d",
-   "inputs": {
-    "verses": [
-     "Мф 1:16"
-    ],
-    "text": "97c1bafd9ead0b4d69bb1389468e7cfe77aab6074b0d7902ffb901fbd4ea433e",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-iosif-muzh-marii|p-iliy-syn-matfata|father|o",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "2b6869c370bae7362e6f7286bb2f846aeb6a365bfc4c264e7a786a99e71f43c6",
-   "inputs": {
-    "verses": [
-     "Лк 3:23"
-    ],
-    "text": "386c8dd3d29671fb9bc5dd88361aa29ca2591757e2c4efc17986ab01a4a39ae5",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-isaak|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "ccc1eef626b003f8b5f1cde823c8f7e35c292ed9ebfa8dd1c86049e863a7ac70",
-   "inputs": {
-    "verses": [
-     "1Пар 1:28",
-     "1Пар 1:34",
-     "Быт 21:2",
-     "Быт 21:3",
-     "Быт 25:19",
-     "Лк 3:34",
-     "Мф 1:2"
-    ],
-    "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-isaak|p-sarra|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "442b96927555f1b4c95bd6f94d9ca98c3e895a60adcc0ac51e81ca6d802ec63f",
-   "inputs": {
-    "verses": [
-     "1Пар 1:28",
-     "1Пар 1:34",
-     "Быт 21:2",
-     "Быт 21:3",
-     "Быт 25:19",
-     "Лк 3:34",
-     "Мф 1:2"
-    ],
-    "text": "1844bf6acd053a5450da7e72daa0c4bea1832a695fde260d1b7ddbdcb1aa4465",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-ishbak|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "2e7a877e7497b03b984facf8d5463cf434bafa8c0ca334ad5d4350b589a4c344",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-ishbak|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "d56e56a9f953cfd401566db46aa9adc39d50405663634d583efa11d4ba52485b",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-izmail|p-agar|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "5c84c5987e11000a69515653ac5a488e3934b2b5edc7018df7557afc9343347c",
-   "inputs": {
-    "verses": [
-     "1Пар 1:28",
-     "Быт 16:15",
-     "Быт 16:16",
-     "Быт 25:12"
-    ],
-    "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
-    "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-izmail|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "c1a30d7d6888462b5bc7c644789059458de277d5fd22157649425b26080af697",
-   "inputs": {
-    "verses": [
-     "1Пар 1:28",
-     "Быт 16:15",
-     "Быт 16:16",
-     "Быт 25:12"
-    ],
-    "text": "b47d7a666f5a8b634cebacd0ae9db049dee6b04085e68db275c38b960599bb2e",
-    "brackets": "cd4b5a295147cce66f83c710b324aca0e3a3778bccc5b5bf966e83218ba75ccf",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-madian|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "57629055d7c673273a17db7860e28f205086f4d157835a6a8ad24c0ad80924ed",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-madian|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "87b10e1fb6289f014c0afe26140c264de53c753a5f3fec4e51386d344d8b017f",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-manassiya|p-asenefa|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "b1b32b8b491706e4448f81a27cbed5ee26037dca03e41b0885c520051821f921",
-   "inputs": {
-    "verses": [
-     "Быт 41:50",
-     "Быт 41:51",
-     "Быт 46:20",
-     "Чис 26:28"
-    ],
-    "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
-    "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-manassiya|p-iosif|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "e5d49f92fcf783a747a83e8f3adb8b2a40635f00b5474f63778f0374853dc709",
-   "inputs": {
-    "verses": [
-     "Быт 41:50",
-     "Быт 41:51",
-     "Быт 46:20",
-     "Чис 26:28"
-    ],
-    "text": "724565e04e9cd15945e725ce65e98a0dd03c3723114fd52a30ec787759178cb3",
-    "brackets": "b883b114c2942011f52c079c7d488873afb5fe28b2d07b285b6db1a1e6d543d7",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-medan|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "c63efc25b082faa64d52a894f5f27a69459024ca630e684f04cb136664c72105",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-medan|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "b14e03af95d9f91cc356e7cd74450d08d1704fa32ad18212775710506862ffe2",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-mikhail-syn-avikhaila|p-avikhail-syn-khuriya|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "7cbc476463d2e173d365fffc25e93bc67fb4c199274d587748b885214ef65f98",
-   "inputs": {
-    "verses": [
-     "1Пар 5:13",
-     "1Пар 5:14"
-    ],
-    "text": "55256e7737b937ea4aadaad0105dded4889dd1bc0fb9624c0014ca17188f7578",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-mikhail-syn-ieshishaya|p-ieshishay|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "ac4f7d514e60922634652c47943a458a28213ac66e64daf3fed0df7e0cfa9923",
-   "inputs": {
-    "verses": [
-     "1Пар 5:14"
-    ],
-    "text": "f1ce1ceae23baf4b9cd7605b116e2bc7bb4b8b5491a38d8805e323048ff6634a",
-    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-sarra|p-farra|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "b4275fb9d5ddc6afcd6d1c7a11d9230e82b87cecfa2173ad05f72214c4fe1316",
-   "inputs": {
-    "verses": [
-     "Быт 11:27",
-     "Быт 20:12",
-     "Быт 20:2"
-    ],
-    "text": "2fa584b13ca803dcf703a0002b1db77f179621c4d461a1bdbab163be459876e4",
-    "brackets": "0f1294473aa1edb6745188ef51ffb88bd19b535dab314176738a0f50c6e2f59b",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-shuakh|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "c23b3f2fa5935cc54b2c20e7707faa231e44bc1cbe21a8fc726fb77041f355fd",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-shuakh|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "3c8febd4dade9158774acb5e69c88be122bcb4ebd1740ff7e9116fe8f692ba93",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-zara|p-famar|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "c2c74c82a55d26413964ae72f42ecd5cd261f0b6ec4cc184b039044abee99135",
-   "inputs": {
-    "verses": [
-     "1Пар 2:4",
-     "Быт 38:27",
-     "Быт 38:28",
-     "Быт 38:29",
-     "Быт 38:30",
-     "Быт 46:12",
-     "Мф 1:3"
-    ],
-    "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
-    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-zara|p-iuda|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "be8746a90b7bc37952da710afa5d5fdf78d45b036f6497be80efbc3377b49c21",
-   "inputs": {
-    "verses": [
-     "1Пар 2:4",
-     "Быт 38:27",
-     "Быт 38:28",
-     "Быт 38:29",
-     "Быт 38:30",
-     "Быт 46:12",
-     "Мф 1:3"
-    ],
-    "text": "7aaa4247df516bdba64c494bc9249efbce2d60a49199edfef3c1a34185a1a9e5",
-    "brackets": "3b4ea3f0f89756d9dc21d1defad0e8c72d67a130c57ed3d89506302b21a5344e",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-zimran|p-avraam|father|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "cb7e0a4c45797a78fa69807f0a6d236e3cb8ac1b02c537e7cc8bbe15a8c81758",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
-  },
-  {
-   "key": "origin:p-zimran|p-khettura|mother|p",
-   "by": "сверщик-агент",
-   "kind": "agent",
-   "at": "2026-10-10",
-   "hash": "a5b45d355b25bf4483bfae8910807e0b7e13fae93d1c60dec42e46969cd24552",
-   "inputs": {
-    "verses": [
-     "1Пар 1:32",
-     "Быт 25:2"
-    ],
-    "text": "958d6c30d35d8d46750e648f9fa02935a6668bf49b4557dec57e2df804d255bf",
-    "brackets": "472192dd69a4c85c30aa4d4d3d0f4428181ebf1113410978e4cc5e79e4d9d3b4",
-    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-    "sources": {
-     "src-synodal": "tools/bible/synodal.tsv"
-    }
-   }
+   ]
   },
   {
    "key": "reading:r-lk3-23",

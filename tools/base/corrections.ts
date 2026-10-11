@@ -9,6 +9,7 @@ import type { Base } from './migrate.ts';
 import type { Hints } from './project.ts';
 import type { Actor, Assertion, Correction, Origin, ReadingSet } from './types.ts';
 import { STEPS_D2 } from './corrections-d2.ts';
+import { tagNew } from './ids.ts';
 
 export interface Step {
   id: string;
@@ -520,5 +521,8 @@ export function makeCtx(base: Base, hints: Hints): Ctx {
 
 export function applyCorrections(base: Base, hints: Hints) {
   const ctx = makeCtx(base, hints);
-  for (const s of STEPS) base.corrections.push({ id: s.id, ...s.run(ctx) });
+  for (const s of STEPS) {
+    base.corrections.push({ id: s.id, ...s.run(ctx) });
+    tagNew(base, s.id);
+  }
 }

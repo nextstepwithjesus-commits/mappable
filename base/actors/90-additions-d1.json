@@ -3,11 +3,11 @@
  "title": "Дополнения при переносе (контрольный набор)",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data/persons/90-additions-d1.json",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [
@@ -61,6 +61,7 @@
    "disambig": "Архангел",
    "facts": [
     {
+     "id": "a-16269",
      "sec": 5,
      "field": "status",
      "value": {
@@ -75,6 +76,7 @@
      }
     },
     {
+     "id": "a-16270",
      "sec": 5,
      "field": "status",
      "value": {
@@ -91,6 +93,7 @@
      }
     },
     {
+     "id": "a-16271",
      "sec": 17,
      "field": "events",
      "value": {
@@ -105,6 +108,7 @@
      }
     },
     {
+     "id": "a-16272",
      "sec": 17,
      "field": "events",
      "value": {
@@ -145,6 +149,7 @@
    },
    "facts": [
     {
+     "id": "a-16273",
      "sec": 17,
      "field": "events",
      "value": {
@@ -181,6 +186,7 @@
    "disambig": "один из десяти прокажённых",
    "facts": [
     {
+     "id": "a-16274",
      "sec": 17,
      "field": "events",
      "value": {

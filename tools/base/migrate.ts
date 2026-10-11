@@ -12,7 +12,7 @@
  *      (corrections-d3.ts) — они идут после дополнений.
  *   4. Обратная проекция после исправлений: каждое отличие должно относиться к лицу из списка исправлений.
  */
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, rmSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
@@ -28,6 +28,7 @@ import { loadBible } from '../bible.ts';
 import { parseRef } from '../../src/engine/books.ts';
 import { namesIn } from '../../src/engine/text.ts';
 import { scriptureText } from './brackets.ts';
+import { finishIds, loadIds, mergeRedirects, saveIds, startIds, tagNew, type IdEntry } from './ids.ts';
 
 const ROOT = join(import.meta.dirname, '..', '..');
 const DATA = join(ROOT, 'data');
@@ -86,6 +87,8 @@ export interface Base {
   fileSources?: Record<string, string[]>;
   /** Журнал подписей проверки base/checks.json (Д3-2). */
   checks?: CheckEntry[];
+  /** Выданные номера base/ids.json (02 § 3.3.1; К-1). */
+  ids?: IdEntry[];
 }
 
 /** Источник записей по умолчанию: текст Писания (09 § 5.5). */
@@ -333,18 +336,42 @@ export function diff(old: ReturnType<typeof loadOld>, proj: ReturnType<typeof pr
   return out;
 }
 
-/** Вся база в памяти: точный перенос, исправления, дополнения (без проверок и записи). */
-export function buildBase() {
+export interface BuildOptions {
+  /** Выданные номера (по умолчанию — base/ids.json с диска). */
+  ids?: IdEntry[];
+  /** Переадресация на диске (по умолчанию — base/redirects.json): только дописывается. */
+  redirects?: Redirect[];
+  /** Дата выдачи новых номеров. */
+  at?: string;
+  /** Шаги после всех шагов правки (для тестов выдачи номеров). */
+  extraSteps?: Step[];
+}
+
+const readItems = (rel: string) => (existsSync(join(OUT, rel)) ? JSON.parse(readFileSync(join(OUT, rel), 'utf8')).items : []);
+
+/**
+ * Вся база в памяти: точный перенос, номера по ключам data/ (до шагов), исправления, дополнения, номера рёбер и эпох
+ * (без проверок и записи). Выданные номера и переадресация — с диска: пересборка их только дописывает (К-1, К-16).
+ */
+export function buildBase(opts: BuildOptions = {}) {
   const old = loadOld();
   const { base, hints } = toBase(old.vols, old.groups, old.epochs, old.anchors, old.lines);
+  startIds(base, opts.ids ?? loadIds(OUT), opts.at ?? new Date().toISOString().slice(0, 10));
   applyCorrections(base, hints);
-  applyAll(base, hints, [ADDITIONS, ...STEPS_D3]);
+  applyAll(base, hints, [ADDITIONS, ...STEPS_D3, ...(opts.extraSteps ?? [])]);
+  const iss = finishIds(base)!;
+  if (iss.errors.length) throw new Error(`номера: ${iss.errors.slice(0, 5).join('; ')}`);
+  base.redirects = mergeRedirects(opts.redirects ?? readItems('redirects.json'), base.redirects);
+  base.ids = iss.table;
   return base;
 }
 
 function applyAll(base: Base, hints: Hints, steps: Step[]) {
   const ctx = makeCtx(base, hints);
-  for (const s of steps) base.corrections.push({ id: s.id, ...s.run(ctx) });
+  for (const s of steps) {
+    base.corrections.push({ id: s.id, ...s.run(ctx) });
+    tagNew(base, s.id);
+  }
 }
 
 /**
@@ -387,6 +414,7 @@ export function stepChanges(base: Base, hints: Hints, step: Step) {
   const before = recordKeys(base);
   base.corrections.push({ id: step.id, ...step.run(makeCtx(base, hints)) });
   const after = recordKeys(base);
+  tagNew(base, step.id);
   const changed = [...new Set([...before.keys(), ...after.keys()])].filter((k) => before.get(k) !== after.get(k));
   const c = base.corrections.at(-1)!;
   const ids = step.byActors ? c.actors.map((x) => `p-${x}`) : [];
@@ -407,6 +435,9 @@ function main() {
     process.exit(1);
   }
   console.log(`точный перенос: обратная проекция совпала с прежними данными (лиц ${base.volumes.reduce((n, v) => n + v.actors.length, 0)})`);
+  const at = new Date().toISOString().slice(0, 10);
+  // номера утверждений и родства — по ключам записей из data/, до шагов правки (02 § 3.3.1; К-1, К-16)
+  startIds(base, loadIds(OUT), at);
 
   // 2. исправления по одному: всё, что изменилось, — в объявленной области шага (и поля, которых не было в прежних данных)
   const steps: Record<string, string[]> = {};
@@ -417,6 +448,15 @@ function main() {
     console.log(`   ${step.id}: изменено записей ${changed.length}${stray.length ? `, ВНЕ ОБЛАСТИ ${stray.length}: ${stray.slice(0, 8).join('; ')}` : ''}`);
     bad += stray.length;
   }
+  // номера рёбер (по концам) и эпох; переадресация с прежних номеров эпох
+  const iss = finishIds(base)!;
+  const byKind = (k: string) => iss.added.filter((e) => e.kind === k).length;
+  console.log(`номера: выдано раньше ${iss.table.length - iss.added.length}, новых ${iss.added.length} (рёбер ${byKind('origin')}, утверждений ${byKind('fact')}, родства ${byKind('kin')}, эпох ${byKind('epoch')})`);
+  if (iss.errors.length) {
+    for (const e of iss.errors.slice(0, 20)) console.error(`!! номера: ${e}`);
+    process.exit(1);
+  }
+  const redirects = mergeRedirects(readItems('redirects.json'), base.redirects);
   // проекция: отличия от прежних данных по лицам и полям — для отчёта
   const d1 = diff(old, project(base, hints));
   console.log(`после исправлений: изменений вне областей шагов ${bad}; отличий в прежнем виде ${d1.length}`);
@@ -426,7 +466,6 @@ function main() {
 
   // 3. запись
   const commit = execSync('git rev-parse --short HEAD', { cwd: ROOT }).toString().trim();
-  const at = new Date().toISOString().slice(0, 10);
   const prov = (vol: string): Prov => ({ by: 'перенос Д1 (координатор)', at, status: 'draft', from: { vol, commit } });
   // источник записей по умолчанию — текст Писания (09 § 5.5; Д3-3); запись уточняет своим полем sources
   const file = <T>(title: string, items: T[], vol = 'data'): BaseFile<T> => ({ schema: 1, title, prov: prov(vol), sources: [...TEXT_SOURCES], items });
@@ -447,7 +486,14 @@ function main() {
   write('memberships.json', file('Членство', base.memberships));
   write('chrono.json', file('Хронологические входы (прежний вид; переработка — этап Д6)', base.chrono));
   write('nodata.json', file('Нет сведений', base.nodata));
-  write('redirects.json', file('Переадресация номеров', base.redirects));
+  // переадресация и выданные номера только дописываются (К-16): файл переписывается, только если есть новые строки
+  const redirectsFile = join(OUT, 'redirects.json');
+  if (!existsSync(redirectsFile)) write('redirects.json', file('Переадресация номеров', redirects));
+  else {
+    const cur = JSON.parse(readFileSync(redirectsFile, 'utf8'));
+    if (cur.items.length !== redirects.length) write('redirects.json', { ...cur, items: redirects });
+  }
+  if (saveIds(iss.table, OUT)) console.log(`base/ids.json: дописано номеров ${iss.added.length}`);
   write('corrections.json', file('Исправления при переносе', base.corrections));
   write('epochs.json', file('Эпохи', base.epochs, 'data/epochs.json'));
   write('anchors.json', { schema: 1, title: 'Внебиблейские опоры', prov: prov('data/anchors.json'), ...base.anchors });

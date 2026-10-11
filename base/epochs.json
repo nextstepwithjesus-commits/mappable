@@ -3,11 +3,11 @@
  "title": "Эпохи",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data/epochs.json",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [
@@ -15,7 +15,7 @@
  ],
  "items": [
   {
-   "id": "antediluvian",
+   "id": "era-antediluvian",
    "name": "Первый мир",
    "short": "До Потопа",
    "start": -4174,
@@ -110,7 +110,7 @@
    ]
   },
   {
-   "id": "postdiluvian",
+   "id": "era-postdiluvian",
    "name": "От Потопа до Авраама",
    "short": "После Потопа",
    "start": -2518,
@@ -183,7 +183,7 @@
    ]
   },
   {
-   "id": "patriarchs",
+   "id": "era-patriarchs",
    "name": "Патриархи",
    "short": "Патриархи",
    "start": -2166,
@@ -285,7 +285,7 @@
    ]
   },
   {
-   "id": "egypt",
+   "id": "era-egypt",
    "name": "Израиль в Египте",
    "short": "В Египте",
    "start": -1876,
@@ -365,7 +365,7 @@
    ]
   },
   {
-   "id": "exodus",
+   "id": "era-exodus",
    "name": "Исход и странствие в пустыне",
    "short": "Исход",
    "start": -1446,
@@ -417,7 +417,7 @@
    ]
   },
   {
-   "id": "conquest",
+   "id": "era-conquest",
    "name": "Завоевание Ханаана",
    "short": "Завоевание",
    "start": -1406,
@@ -457,7 +457,7 @@
    ]
   },
   {
-   "id": "judges",
+   "id": "era-judges",
    "name": "Судьи",
    "short": "Судьи",
    "start": -1375,
@@ -498,7 +498,7 @@
    ]
   },
   {
-   "id": "united",
+   "id": "era-united",
    "name": "Единое царство",
    "short": "Царство",
    "start": -1050,
@@ -564,7 +564,7 @@
    ]
   },
   {
-   "id": "divided",
+   "id": "era-divided",
    "name": "Разделённое царство",
    "short": "Два царства",
    "start": -931,
@@ -621,7 +621,7 @@
    ]
   },
   {
-   "id": "judah-alone",
+   "id": "era-judah-alone",
    "name": "Иудея после падения Самарии",
    "short": "Иудея одна",
    "start": -722,
@@ -690,7 +690,7 @@
    ]
   },
   {
-   "id": "exile",
+   "id": "era-exile",
    "name": "Вавилонский плен",
    "short": "Плен",
    "start": -586,
@@ -734,7 +734,7 @@
    ]
   },
   {
-   "id": "return",
+   "id": "era-return",
    "name": "Возвращение и персидское время",
    "short": "Возвращение",
    "start": -538,
@@ -798,7 +798,7 @@
    ]
   },
   {
-   "id": "intertestamental",
+   "id": "era-intertestamental",
    "name": "Межзаветное время",
    "short": "Между Заветами",
    "start": -430,
@@ -822,7 +822,7 @@
    "events": []
   },
   {
-   "id": "christ",
+   "id": "era-christ",
    "name": "Евангельская история",
    "short": "Евангелия",
    "start": -7,
@@ -891,7 +891,7 @@
    ]
   },
   {
-   "id": "apostolic",
+   "id": "era-apostolic",
    "name": "Апостольская Церковь",
    "short": "Апостолы",
    "start": 30,
@@ -947,7 +947,7 @@
    ]
   },
   {
-   "id": "church",
+   "id": "era-church",
    "name": "После завершения канона",
    "short": "После канона",
    "start": 100,

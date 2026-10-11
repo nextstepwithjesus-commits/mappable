@@ -21,7 +21,8 @@ const fresh = () => {
 };
 const who = { by: 'тест второго ключа', kind: 'agent' as const, at: '2026-10-10' };
 const keyOf = (b: Base, pred: (r: ReturnType<typeof records>[number]) => boolean) => records(b).find(pred)!.key;
-const ORIGIN = 'origin:p-isaak|p-avraam|father|p';
+// ключ ребра — по его номеру (02 § 3.3.1; К-1): o-<родитель>--<ребёнок>
+const ORIGIN = 'origin:o-avraam--isaak';
 
 beforeAll(() => {
   base = loadBase();

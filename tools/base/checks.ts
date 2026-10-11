@@ -8,13 +8,14 @@
  *                                                               подписать лицо, его утверждения, «нет сведений» и время
  *   npm run -s base:mark -- --stale                             подписи, которые больше не действуют, и почему
  *   npm run -s base:mark -- --unmark <ключ> …                   снять подпись
+ *   npm run -s base:mark -- --rekey                             перенести подписи с прежних ключей на номера (02 § 3.3.3; К-2)
  *
  * Подписать можно только запись не в карантине, при базе без ошибок проверки (кроме устаревших подписей) и не
  * составителю записи. Повторная подпись переносит прежнюю в историю.
  */
 import { pathToFileURL } from 'node:url';
 import { loadBase, validate } from './validate.ts';
-import { ledger, records, saveChecks, sign, statusOf, staleReason, inputsOf } from './admit.ts';
+import { ledger, records, rekey, saveChecks, sign, statusOf, staleReason, inputsOf } from './admit.ts';
 
 function arg(name: string): string | undefined {
   const i = process.argv.indexOf(name);
@@ -54,6 +55,15 @@ function main() {
       }
     }
     console.log(`подписей: ${(base.checks ?? []).length}; не действуют: ${n}`);
+    return;
+  }
+  if (process.argv.includes('--rekey')) {
+    const r = rekey(base);
+    for (const m of r.moved) console.log(`перенесено: ${m.from} → ${m.to}`);
+    for (const f of r.failed) console.log(`НЕ перенесено: ${f.key} — ${f.why}`);
+    if (r.moved.length) saveChecks(r.entries);
+    console.log(`подписей: ${r.entries.length}; перенесено ${r.moved.length}; не перенесено ${r.failed.length}`);
+    if (r.failed.length) process.exit(1);
     return;
   }
   const unmark = process.argv.indexOf('--unmark');

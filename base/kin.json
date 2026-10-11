@@ -3,11 +3,11 @@
  "title": "Родство словами Писания",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [
@@ -15,6 +15,7 @@
  ],
  "items": [
   {
+   "id": "k-1",
    "from": "p-iuval",
    "to": "p-iaval",
    "rel": "брат",
@@ -28,6 +29,7 @@
    }
   },
   {
+   "id": "k-2",
    "from": "p-noema",
    "to": "p-tuvalkain",
    "rel": "сестра",
@@ -41,6 +43,7 @@
    }
   },
   {
+   "id": "k-3",
    "from": "p-sarra",
    "to": "p-avraam",
    "rel": "сестра",
@@ -60,6 +63,7 @@
    }
   },
   {
+   "id": "k-4",
    "from": "p-sarra",
    "to": "p-farra",
    "rel": "невестка",
@@ -71,6 +75,7 @@
    }
   },
   {
+   "id": "k-5",
    "from": "p-mamriy",
    "to": "p-eshkol",
    "rel": "брат",
@@ -84,6 +89,7 @@
    }
   },
   {
+   "id": "k-6",
    "from": "p-mamriy",
    "to": "p-aner",
    "rel": "брат",
@@ -97,6 +103,7 @@
    }
   },
   {
+   "id": "k-7",
    "from": "p-eshkol",
    "to": "p-mamriy",
    "rel": "брат",
@@ -110,6 +117,7 @@
    }
   },
   {
+   "id": "k-8",
    "from": "p-aner",
    "to": "p-mamriy",
    "rel": "брат",
@@ -123,6 +131,7 @@
    }
   },
   {
+   "id": "k-9",
    "from": "p-famna-sestra-lotana",
    "to": "p-lotan",
    "rel": "сестра",
@@ -137,6 +146,7 @@
    }
   },
   {
+   "id": "k-10",
    "from": "p-famar",
    "to": "p-iuda",
    "rel": "невестка",
@@ -152,6 +162,7 @@
    }
   },
   {
+   "id": "k-11",
    "from": "p-vooz",
    "to": "p-elimelekh",
    "rel": "родственник",
@@ -167,6 +178,7 @@
    }
   },
   {
+   "id": "k-12",
    "from": "p-vooz",
    "to": "p-noemin",
    "rel": "родственник",
@@ -182,6 +194,7 @@
    }
   },
   {
+   "id": "k-13",
    "from": "p-saruiya",
    "to": "p-david",
    "rel": "сестра",
@@ -195,6 +208,7 @@
    }
   },
   {
+   "id": "k-14",
    "from": "p-saruiya",
    "to": "p-avigeya-sestra-davida",
    "rel": "сестра",
@@ -208,6 +222,7 @@
    }
   },
   {
+   "id": "k-15",
    "from": "p-avigeya-sestra-davida",
    "to": "p-david",
    "rel": "сестра",
@@ -221,6 +236,7 @@
    }
   },
   {
+   "id": "k-16",
    "from": "p-avigeya-sestra-davida",
    "to": "p-saruiya",
    "rel": "сестра",
@@ -234,6 +250,7 @@
    }
   },
   {
+   "id": "k-17",
    "from": "p-kenaz-otets-gofoniila",
    "to": "p-khalev",
    "rel": "младший брат",
@@ -248,6 +265,7 @@
    }
   },
   {
+   "id": "k-18",
    "from": "p-kheluv-brat-shukhi",
    "to": "p-shukha",
    "rel": "брат",
@@ -261,6 +279,7 @@
    }
   },
   {
+   "id": "k-19",
    "from": "p-shukha",
    "to": "p-kheluv-brat-shukhi",
    "rel": "брат",
@@ -274,6 +293,7 @@
    }
   },
   {
+   "id": "k-20",
    "from": "p-godiya-sestra-nakhama",
    "to": "p-nakham-otets-keily",
    "rel": "сестра",
@@ -287,6 +307,7 @@
    }
   },
   {
+   "id": "k-21",
    "from": "p-iokhaveda",
    "to": "p-amram",
    "rel": "тётка",
@@ -300,6 +321,7 @@
    }
   },
   {
+   "id": "k-22",
    "from": "p-khovav",
    "to": "p-moisey",
    "rel": "родственник",
@@ -314,6 +336,7 @@
    }
   },
   {
+   "id": "k-23",
    "from": "p-simey-brat-khonanii",
    "to": "p-khonaniya-levit",
    "rel": "брат",
@@ -327,6 +350,7 @@
    }
   },
   {
+   "id": "k-24",
    "from": "p-shemaiya-2par35",
    "to": "p-khonaniya-2par35",
    "rel": "брат",
@@ -340,6 +364,7 @@
    }
   },
   {
+   "id": "k-25",
    "from": "p-nafanail-2par35",
    "to": "p-khonaniya-2par35",
    "rel": "брат",
@@ -353,6 +378,7 @@
    }
   },
   {
+   "id": "k-26",
    "from": "p-nafanail-2par35",
    "to": "p-shemaiya-2par35",
    "rel": "брат",
@@ -366,6 +392,7 @@
    }
   },
   {
+   "id": "k-27",
    "from": "p-ieiel-1par5-7",
    "to": "p-beera-syn-vaala",
    "rel": "брат",
@@ -379,6 +406,7 @@
    }
   },
   {
+   "id": "k-28",
    "from": "p-zakhariya-1par5-7",
    "to": "p-beera-syn-vaala",
    "rel": "брат",
@@ -392,6 +420,7 @@
    }
   },
   {
+   "id": "k-29",
    "from": "p-bela-syn-azaza",
    "to": "p-beera-syn-vaala",
    "rel": "брат",
@@ -405,6 +434,7 @@
    }
   },
   {
+   "id": "k-30",
    "from": "p-sheresh-syn-makhira",
    "to": "p-keresh-syn-makhira",
    "rel": "брат",
@@ -418,6 +448,7 @@
    }
   },
   {
+   "id": "k-31",
    "from": "p-molekhef",
    "to": "p-galaad-syn-makhira",
    "rel": "сестра",
@@ -433,6 +464,7 @@
    }
   },
   {
+   "id": "k-32",
    "from": "p-nir",
    "to": "p-saul",
    "rel": "дядя",
@@ -446,6 +478,7 @@
    }
   },
   {
+   "id": "k-33",
    "from": "p-eshek",
    "to": "p-atsel",
    "rel": "брат",
@@ -459,6 +492,7 @@
    }
   },
   {
+   "id": "k-34",
    "from": "p-gelem",
    "to": "p-shomer-syn-khevera",
    "rel": "брат",
@@ -472,6 +506,7 @@
    }
   },
   {
+   "id": "k-35",
    "from": "p-famar-doch-davida",
    "to": "p-avessalom",
    "rel": "сестра",
@@ -489,6 +524,7 @@
    }
   },
   {
+   "id": "k-36",
    "from": "p-maakha-doch-avessaloma",
    "to": "p-asa",
    "rel": "мать",
@@ -504,6 +540,7 @@
    }
   },
   {
+   "id": "k-37",
    "from": "p-iosavef",
    "to": "p-okhoziya-syn-iorama",
    "rel": "сестра",
@@ -518,6 +555,7 @@
    }
   },
   {
+   "id": "k-38",
    "from": "p-maaseya-syn-akhaza",
    "to": "p-akhaz",
    "rel": "сын царя",
@@ -532,6 +570,7 @@
    }
   },
   {
+   "id": "k-39",
    "from": "p-sedekiya",
    "to": "p-iekhoniya",
    "rel": "дядя",
@@ -545,6 +584,7 @@
    }
   },
   {
+   "id": "k-40",
    "from": "p-ierameil-syn-tsarya",
    "to": "p-ioakim-tsar",
    "rel": "сын царя",
@@ -559,6 +599,7 @@
    }
   },
   {
+   "id": "k-41",
    "from": "p-malkhiya-syn-tsarya",
    "to": "p-sedekiya",
    "rel": "сын царя",
@@ -573,6 +614,7 @@
    }
   },
   {
+   "id": "k-42",
    "from": "p-sestra-takhpenesy",
    "to": "p-takhpenesa",
    "rel": "сестра",
@@ -586,6 +628,7 @@
    }
   },
   {
+   "id": "k-43",
    "from": "p-ioas-syn-tsarya",
    "to": "p-akhav",
    "rel": "сын царя",
@@ -601,6 +644,7 @@
    }
   },
   {
+   "id": "k-44",
    "from": "p-sallum-dyadya-ieremii",
    "to": "p-ieremiya",
    "rel": "дядя",
@@ -614,6 +658,7 @@
    }
   },
   {
+   "id": "k-45",
    "from": "p-anameil",
    "to": "p-ieremiya",
    "rel": "сын дяди",
@@ -629,6 +674,7 @@
    }
   },
   {
+   "id": "k-46",
    "from": "p-khanani-brat-neemii",
    "to": "p-neemiya",
    "rel": "брат",
@@ -643,6 +689,7 @@
    }
   },
   {
+   "id": "k-47",
    "from": "p-syn-ioiady-zyat-sanavallata",
    "to": "p-sanavallat",
    "rel": "зять",
@@ -656,6 +703,7 @@
    }
   },
   {
+   "id": "k-48",
    "from": "p-toviya-ammonityanin",
    "to": "p-shekhaniya-syn-arakha",
    "rel": "зять",
@@ -669,6 +717,7 @@
    }
   },
   {
+   "id": "k-49",
    "from": "p-toviya-ammonityanin",
    "to": "p-eliashiv-pervosvyashchennik",
    "rel": "близкий родственник",
@@ -683,6 +732,7 @@
    }
   },
   {
+   "id": "k-50",
    "from": "p-abikhail-otets-esfiri",
    "to": "p-mardokhey",
    "rel": "дядя",
@@ -697,6 +747,7 @@
    }
   },
   {
+   "id": "k-51",
    "from": "p-esfir",
    "to": "p-mardokhey",
    "rel": "дочь дяди",
@@ -711,6 +762,7 @@
    }
   },
   {
+   "id": "k-52",
    "from": "p-elisaveta",
    "to": "p-mariya",
    "rel": "родственница",
@@ -724,6 +776,7 @@
    }
   },
   {
+   "id": "k-53",
    "from": "p-iakov-brat-gospoden",
    "to": "p-iisus",
    "rel": "брат",
@@ -739,6 +792,7 @@
    }
   },
   {
+   "id": "k-54",
    "from": "p-iosiy-brat-gospoden",
    "to": "p-iisus",
    "rel": "брат",
@@ -753,6 +807,7 @@
    }
   },
   {
+   "id": "k-55",
    "from": "p-simon-brat-gospoden",
    "to": "p-iisus",
    "rel": "брат",
@@ -767,6 +822,7 @@
    }
   },
   {
+   "id": "k-56",
    "from": "p-iuda-brat-gospoden",
    "to": "p-iisus",
    "rel": "брат",
@@ -781,6 +837,7 @@
    }
   },
   {
+   "id": "k-57",
    "from": "p-iuda-brat-gospoden",
    "to": "p-iakov-brat-gospoden",
    "rel": "брат",
@@ -795,6 +852,7 @@
    }
   },
   {
+   "id": "k-58",
    "from": "p-mariya-kleopova",
    "to": "p-mariya",
    "rel": "сестра",
@@ -809,6 +867,7 @@
    }
   },
   {
+   "id": "k-59",
    "from": "p-teshcha-simona",
    "to": "p-petr",
    "rel": "тёща",
@@ -824,6 +883,7 @@
    }
   },
   {
+   "id": "k-60",
    "from": "p-andrey",
    "to": "p-petr",
    "rel": "брат",
@@ -841,6 +901,7 @@
    }
   },
   {
+   "id": "k-61",
    "from": "p-lazar",
    "to": "p-marfa",
    "rel": "брат",
@@ -857,6 +918,7 @@
    }
   },
   {
+   "id": "k-62",
    "from": "p-lazar",
    "to": "p-mariya-iz-vifanii",
    "rel": "брат",
@@ -872,6 +934,7 @@
    }
   },
   {
+   "id": "k-63",
    "from": "p-marfa",
    "to": "p-mariya-iz-vifanii",
    "rel": "сестра",
@@ -888,6 +951,7 @@
    }
   },
   {
+   "id": "k-64",
    "from": "p-filipp-brat-iroda",
    "to": "p-irod-antipa",
    "rel": "брат",
@@ -904,6 +968,7 @@
    }
   },
   {
+   "id": "k-65",
    "from": "p-anna-pervosvyashchennik",
    "to": "p-kaiafa",
    "rel": "тесть",
@@ -917,6 +982,7 @@
    }
   },
   {
+   "id": "k-66",
    "from": "p-ioann-deyan4-6",
    "to": "p-anna-pervosvyashchennik",
    "rel": "из рода первосвященнического",
@@ -931,6 +997,7 @@
    }
   },
   {
+   "id": "k-67",
    "from": "p-aleksandr-deyan4-6",
    "to": "p-anna-pervosvyashchennik",
    "rel": "из рода первосвященнического",
@@ -945,6 +1012,7 @@
    }
   },
   {
+   "id": "k-68",
    "from": "p-loida",
    "to": "p-timofey",
    "rel": "бабка",
@@ -958,6 +1026,7 @@
    }
   },
   {
+   "id": "k-69",
    "from": "p-ioann-mark",
    "to": "p-varnava",
    "rel": "племянник",
@@ -971,6 +1040,7 @@
    }
   },
   {
+   "id": "k-70",
    "from": "p-manail",
    "to": "p-irod-antipa",
    "rel": "совоспитанник",
@@ -984,6 +1054,7 @@
    }
   },
   {
+   "id": "k-71",
    "from": "p-andronik",
    "to": "p-pavel",
    "rel": "сродник",
@@ -998,6 +1069,7 @@
    }
   },
   {
+   "id": "k-72",
    "from": "p-yuniya",
    "to": "p-pavel",
    "rel": "сродница",
@@ -1012,6 +1084,7 @@
    }
   },
   {
+   "id": "k-73",
    "from": "p-irodion",
    "to": "p-pavel",
    "rel": "сродник",
@@ -1026,6 +1099,7 @@
    }
   },
   {
+   "id": "k-74",
    "from": "p-luciy-srodnik",
    "to": "p-pavel",
    "rel": "сродник",
@@ -1040,6 +1114,7 @@
    }
   },
   {
+   "id": "k-75",
    "from": "p-iason-srodnik",
    "to": "p-pavel",
    "rel": "сродник",
@@ -1054,6 +1129,7 @@
    }
   },
   {
+   "id": "k-76",
    "from": "p-sosipatr-srodnik",
    "to": "p-pavel",
    "rel": "сродник",
@@ -1068,6 +1144,7 @@
    }
   },
   {
+   "id": "k-77",
    "from": "p-sestra-nireya",
    "to": "p-nirey",
    "rel": "сестра",
@@ -1081,6 +1158,7 @@
    }
   },
   {
+   "id": "k-78",
    "from": "p-ionafan-dyadya-davida",
    "to": "p-david",
    "rel": "дядя",
@@ -1094,6 +1172,7 @@
    }
   },
   {
+   "id": "k-79",
    "from": "p-ioil-brat-nafana",
    "to": "p-nafan-otets-igala",
    "rel": "брат",
@@ -1108,6 +1187,7 @@
    }
   },
   {
+   "id": "k-80",
    "from": "p-iokha-fitsiyanin",
    "to": "p-iediael-syn-shimriya",
    "rel": "брат",
@@ -1121,6 +1201,7 @@
    }
   },
   {
+   "id": "k-81",
    "from": "p-lakhmiy",
    "to": "p-goliaf",
    "rel": "брат",
@@ -1134,6 +1215,7 @@
    }
   },
   {
+   "id": "k-82",
    "from": "p-godiya-sestra-nakhama",
    "to": "p-nakham-otets-keily",
    "rel": "сестра",
@@ -1142,6 +1224,7 @@
    ]
   },
   {
+   "id": "k-83",
    "from": "p-maakha-zhena-makhira",
    "to": "p-shupim-syn-ira",
    "rel": "сестра",
@@ -1151,6 +1234,7 @@
    "cert": "interpretation"
   },
   {
+   "id": "k-84",
    "from": "p-maakha-zhena-makhira",
    "to": "p-khupim-syn-ira",
    "rel": "сестра",
@@ -1160,6 +1244,7 @@
    "cert": "interpretation"
   },
   {
+   "id": "k-85",
    "from": "p-sedekiya",
    "to": "p-iekhoniya",
    "rel": "брат",

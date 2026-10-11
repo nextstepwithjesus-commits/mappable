@@ -104,7 +104,11 @@ export function project(base: Base, hints: Hints) {
       if (g?.length) p.group = oldG(g[0].area);
       p.prominence = a.prominence;
       const ch = chronoBy.get(a.id);
-      if (ch !== undefined) p.chrono = mapChronoIds(ch, old);
+      if (ch !== undefined) {
+        p.chrono = mapChronoIds(ch, old);
+        // номер эпохи в прежнем виде — без префикса era- (К-1)
+        if (typeof p.chrono.epoch === 'string') p.chrono.epoch = p.chrono.epoch.replace(/^era-/, '');
+      }
 
       const card: any = {};
       for (const as of a.facts) {
@@ -132,7 +136,7 @@ export function project(base: Base, hints: Hints) {
     for (const s of c.persons) s.id = old(s.id);
     lines[hints.lineIdmap?.[k] ?? k] = c;
   }
-  const epochs = base.epochs.map((e) => mapEpochIds(e, old));
+  const epochs = base.epochs.map((e) => ({ ...mapEpochIds(e, old), id: String(e.id).replace(/^era-/, '') }));
   const groups = base.areas.map((a) => ({
     id: oldG(a.id), name: a.name, kind: a.kind,
     ...(a.founder !== undefined && { founder: old(a.founder) }), ...(a.parent !== undefined && { parent: oldG(a.parent) }),

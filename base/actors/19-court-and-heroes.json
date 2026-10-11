@@ -3,11 +3,11 @@
  "title": "Двор и войско Давида и Соломона; герои Давида",
  "prov": {
   "by": "перенос Д1 (координатор)",
-  "at": "2026-10-10",
+  "at": "2026-10-11",
   "status": "draft",
   "from": {
    "vol": "data/persons/19-court-and-heroes.json",
-   "commit": "57d4584"
+   "commit": "a2afb08"
   }
  },
  "sources": [
@@ -42,6 +42,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14338",
      "sec": 2,
      "field": "original",
      "value": {
@@ -56,6 +57,7 @@
      }
     },
     {
+     "id": "a-14339",
      "sec": 5,
      "field": "status",
      "value": {
@@ -66,6 +68,7 @@
      }
     },
     {
+     "id": "a-14340",
      "sec": 5,
      "field": "status",
      "value": {
@@ -77,6 +80,7 @@
      }
     },
     {
+     "id": "a-14341",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -88,6 +92,7 @@
      }
     },
     {
+     "id": "a-14342",
      "sec": 17,
      "field": "events",
      "value": {
@@ -100,6 +105,7 @@
      "cert": "interpretation"
     },
     {
+     "id": "a-14343",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -112,6 +118,7 @@
      }
     },
     {
+     "id": "a-14344",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -124,6 +131,7 @@
      }
     },
     {
+     "id": "a-14345",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -157,6 +165,7 @@
    "prominence": 3,
    "facts": [
     {
+     "id": "a-14346",
      "sec": 2,
      "field": "original",
      "value": {
@@ -171,6 +180,7 @@
      }
     },
     {
+     "id": "a-14347",
      "sec": 5,
      "field": "status",
      "value": {
@@ -184,6 +194,7 @@
      }
     },
     {
+     "id": "a-14348",
      "sec": 5,
      "field": "status",
      "value": {
@@ -194,6 +205,7 @@
      }
     },
     {
+     "id": "a-14349",
      "sec": 5,
      "field": "status",
      "value": {
@@ -205,6 +217,7 @@
      }
     },
     {
+     "id": "a-14350",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -216,6 +229,7 @@
      "cert": "inference"
     },
     {
+     "id": "a-14351",
      "sec": 14,
      "field": "met",
      "value": {
@@ -227,6 +241,7 @@
      }
     },
     {
+     "id": "a-14352",
      "sec": 14,
      "field": "met",
      "value": {
@@ -238,6 +253,7 @@
      }
     },
     {
+     "id": "a-14353",
      "sec": 14,
      "field": "met",
      "value": {
@@ -250,6 +266,7 @@
      }
     },
     {
+     "id": "a-14354",
      "sec": 15,
      "field": "places",
      "value": {
@@ -263,6 +280,7 @@
      }
     },
     {
+     "id": "a-14355",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -275,6 +293,7 @@
      }
     },
     {
+     "id": "a-14356",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -286,6 +305,7 @@
      }
     },
     {
+     "id": "a-14357",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -296,6 +316,7 @@
      }
     },
     {
+     "id": "a-14358",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -308,6 +329,7 @@
      }
     },
     {
+     "id": "a-14359",
      "sec": 17,
      "field": "events",
      "value": {
@@ -319,6 +341,7 @@
      }
     },
     {
+     "id": "a-14360",
      "sec": 17,
      "field": "events",
      "value": {
@@ -330,6 +353,7 @@
      }
     },
     {
+     "id": "a-14361",
      "sec": 17,
      "field": "events",
      "value": {
@@ -341,6 +365,7 @@
      }
     },
     {
+     "id": "a-14362",
      "sec": 17,
      "field": "events",
      "value": {
@@ -353,6 +378,7 @@
      }
     },
     {
+     "id": "a-14363",
      "sec": 17,
      "field": "events",
      "value": {
@@ -363,6 +389,7 @@
      }
     },
     {
+     "id": "a-14364",
      "sec": 17,
      "field": "events",
      "value": {
@@ -374,6 +401,7 @@
      }
     },
     {
+     "id": "a-14365",
      "sec": 17,
      "field": "events",
      "value": {
@@ -384,6 +412,7 @@
      }
     },
     {
+     "id": "a-14366",
      "sec": 17,
      "field": "events",
      "value": {
@@ -394,6 +423,7 @@
      }
     },
     {
+     "id": "a-14367",
      "sec": 17,
      "field": "events",
      "value": {
@@ -404,6 +434,7 @@
      }
     },
     {
+     "id": "a-14368",
      "sec": 17,
      "field": "events",
      "value": {
@@ -414,6 +445,7 @@
      }
     },
     {
+     "id": "a-14369",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -423,6 +455,7 @@
      }
     },
     {
+     "id": "a-14370",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -431,6 +464,7 @@
      }
     },
     {
+     "id": "a-14371",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -440,6 +474,7 @@
      }
     },
     {
+     "id": "a-14372",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -456,6 +491,7 @@
      }
     },
     {
+     "id": "a-14373",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -468,6 +504,7 @@
      }
     },
     {
+     "id": "a-14374",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -480,6 +517,7 @@
      }
     },
     {
+     "id": "a-14375",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -511,6 +549,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14376",
      "sec": 5,
      "field": "status",
      "value": {
@@ -521,6 +560,7 @@
      }
     },
     {
+     "id": "a-14377",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -549,6 +589,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14378",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -559,6 +600,7 @@
      }
     },
     {
+     "id": "a-14379",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -566,6 +608,7 @@
      }
     },
     {
+     "id": "a-14380",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -597,6 +640,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14381",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -609,6 +653,7 @@
      }
     },
     {
+     "id": "a-14382",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -641,6 +686,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14383",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -653,6 +699,7 @@
      }
     },
     {
+     "id": "a-14384",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -663,6 +710,7 @@
      }
     },
     {
+     "id": "a-14385",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -676,6 +724,7 @@
      }
     },
     {
+     "id": "a-14386",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -709,6 +758,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14387",
      "sec": 15,
      "field": "places",
      "value": {
@@ -721,6 +771,7 @@
      }
     },
     {
+     "id": "a-14388",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -732,6 +783,7 @@
      }
     },
     {
+     "id": "a-14389",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -739,6 +791,7 @@
      }
     },
     {
+     "id": "a-14390",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -769,6 +822,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14391",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -776,6 +830,7 @@
      }
     },
     {
+     "id": "a-14392",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -816,6 +871,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14393",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -826,6 +882,7 @@
      }
     },
     {
+     "id": "a-14394",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -836,6 +893,7 @@
      }
     },
     {
+     "id": "a-14395",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -846,6 +904,7 @@
      }
     },
     {
+     "id": "a-14396",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -859,6 +918,7 @@
      }
     },
     {
+     "id": "a-14397",
      "sec": 20,
      "field": "death",
      "value": {
@@ -874,6 +934,7 @@
      }
     },
     {
+     "id": "a-14398",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -887,6 +948,7 @@
      }
     },
     {
+     "id": "a-14399",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -900,6 +962,7 @@
      }
     },
     {
+     "id": "a-14400",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -931,6 +994,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14401",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -938,6 +1002,7 @@
      }
     },
     {
+     "id": "a-14402",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -951,6 +1016,7 @@
      }
     },
     {
+     "id": "a-14403",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -984,6 +1050,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14404",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -994,6 +1061,7 @@
      }
     },
     {
+     "id": "a-14405",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1023,6 +1091,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14406",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1033,6 +1102,7 @@
      }
     },
     {
+     "id": "a-14407",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1058,6 +1128,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14408",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1065,6 +1136,7 @@
      }
     },
     {
+     "id": "a-14409",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1099,6 +1171,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14410",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1110,6 +1183,7 @@
      }
     },
     {
+     "id": "a-14411",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1117,6 +1191,7 @@
      }
     },
     {
+     "id": "a-14412",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1130,6 +1205,7 @@
      }
     },
     {
+     "id": "a-14413",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1163,6 +1239,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14414",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1173,6 +1250,7 @@
      }
     },
     {
+     "id": "a-14415",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1180,6 +1258,7 @@
      }
     },
     {
+     "id": "a-14416",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1193,6 +1272,7 @@
      }
     },
     {
+     "id": "a-14417",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1225,6 +1305,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14418",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1235,6 +1316,7 @@
      }
     },
     {
+     "id": "a-14419",
      "sec": 6,
      "field": "parentsNote",
      "value": {
@@ -1245,6 +1327,7 @@
      }
     },
     {
+     "id": "a-14420",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1252,6 +1335,7 @@
      }
     },
     {
+     "id": "a-14421",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1265,6 +1349,7 @@
      }
     },
     {
+     "id": "a-14422",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1297,6 +1382,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14423",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1308,6 +1394,7 @@
      }
     },
     {
+     "id": "a-14424",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1336,6 +1423,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14425",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1347,6 +1435,7 @@
      }
     },
     {
+     "id": "a-14426",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1375,6 +1464,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14427",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1386,6 +1476,7 @@
      }
     },
     {
+     "id": "a-14428",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1414,6 +1505,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14429",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1425,6 +1517,7 @@
      "cert": "inference"
     },
     {
+     "id": "a-14430",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1436,6 +1529,7 @@
      }
     },
     {
+     "id": "a-14431",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1443,6 +1537,7 @@
      }
     },
     {
+     "id": "a-14432",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1476,6 +1571,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14433",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1487,6 +1583,7 @@
      }
     },
     {
+     "id": "a-14434",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1494,6 +1591,7 @@
      }
     },
     {
+     "id": "a-14435",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1523,6 +1621,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14436",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1551,6 +1650,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14437",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1562,6 +1662,7 @@
      }
     },
     {
+     "id": "a-14438",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1590,6 +1691,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14439",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1601,6 +1703,7 @@
      "cert": "inference"
     },
     {
+     "id": "a-14440",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1612,6 +1715,7 @@
      }
     },
     {
+     "id": "a-14441",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1619,6 +1723,7 @@
      }
     },
     {
+     "id": "a-14442",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1648,6 +1753,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14443",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1655,6 +1761,7 @@
      }
     },
     {
+     "id": "a-14444",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -1688,6 +1795,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14445",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1699,6 +1807,7 @@
      }
     },
     {
+     "id": "a-14446",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1724,6 +1833,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14447",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1752,6 +1862,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14448",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1763,6 +1874,7 @@
      }
     },
     {
+     "id": "a-14449",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1788,6 +1900,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14450",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1816,6 +1929,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14451",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1827,6 +1941,7 @@
      }
     },
     {
+     "id": "a-14452",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -1855,6 +1970,7 @@
    "prominence": 3,
    "facts": [
     {
+     "id": "a-14453",
      "sec": 2,
      "field": "original",
      "value": {
@@ -1869,6 +1985,7 @@
      }
     },
     {
+     "id": "a-14454",
      "sec": 5,
      "field": "status",
      "value": {
@@ -1880,6 +1997,7 @@
      }
     },
     {
+     "id": "a-14455",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -1892,6 +2010,7 @@
      }
     },
     {
+     "id": "a-14456",
      "sec": 14,
      "field": "met",
      "value": {
@@ -1903,6 +2022,7 @@
      }
     },
     {
+     "id": "a-14457",
      "sec": 14,
      "field": "met",
      "value": {
@@ -1914,6 +2034,7 @@
      }
     },
     {
+     "id": "a-14458",
      "sec": 14,
      "field": "met",
      "value": {
@@ -1924,6 +2045,7 @@
      }
     },
     {
+     "id": "a-14459",
      "sec": 14,
      "field": "met",
      "value": {
@@ -1934,6 +2056,7 @@
      }
     },
     {
+     "id": "a-14460",
      "sec": 15,
      "field": "places",
      "value": {
@@ -1945,6 +2068,7 @@
      }
     },
     {
+     "id": "a-14461",
      "sec": 15,
      "field": "places",
      "value": {
@@ -1957,6 +2081,7 @@
      }
     },
     {
+     "id": "a-14462",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -1967,6 +2092,7 @@
      }
     },
     {
+     "id": "a-14463",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1977,6 +2103,7 @@
      }
     },
     {
+     "id": "a-14464",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1987,6 +2114,7 @@
      }
     },
     {
+     "id": "a-14465",
      "sec": 17,
      "field": "events",
      "value": {
@@ -1997,6 +2125,7 @@
      }
     },
     {
+     "id": "a-14466",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2007,6 +2136,7 @@
      }
     },
     {
+     "id": "a-14467",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2017,6 +2147,7 @@
      }
     },
     {
+     "id": "a-14468",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2027,6 +2158,7 @@
      }
     },
     {
+     "id": "a-14469",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -2036,6 +2168,7 @@
      }
     },
     {
+     "id": "a-14470",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -2044,6 +2177,7 @@
      }
     },
     {
+     "id": "a-14471",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -2052,6 +2186,7 @@
      }
     },
     {
+     "id": "a-14472",
      "sec": 19,
      "field": "withGod",
      "value": {
@@ -2062,6 +2197,7 @@
      }
     },
     {
+     "id": "a-14473",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2075,6 +2211,7 @@
      }
     },
     {
+     "id": "a-14474",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2086,6 +2223,7 @@
      }
     },
     {
+     "id": "a-14475",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2119,6 +2257,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14476",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2129,6 +2268,7 @@
      }
     },
     {
+     "id": "a-14477",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -2139,6 +2279,7 @@
      }
     },
     {
+     "id": "a-14478",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2146,6 +2287,7 @@
      }
     },
     {
+     "id": "a-14479",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2176,6 +2318,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14480",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2204,6 +2347,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14481",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -2214,6 +2358,7 @@
      }
     },
     {
+     "id": "a-14482",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2221,6 +2366,7 @@
      }
     },
     {
+     "id": "a-14483",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2252,6 +2398,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14484",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2263,6 +2410,7 @@
      }
     },
     {
+     "id": "a-14485",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2303,6 +2451,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14486",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2313,6 +2462,7 @@
      }
     },
     {
+     "id": "a-14487",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2323,6 +2473,7 @@
      }
     },
     {
+     "id": "a-14488",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -2333,6 +2484,7 @@
      }
     },
     {
+     "id": "a-14489",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2343,6 +2495,7 @@
      }
     },
     {
+     "id": "a-14490",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2355,6 +2508,7 @@
      "cert": "interpretation"
     },
     {
+     "id": "a-14491",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2366,6 +2520,7 @@
      }
     },
     {
+     "id": "a-14492",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2380,6 +2535,7 @@
      }
     },
     {
+     "id": "a-14493",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2392,6 +2548,7 @@
      }
     },
     {
+     "id": "a-14494",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2403,6 +2560,7 @@
      }
     },
     {
+     "id": "a-14495",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2433,6 +2591,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14496",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2440,6 +2599,7 @@
      }
     },
     {
+     "id": "a-14497",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2470,6 +2630,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14498",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -2480,6 +2641,7 @@
      }
     },
     {
+     "id": "a-14499",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2487,6 +2649,7 @@
      }
     },
     {
+     "id": "a-14500",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2518,6 +2681,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14501",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2529,6 +2693,7 @@
      }
     },
     {
+     "id": "a-14502",
      "sec": 15,
      "field": "places",
      "value": {
@@ -2540,6 +2705,7 @@
      }
     },
     {
+     "id": "a-14503",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2550,6 +2716,7 @@
      }
     },
     {
+     "id": "a-14504",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2560,6 +2727,7 @@
      }
     },
     {
+     "id": "a-14505",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2570,6 +2738,7 @@
      }
     },
     {
+     "id": "a-14506",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2582,6 +2751,7 @@
      "cert": "interpretation"
     },
     {
+     "id": "a-14507",
      "sec": 19,
      "field": "withGod",
      "value": {
@@ -2593,6 +2763,7 @@
      }
     },
     {
+     "id": "a-14508",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2604,6 +2775,7 @@
      }
     },
     {
+     "id": "a-14509",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2616,6 +2788,7 @@
      }
     },
     {
+     "id": "a-14510",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2627,6 +2800,7 @@
      }
     },
     {
+     "id": "a-14511",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2657,6 +2831,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14512",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2682,6 +2857,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14513",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2694,6 +2870,7 @@
      "cert": "inference"
     },
     {
+     "id": "a-14514",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -2704,6 +2881,7 @@
      }
     },
     {
+     "id": "a-14515",
      "sec": 15,
      "field": "places",
      "value": {
@@ -2715,6 +2893,7 @@
      }
     },
     {
+     "id": "a-14516",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2725,6 +2904,7 @@
      }
     },
     {
+     "id": "a-14517",
      "sec": 17,
      "field": "events",
      "value": {
@@ -2737,6 +2917,7 @@
      "cert": "interpretation"
     },
     {
+     "id": "a-14518",
      "sec": 19,
      "field": "withGod",
      "value": {
@@ -2747,6 +2928,7 @@
      }
     },
     {
+     "id": "a-14519",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2757,6 +2939,7 @@
      }
     },
     {
+     "id": "a-14520",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2769,6 +2952,7 @@
      }
     },
     {
+     "id": "a-14521",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2799,6 +2983,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14522",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2810,6 +2995,7 @@
      }
     },
     {
+     "id": "a-14523",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2839,6 +3025,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14524",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2851,6 +3038,7 @@
      }
     },
     {
+     "id": "a-14525",
      "sec": 15,
      "field": "places",
      "value": {
@@ -2864,6 +3052,7 @@
      }
     },
     {
+     "id": "a-14526",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2871,6 +3060,7 @@
      }
     },
     {
+     "id": "a-14527",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2900,6 +3090,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14528",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2913,6 +3104,7 @@
      }
     },
     {
+     "id": "a-14529",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -2924,6 +3116,7 @@
      }
     },
     {
+     "id": "a-14530",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2931,6 +3124,7 @@
      }
     },
     {
+     "id": "a-14531",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -2960,6 +3154,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14532",
      "sec": 5,
      "field": "status",
      "value": {
@@ -2971,6 +3166,7 @@
      }
     },
     {
+     "id": "a-14533",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -2981,6 +3177,7 @@
      }
     },
     {
+     "id": "a-14534",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -2988,6 +3185,7 @@
      }
     },
     {
+     "id": "a-14535",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3027,6 +3225,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14536",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3040,6 +3239,7 @@
      }
     },
     {
+     "id": "a-14537",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3052,6 +3252,7 @@
      }
     },
     {
+     "id": "a-14538",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3062,6 +3263,7 @@
      }
     },
     {
+     "id": "a-14539",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3072,6 +3274,7 @@
      }
     },
     {
+     "id": "a-14540",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3084,6 +3287,7 @@
      }
     },
     {
+     "id": "a-14541",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3121,6 +3325,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14542",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3154,6 +3359,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14543",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3167,6 +3373,7 @@
      }
     },
     {
+     "id": "a-14544",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3179,6 +3386,7 @@
      }
     },
     {
+     "id": "a-14545",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3189,6 +3397,7 @@
      }
     },
     {
+     "id": "a-14546",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3201,6 +3410,7 @@
      }
     },
     {
+     "id": "a-14547",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3241,6 +3451,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14548",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3254,6 +3465,7 @@
      }
     },
     {
+     "id": "a-14549",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3266,6 +3478,7 @@
      }
     },
     {
+     "id": "a-14550",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3276,6 +3489,7 @@
      }
     },
     {
+     "id": "a-14551",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3286,6 +3500,7 @@
      }
     },
     {
+     "id": "a-14552",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3298,6 +3513,7 @@
      }
     },
     {
+     "id": "a-14553",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3328,6 +3544,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14554",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3339,6 +3556,7 @@
      }
     },
     {
+     "id": "a-14555",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3349,6 +3567,7 @@
      }
     },
     {
+     "id": "a-14556",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3356,6 +3575,7 @@
      }
     },
     {
+     "id": "a-14557",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3395,6 +3615,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14558",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3406,6 +3627,7 @@
      }
     },
     {
+     "id": "a-14559",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3419,6 +3641,7 @@
      }
     },
     {
+     "id": "a-14560",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3429,6 +3652,7 @@
      }
     },
     {
+     "id": "a-14561",
      "sec": 17,
      "field": "events",
      "value": {
@@ -3440,6 +3664,7 @@
      }
     },
     {
+     "id": "a-14562",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3453,6 +3678,7 @@
      }
     },
     {
+     "id": "a-14563",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3468,6 +3694,7 @@
      }
     },
     {
+     "id": "a-14564",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3501,6 +3728,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14565",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3512,6 +3740,7 @@
      }
     },
     {
+     "id": "a-14566",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3522,6 +3751,7 @@
      }
     },
     {
+     "id": "a-14567",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3529,6 +3759,7 @@
      }
     },
     {
+     "id": "a-14568",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3558,6 +3789,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14569",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3569,6 +3801,7 @@
      }
     },
     {
+     "id": "a-14570",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3579,6 +3812,7 @@
      }
     },
     {
+     "id": "a-14571",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3586,6 +3820,7 @@
      }
     },
     {
+     "id": "a-14572",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3618,6 +3853,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14573",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3631,6 +3867,7 @@
      }
     },
     {
+     "id": "a-14574",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3643,6 +3880,7 @@
      }
     },
     {
+     "id": "a-14575",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3653,6 +3891,7 @@
      }
     },
     {
+     "id": "a-14576",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3665,6 +3904,7 @@
      }
     },
     {
+     "id": "a-14577",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3705,6 +3945,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14578",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3716,6 +3957,7 @@
      }
     },
     {
+     "id": "a-14579",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3762,6 +4004,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14580",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3775,6 +4018,7 @@
      }
     },
     {
+     "id": "a-14581",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3787,6 +4031,7 @@
      }
     },
     {
+     "id": "a-14582",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3797,6 +4042,7 @@
      }
     },
     {
+     "id": "a-14583",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3809,6 +4055,7 @@
      }
     },
     {
+     "id": "a-14584",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -3840,6 +4087,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14585",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3869,6 +4117,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14586",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3882,6 +4131,7 @@
      }
     },
     {
+     "id": "a-14587",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3894,6 +4144,7 @@
      "cert": "inference"
     },
     {
+     "id": "a-14588",
      "sec": 15,
      "field": "places",
      "value": {
@@ -3907,6 +4158,7 @@
      }
     },
     {
+     "id": "a-14589",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3935,6 +4187,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14590",
      "sec": 5,
      "field": "status",
      "value": {
@@ -3948,6 +4201,7 @@
      }
     },
     {
+     "id": "a-14591",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3960,6 +4214,7 @@
      }
     },
     {
+     "id": "a-14592",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -3970,6 +4225,7 @@
      }
     },
     {
+     "id": "a-14593",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -3980,6 +4236,7 @@
      }
     },
     {
+     "id": "a-14594",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -3992,6 +4249,7 @@
      }
     },
     {
+     "id": "a-14595",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4021,6 +4279,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14596",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4032,6 +4291,7 @@
      }
     },
     {
+     "id": "a-14597",
      "sec": 15,
      "field": "places",
      "value": {
@@ -4043,6 +4303,7 @@
      }
     },
     {
+     "id": "a-14598",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4050,6 +4311,7 @@
      }
     },
     {
+     "id": "a-14599",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4079,6 +4341,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14600",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4090,6 +4353,7 @@
      }
     },
     {
+     "id": "a-14601",
      "sec": 15,
      "field": "places",
      "value": {
@@ -4101,6 +4365,7 @@
      }
     },
     {
+     "id": "a-14602",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4108,6 +4373,7 @@
      }
     },
     {
+     "id": "a-14603",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4137,6 +4403,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14604",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4148,6 +4415,7 @@
      }
     },
     {
+     "id": "a-14605",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4158,6 +4426,7 @@
      }
     },
     {
+     "id": "a-14606",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4165,6 +4434,7 @@
      }
     },
     {
+     "id": "a-14607",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4194,6 +4464,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14608",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4205,6 +4476,7 @@
      }
     },
     {
+     "id": "a-14609",
      "sec": 15,
      "field": "places",
      "value": {
@@ -4216,6 +4488,7 @@
      }
     },
     {
+     "id": "a-14610",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4223,6 +4496,7 @@
      }
     },
     {
+     "id": "a-14611",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4259,6 +4533,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14612",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4272,6 +4547,7 @@
      }
     },
     {
+     "id": "a-14613",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4283,6 +4559,7 @@
      }
     },
     {
+     "id": "a-14614",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4290,6 +4567,7 @@
      }
     },
     {
+     "id": "a-14615",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4321,6 +4599,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14616",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4334,6 +4613,7 @@
      }
     },
     {
+     "id": "a-14617",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4345,6 +4625,7 @@
      }
     },
     {
+     "id": "a-14618",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4377,6 +4658,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14619",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4387,6 +4669,7 @@
      }
     },
     {
+     "id": "a-14620",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -4398,6 +4681,7 @@
      }
     },
     {
+     "id": "a-14621",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4409,6 +4693,7 @@
      }
     },
     {
+     "id": "a-14622",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4439,6 +4724,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14623",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4446,6 +4732,7 @@
      }
     },
     {
+     "id": "a-14624",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4476,6 +4763,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14625",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4489,6 +4777,7 @@
      }
     },
     {
+     "id": "a-14626",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4499,6 +4788,7 @@
      }
     },
     {
+     "id": "a-14627",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4506,6 +4796,7 @@
      }
     },
     {
+     "id": "a-14628",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4535,6 +4826,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14629",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4546,6 +4838,7 @@
      }
     },
     {
+     "id": "a-14630",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4556,6 +4849,7 @@
      }
     },
     {
+     "id": "a-14631",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4563,6 +4857,7 @@
      }
     },
     {
+     "id": "a-14632",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4600,6 +4895,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14633",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4629,6 +4925,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14634",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4642,6 +4939,7 @@
      }
     },
     {
+     "id": "a-14635",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4653,6 +4951,7 @@
      }
     },
     {
+     "id": "a-14636",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4678,6 +4977,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14637",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4685,6 +4985,7 @@
      }
     },
     {
+     "id": "a-14638",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4714,6 +5015,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14639",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4739,6 +5041,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14640",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4750,6 +5053,7 @@
      }
     },
     {
+     "id": "a-14641",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4757,6 +5061,7 @@
      }
     },
     {
+     "id": "a-14642",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4788,6 +5093,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14643",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4813,6 +5119,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14644",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4824,6 +5131,7 @@
      }
     },
     {
+     "id": "a-14645",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4831,6 +5139,7 @@
      }
     },
     {
+     "id": "a-14646",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4860,6 +5169,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14647",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4871,6 +5181,7 @@
      }
     },
     {
+     "id": "a-14648",
      "sec": 15,
      "field": "places",
      "value": {
@@ -4882,6 +5193,7 @@
      }
     },
     {
+     "id": "a-14649",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4889,6 +5201,7 @@
      }
     },
     {
+     "id": "a-14650",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4918,6 +5231,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14651",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4929,6 +5243,7 @@
      }
     },
     {
+     "id": "a-14652",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -4939,6 +5254,7 @@
      }
     },
     {
+     "id": "a-14653",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -4946,6 +5262,7 @@
      }
     },
     {
+     "id": "a-14654",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -4982,6 +5299,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14655",
      "sec": 5,
      "field": "status",
      "value": {
@@ -4995,6 +5313,7 @@
      }
     },
     {
+     "id": "a-14656",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5006,6 +5325,7 @@
      }
     },
     {
+     "id": "a-14657",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5031,6 +5351,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14658",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5063,6 +5384,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14659",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5076,6 +5398,7 @@
      }
     },
     {
+     "id": "a-14660",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5086,6 +5409,7 @@
      }
     },
     {
+     "id": "a-14661",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5093,6 +5417,7 @@
      }
     },
     {
+     "id": "a-14662",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5123,6 +5448,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14663",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5130,6 +5456,7 @@
      }
     },
     {
+     "id": "a-14664",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5160,6 +5487,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14665",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5171,6 +5499,7 @@
      }
     },
     {
+     "id": "a-14666",
      "sec": 15,
      "field": "places",
      "value": {
@@ -5183,6 +5512,7 @@
      }
     },
     {
+     "id": "a-14667",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5190,6 +5520,7 @@
      }
     },
     {
+     "id": "a-14668",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5220,6 +5551,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14669",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5231,6 +5563,7 @@
      }
     },
     {
+     "id": "a-14670",
      "sec": 12,
      "field": "kinNote",
      "value": {
@@ -5241,6 +5574,7 @@
      }
     },
     {
+     "id": "a-14671",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5248,6 +5582,7 @@
      }
     },
     {
+     "id": "a-14672",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5278,6 +5613,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14673",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5289,6 +5625,7 @@
      }
     },
     {
+     "id": "a-14674",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5299,6 +5636,7 @@
      }
     },
     {
+     "id": "a-14675",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5306,6 +5644,7 @@
      }
     },
     {
+     "id": "a-14676",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5335,6 +5674,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14677",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5360,6 +5700,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14678",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5371,6 +5712,7 @@
      }
     },
     {
+     "id": "a-14679",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5378,6 +5720,7 @@
      }
     },
     {
+     "id": "a-14680",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5407,6 +5750,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14681",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5420,6 +5764,7 @@
      }
     },
     {
+     "id": "a-14682",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5431,6 +5776,7 @@
      }
     },
     {
+     "id": "a-14683",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5456,6 +5802,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14684",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5469,6 +5816,7 @@
      }
     },
     {
+     "id": "a-14685",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5480,6 +5828,7 @@
      }
     },
     {
+     "id": "a-14686",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -5491,6 +5840,7 @@
      }
     },
     {
+     "id": "a-14687",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5516,6 +5866,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14688",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5529,6 +5880,7 @@
      }
     },
     {
+     "id": "a-14689",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5540,6 +5892,7 @@
      }
     },
     {
+     "id": "a-14690",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5547,6 +5900,7 @@
      }
     },
     {
+     "id": "a-14691",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5558,6 +5912,7 @@
      }
     },
     {
+     "id": "a-14692",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5588,6 +5943,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14693",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5601,6 +5957,7 @@
      }
     },
     {
+     "id": "a-14694",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5612,6 +5969,7 @@
      }
     },
     {
+     "id": "a-14695",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5619,6 +5977,7 @@
      }
     },
     {
+     "id": "a-14696",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5648,6 +6007,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14697",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5655,6 +6015,7 @@
      }
     },
     {
+     "id": "a-14698",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5684,6 +6045,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14699",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5695,6 +6057,7 @@
      }
     },
     {
+     "id": "a-14700",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5702,6 +6065,7 @@
      }
     },
     {
+     "id": "a-14701",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5731,6 +6095,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14702",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5759,6 +6124,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14703",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5770,6 +6136,7 @@
      }
     },
     {
+     "id": "a-14704",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5780,6 +6147,7 @@
      }
     },
     {
+     "id": "a-14705",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5790,6 +6158,7 @@
      }
     },
     {
+     "id": "a-14706",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5815,6 +6184,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14707",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5822,6 +6192,7 @@
      }
     },
     {
+     "id": "a-14708",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -5852,6 +6223,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14709",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5863,6 +6235,7 @@
      }
     },
     {
+     "id": "a-14710",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5888,6 +6261,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14711",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5899,6 +6273,7 @@
      }
     },
     {
+     "id": "a-14712",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5909,6 +6284,7 @@
      }
     },
     {
+     "id": "a-14713",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5934,6 +6310,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14714",
      "sec": 5,
      "field": "status",
      "value": {
@@ -5945,6 +6322,7 @@
      }
     },
     {
+     "id": "a-14715",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5955,6 +6333,7 @@
      }
     },
     {
+     "id": "a-14716",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5980,6 +6359,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14717",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -5990,6 +6370,7 @@
      }
     },
     {
+     "id": "a-14718",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -5997,6 +6378,7 @@
      }
     },
     {
+     "id": "a-14719",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6026,6 +6408,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14720",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6037,6 +6420,7 @@
      }
     },
     {
+     "id": "a-14721",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6062,6 +6446,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14722",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6073,6 +6458,7 @@
      }
     },
     {
+     "id": "a-14723",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6098,6 +6484,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14724",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6123,6 +6510,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14725",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6134,6 +6522,7 @@
      }
     },
     {
+     "id": "a-14726",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6159,6 +6548,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14727",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6170,6 +6560,7 @@
      }
     },
     {
+     "id": "a-14728",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -6180,6 +6571,7 @@
      }
     },
     {
+     "id": "a-14729",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6205,6 +6597,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14730",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6216,6 +6609,7 @@
      }
     },
     {
+     "id": "a-14731",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6227,6 +6621,7 @@
      }
     },
     {
+     "id": "a-14732",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6252,6 +6647,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14733",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6277,6 +6673,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14734",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6288,6 +6685,7 @@
      }
     },
     {
+     "id": "a-14735",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6313,6 +6711,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14736",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6324,6 +6723,7 @@
      }
     },
     {
+     "id": "a-14737",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6349,6 +6749,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14738",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6360,6 +6761,7 @@
      }
     },
     {
+     "id": "a-14739",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -6370,6 +6772,7 @@
      }
     },
     {
+     "id": "a-14740",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6395,6 +6798,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14741",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6406,6 +6810,7 @@
      }
     },
     {
+     "id": "a-14742",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6418,6 +6823,7 @@
      }
     },
     {
+     "id": "a-14743",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6443,6 +6849,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14744",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6454,6 +6861,7 @@
      }
     },
     {
+     "id": "a-14745",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6466,6 +6874,7 @@
      }
     },
     {
+     "id": "a-14746",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6491,6 +6900,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14747",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6502,6 +6912,7 @@
      }
     },
     {
+     "id": "a-14748",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6514,6 +6925,7 @@
      }
     },
     {
+     "id": "a-14749",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6539,6 +6951,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14750",
      "sec": 10,
      "field": "childrenNote",
      "value": {
@@ -6549,6 +6962,7 @@
      }
     },
     {
+     "id": "a-14751",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6556,6 +6970,7 @@
      }
     },
     {
+     "id": "a-14752",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6593,6 +7008,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14753",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -6603,6 +7019,7 @@
      }
     },
     {
+     "id": "a-14754",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6610,6 +7027,7 @@
      }
     },
     {
+     "id": "a-14755",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6646,6 +7064,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14756",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6657,6 +7076,7 @@
      }
     },
     {
+     "id": "a-14757",
      "sec": 17,
      "field": "events",
      "value": {
@@ -6667,6 +7087,7 @@
      }
     },
     {
+     "id": "a-14758",
      "sec": 17,
      "field": "events",
      "value": {
@@ -6677,6 +7098,7 @@
      }
     },
     {
+     "id": "a-14759",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6688,6 +7110,7 @@
      }
     },
     {
+     "id": "a-14760",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6701,6 +7124,7 @@
      }
     },
     {
+     "id": "a-14761",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6730,6 +7154,7 @@
    "prominence": 3,
    "facts": [
     {
+     "id": "a-14762",
      "sec": 2,
      "field": "original",
      "value": {
@@ -6744,6 +7169,7 @@
      }
     },
     {
+     "id": "a-14763",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6754,6 +7180,7 @@
      }
     },
     {
+     "id": "a-14764",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6764,6 +7191,7 @@
      }
     },
     {
+     "id": "a-14765",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -6775,6 +7203,7 @@
      }
     },
     {
+     "id": "a-14766",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -6786,6 +7215,7 @@
      }
     },
     {
+     "id": "a-14767",
      "sec": 14,
      "field": "met",
      "value": {
@@ -6797,6 +7227,7 @@
      }
     },
     {
+     "id": "a-14768",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6808,6 +7239,7 @@
      }
     },
     {
+     "id": "a-14769",
      "sec": 15,
      "field": "places",
      "value": {
@@ -6820,6 +7252,7 @@
      }
     },
     {
+     "id": "a-14770",
      "sec": 17,
      "field": "events",
      "value": {
@@ -6831,6 +7264,7 @@
      }
     },
     {
+     "id": "a-14771",
      "sec": 17,
      "field": "events",
      "value": {
@@ -6841,6 +7275,7 @@
      }
     },
     {
+     "id": "a-14772",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -6849,6 +7284,7 @@
      }
     },
     {
+     "id": "a-14773",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -6858,6 +7294,7 @@
      }
     },
     {
+     "id": "a-14774",
      "sec": 20,
      "field": "death",
      "value": {
@@ -6880,6 +7317,7 @@
      }
     },
     {
+     "id": "a-14775",
      "sec": 22,
      "field": "laterMentions",
      "value": {
@@ -6892,6 +7330,7 @@
      }
     },
     {
+     "id": "a-14776",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -6905,6 +7344,7 @@
      }
     },
     {
+     "id": "a-14777",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6917,6 +7357,7 @@
      }
     },
     {
+     "id": "a-14778",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6930,6 +7371,7 @@
      }
     },
     {
+     "id": "a-14779",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -6959,6 +7401,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14780",
      "sec": 5,
      "field": "status",
      "value": {
@@ -6969,6 +7412,7 @@
      }
     },
     {
+     "id": "a-14781",
      "sec": 20,
      "field": "death",
      "value": {
@@ -6983,6 +7427,7 @@
      }
     },
     {
+     "id": "a-14782",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7008,6 +7453,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14783",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7018,6 +7464,7 @@
      }
     },
     {
+     "id": "a-14784",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7029,6 +7476,7 @@
      }
     },
     {
+     "id": "a-14785",
      "sec": 17,
      "field": "events",
      "value": {
@@ -7039,6 +7487,7 @@
      }
     },
     {
+     "id": "a-14786",
      "sec": 20,
      "field": "death",
      "value": {
@@ -7053,6 +7502,7 @@
      }
     },
     {
+     "id": "a-14787",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7085,6 +7535,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14788",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7096,6 +7547,7 @@
      }
     },
     {
+     "id": "a-14789",
      "sec": 20,
      "field": "death",
      "value": {
@@ -7111,6 +7563,7 @@
      }
     },
     {
+     "id": "a-14790",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7136,6 +7589,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14791",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7164,6 +7618,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14792",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7174,6 +7629,7 @@
      }
     },
     {
+     "id": "a-14793",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7184,6 +7640,7 @@
      }
     },
     {
+     "id": "a-14794",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7194,6 +7651,7 @@
      }
     },
     {
+     "id": "a-14795",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7206,6 +7664,7 @@
      }
     },
     {
+     "id": "a-14796",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7213,6 +7672,7 @@
      }
     },
     {
+     "id": "a-14797",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7242,6 +7702,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14798",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7252,6 +7713,7 @@
      }
     },
     {
+     "id": "a-14799",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7262,6 +7724,7 @@
      }
     },
     {
+     "id": "a-14800",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7274,6 +7737,7 @@
      }
     },
     {
+     "id": "a-14801",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7299,6 +7763,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14802",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7306,6 +7771,7 @@
      }
     },
     {
+     "id": "a-14803",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -7336,6 +7802,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14804",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7346,6 +7813,7 @@
      }
     },
     {
+     "id": "a-14805",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7356,6 +7824,7 @@
      }
     },
     {
+     "id": "a-14806",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7381,6 +7850,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14807",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7391,6 +7861,7 @@
      }
     },
     {
+     "id": "a-14808",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7401,6 +7872,7 @@
      }
     },
     {
+     "id": "a-14809",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7426,6 +7898,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14810",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7436,6 +7909,7 @@
      }
     },
     {
+     "id": "a-14811",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7446,6 +7920,7 @@
      }
     },
     {
+     "id": "a-14812",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7458,6 +7933,7 @@
      }
     },
     {
+     "id": "a-14813",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7483,6 +7959,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14814",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7493,6 +7970,7 @@
      }
     },
     {
+     "id": "a-14815",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7503,6 +7981,7 @@
      }
     },
     {
+     "id": "a-14816",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7515,6 +7994,7 @@
      }
     },
     {
+     "id": "a-14817",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7543,6 +8023,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14818",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7553,6 +8034,7 @@
      }
     },
     {
+     "id": "a-14819",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7563,6 +8045,7 @@
      }
     },
     {
+     "id": "a-14820",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7573,6 +8056,7 @@
      }
     },
     {
+     "id": "a-14821",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7583,6 +8067,7 @@
      }
     },
     {
+     "id": "a-14822",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7608,6 +8093,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14823",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7618,6 +8104,7 @@
      }
     },
     {
+     "id": "a-14824",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7628,6 +8115,7 @@
      }
     },
     {
+     "id": "a-14825",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7640,6 +8128,7 @@
      }
     },
     {
+     "id": "a-14826",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7665,6 +8154,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14827",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7675,6 +8165,7 @@
      }
     },
     {
+     "id": "a-14828",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7685,6 +8176,7 @@
      }
     },
     {
+     "id": "a-14829",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7697,6 +8189,7 @@
      }
     },
     {
+     "id": "a-14830",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7722,6 +8215,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14831",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7732,6 +8226,7 @@
      }
     },
     {
+     "id": "a-14832",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7742,6 +8237,7 @@
      }
     },
     {
+     "id": "a-14833",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7754,6 +8250,7 @@
      }
     },
     {
+     "id": "a-14834",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7779,6 +8276,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14835",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7789,6 +8287,7 @@
      }
     },
     {
+     "id": "a-14836",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7799,6 +8298,7 @@
      }
     },
     {
+     "id": "a-14837",
      "sec": 15,
      "field": "places",
      "value": {
@@ -7811,6 +8311,7 @@
      }
     },
     {
+     "id": "a-14838",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7836,6 +8337,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14839",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7846,6 +8348,7 @@
      }
     },
     {
+     "id": "a-14840",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7856,6 +8359,7 @@
      }
     },
     {
+     "id": "a-14841",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7881,6 +8385,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14842",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7891,6 +8396,7 @@
      }
     },
     {
+     "id": "a-14843",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7901,6 +8407,7 @@
      }
     },
     {
+     "id": "a-14844",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7926,6 +8433,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14845",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7936,6 +8444,7 @@
      }
     },
     {
+     "id": "a-14846",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7946,6 +8455,7 @@
      }
     },
     {
+     "id": "a-14847",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -7971,6 +8481,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14848",
      "sec": 5,
      "field": "status",
      "value": {
@@ -7981,6 +8492,7 @@
      }
     },
     {
+     "id": "a-14849",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -7991,6 +8503,7 @@
      }
     },
     {
+     "id": "a-14850",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8016,6 +8529,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14851",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8026,6 +8540,7 @@
      }
     },
     {
+     "id": "a-14852",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8036,6 +8551,7 @@
      }
     },
     {
+     "id": "a-14853",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8046,6 +8562,7 @@
      }
     },
     {
+     "id": "a-14854",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8071,6 +8588,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14855",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8081,6 +8599,7 @@
      }
     },
     {
+     "id": "a-14856",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8091,6 +8610,7 @@
      }
     },
     {
+     "id": "a-14857",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8101,6 +8621,7 @@
      }
     },
     {
+     "id": "a-14858",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8108,6 +8629,7 @@
      }
     },
     {
+     "id": "a-14859",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8137,6 +8659,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14860",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8147,6 +8670,7 @@
      }
     },
     {
+     "id": "a-14861",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8157,6 +8681,7 @@
      }
     },
     {
+     "id": "a-14862",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8167,6 +8692,7 @@
      }
     },
     {
+     "id": "a-14863",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8174,6 +8700,7 @@
      }
     },
     {
+     "id": "a-14864",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8203,6 +8730,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14865",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8213,6 +8741,7 @@
      }
     },
     {
+     "id": "a-14866",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8223,6 +8752,7 @@
      }
     },
     {
+     "id": "a-14867",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8233,6 +8763,7 @@
      }
     },
     {
+     "id": "a-14868",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8240,6 +8771,7 @@
      }
     },
     {
+     "id": "a-14869",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8269,6 +8801,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14870",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8279,6 +8812,7 @@
      }
     },
     {
+     "id": "a-14871",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8289,6 +8823,7 @@
      }
     },
     {
+     "id": "a-14872",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8299,6 +8834,7 @@
      }
     },
     {
+     "id": "a-14873",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8306,6 +8842,7 @@
      }
     },
     {
+     "id": "a-14874",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8335,6 +8872,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14875",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8345,6 +8883,7 @@
      }
     },
     {
+     "id": "a-14876",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8355,6 +8894,7 @@
      }
     },
     {
+     "id": "a-14877",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8365,6 +8905,7 @@
      }
     },
     {
+     "id": "a-14878",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8372,6 +8913,7 @@
      }
     },
     {
+     "id": "a-14879",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -8401,6 +8943,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14880",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8426,6 +8969,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14881",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8436,6 +8980,7 @@
      }
     },
     {
+     "id": "a-14882",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8446,6 +8991,7 @@
      }
     },
     {
+     "id": "a-14883",
      "sec": 15,
      "field": "places",
      "value": {
@@ -8458,6 +9004,7 @@
      }
     },
     {
+     "id": "a-14884",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8483,6 +9030,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14885",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8493,6 +9041,7 @@
      }
     },
     {
+     "id": "a-14886",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8503,6 +9052,7 @@
      }
     },
     {
+     "id": "a-14887",
      "sec": 15,
      "field": "places",
      "value": {
@@ -8515,6 +9065,7 @@
      }
     },
     {
+     "id": "a-14888",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8543,6 +9094,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14889",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8554,6 +9106,7 @@
      }
     },
     {
+     "id": "a-14890",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8564,6 +9117,7 @@
      }
     },
     {
+     "id": "a-14891",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8575,6 +9129,7 @@
      }
     },
     {
+     "id": "a-14892",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8585,6 +9140,7 @@
      }
     },
     {
+     "id": "a-14893",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8616,6 +9172,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14894",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8627,6 +9184,7 @@
      }
     },
     {
+     "id": "a-14895",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8637,6 +9195,7 @@
      }
     },
     {
+     "id": "a-14896",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8648,6 +9207,7 @@
      }
     },
     {
+     "id": "a-14897",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8658,6 +9218,7 @@
      }
     },
     {
+     "id": "a-14898",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8689,6 +9250,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14899",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8700,6 +9262,7 @@
      }
     },
     {
+     "id": "a-14900",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8710,6 +9273,7 @@
      }
     },
     {
+     "id": "a-14901",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8721,6 +9285,7 @@
      }
     },
     {
+     "id": "a-14902",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8731,6 +9296,7 @@
      }
     },
     {
+     "id": "a-14903",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8762,6 +9328,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14904",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8773,6 +9340,7 @@
      }
     },
     {
+     "id": "a-14905",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8783,6 +9351,7 @@
      }
     },
     {
+     "id": "a-14906",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8794,6 +9363,7 @@
      }
     },
     {
+     "id": "a-14907",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8804,6 +9374,7 @@
      }
     },
     {
+     "id": "a-14908",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8835,6 +9406,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14909",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8846,6 +9418,7 @@
      }
     },
     {
+     "id": "a-14910",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8856,6 +9429,7 @@
      }
     },
     {
+     "id": "a-14911",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8867,6 +9441,7 @@
      }
     },
     {
+     "id": "a-14912",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8877,6 +9452,7 @@
      }
     },
     {
+     "id": "a-14913",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8908,6 +9484,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14914",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8919,6 +9496,7 @@
      }
     },
     {
+     "id": "a-14915",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8929,6 +9507,7 @@
      }
     },
     {
+     "id": "a-14916",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -8940,6 +9519,7 @@
      }
     },
     {
+     "id": "a-14917",
      "sec": 17,
      "field": "events",
      "value": {
@@ -8950,6 +9530,7 @@
      }
     },
     {
+     "id": "a-14918",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -8981,6 +9562,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14919",
      "sec": 5,
      "field": "status",
      "value": {
@@ -8992,6 +9574,7 @@
      }
     },
     {
+     "id": "a-14920",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9002,6 +9585,7 @@
      }
     },
     {
+     "id": "a-14921",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9013,6 +9597,7 @@
      }
     },
     {
+     "id": "a-14922",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9023,6 +9608,7 @@
      }
     },
     {
+     "id": "a-14923",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9054,6 +9640,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14924",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9065,6 +9652,7 @@
      }
     },
     {
+     "id": "a-14925",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9075,6 +9663,7 @@
      }
     },
     {
+     "id": "a-14926",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9086,6 +9675,7 @@
      }
     },
     {
+     "id": "a-14927",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9096,6 +9686,7 @@
      }
     },
     {
+     "id": "a-14928",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9127,6 +9718,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14929",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9138,6 +9730,7 @@
      }
     },
     {
+     "id": "a-14930",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9148,6 +9741,7 @@
      }
     },
     {
+     "id": "a-14931",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9159,6 +9753,7 @@
      }
     },
     {
+     "id": "a-14932",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9169,6 +9764,7 @@
      }
     },
     {
+     "id": "a-14933",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9200,6 +9796,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14934",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9211,6 +9808,7 @@
      }
     },
     {
+     "id": "a-14935",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9221,6 +9819,7 @@
      }
     },
     {
+     "id": "a-14936",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9232,6 +9831,7 @@
      }
     },
     {
+     "id": "a-14937",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9242,6 +9842,7 @@
      }
     },
     {
+     "id": "a-14938",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9273,6 +9874,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14939",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9284,6 +9886,7 @@
      }
     },
     {
+     "id": "a-14940",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9294,6 +9897,7 @@
      }
     },
     {
+     "id": "a-14941",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9305,6 +9909,7 @@
      }
     },
     {
+     "id": "a-14942",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9315,6 +9920,7 @@
      }
     },
     {
+     "id": "a-14943",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9346,6 +9952,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14944",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9356,6 +9963,7 @@
      }
     },
     {
+     "id": "a-14945",
      "sec": 14,
      "field": "met",
      "value": {
@@ -9367,6 +9975,7 @@
      }
     },
     {
+     "id": "a-14946",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9377,6 +9986,7 @@
      }
     },
     {
+     "id": "a-14947",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9387,6 +9997,7 @@
      }
     },
     {
+     "id": "a-14948",
      "sec": 18,
      "field": "sayings",
      "value": {
@@ -9395,6 +10006,7 @@
      }
     },
     {
+     "id": "a-14949",
      "sec": 19,
      "field": "withGod",
      "value": {
@@ -9405,6 +10017,7 @@
      }
     },
     {
+     "id": "a-14950",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9415,6 +10028,7 @@
      }
     },
     {
+     "id": "a-14951",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9449,6 +10063,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14952",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9459,6 +10074,7 @@
      }
     },
     {
+     "id": "a-14953",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9469,6 +10085,7 @@
      }
     },
     {
+     "id": "a-14954",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9479,6 +10096,7 @@
      }
     },
     {
+     "id": "a-14955",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9507,6 +10125,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14956",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9517,6 +10136,7 @@
      }
     },
     {
+     "id": "a-14957",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9527,6 +10147,7 @@
      }
     },
     {
+     "id": "a-14958",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9537,6 +10158,7 @@
      }
     },
     {
+     "id": "a-14959",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9565,6 +10187,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14960",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9575,6 +10198,7 @@
      }
     },
     {
+     "id": "a-14961",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9585,6 +10209,7 @@
      }
     },
     {
+     "id": "a-14962",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9595,6 +10220,7 @@
      }
     },
     {
+     "id": "a-14963",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9623,6 +10249,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14964",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9633,6 +10260,7 @@
      }
     },
     {
+     "id": "a-14965",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9643,6 +10271,7 @@
      }
     },
     {
+     "id": "a-14966",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9653,6 +10282,7 @@
      }
     },
     {
+     "id": "a-14967",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9681,6 +10311,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14968",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9691,6 +10322,7 @@
      }
     },
     {
+     "id": "a-14969",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9701,6 +10333,7 @@
      }
     },
     {
+     "id": "a-14970",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9711,6 +10344,7 @@
      }
     },
     {
+     "id": "a-14971",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9739,6 +10373,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14972",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9749,6 +10384,7 @@
      }
     },
     {
+     "id": "a-14973",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9759,6 +10395,7 @@
      }
     },
     {
+     "id": "a-14974",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9769,6 +10406,7 @@
      }
     },
     {
+     "id": "a-14975",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9797,6 +10435,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14976",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9807,6 +10446,7 @@
      }
     },
     {
+     "id": "a-14977",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9817,6 +10457,7 @@
      }
     },
     {
+     "id": "a-14978",
      "sec": 17,
      "field": "events",
      "value": {
@@ -9827,6 +10468,7 @@
      }
     },
     {
+     "id": "a-14979",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9852,6 +10494,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14980",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9880,6 +10523,7 @@
    "prominence": 2,
    "facts": [
     {
+     "id": "a-14981",
      "sec": 5,
      "field": "status",
      "value": {
@@ -9890,6 +10534,7 @@
      }
     },
     {
+     "id": "a-14982",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9900,6 +10545,7 @@
      }
     },
     {
+     "id": "a-14983",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -9910,6 +10556,7 @@
      }
     },
     {
+     "id": "a-14984",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9920,6 +10567,7 @@
      }
     },
     {
+     "id": "a-14985",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -9953,6 +10601,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14986",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -9963,6 +10612,7 @@
      }
     },
     {
+     "id": "a-14987",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -9973,6 +10623,7 @@
      }
     },
     {
+     "id": "a-14988",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -9980,6 +10631,7 @@
      }
     },
     {
+     "id": "a-14989",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10013,6 +10665,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14990",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10023,6 +10676,7 @@
      }
     },
     {
+     "id": "a-14991",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10030,6 +10684,7 @@
      }
     },
     {
+     "id": "a-14992",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10063,6 +10718,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14993",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10073,6 +10729,7 @@
      }
     },
     {
+     "id": "a-14994",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -10083,6 +10740,7 @@
      }
     },
     {
+     "id": "a-14995",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -10093,6 +10751,7 @@
      }
     },
     {
+     "id": "a-14996",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10100,6 +10759,7 @@
      }
     },
     {
+     "id": "a-14997",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10129,6 +10789,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14998",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10157,6 +10818,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-14999",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10168,6 +10830,7 @@
      }
     },
     {
+     "id": "a-15000",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10193,6 +10856,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15001",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10200,6 +10864,7 @@
      }
     },
     {
+     "id": "a-15002",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10233,6 +10898,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15003",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10244,6 +10910,7 @@
      }
     },
     {
+     "id": "a-15004",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10269,6 +10936,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15005",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10276,6 +10944,7 @@
      }
     },
     {
+     "id": "a-15006",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10309,6 +10978,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15007",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10320,6 +10990,7 @@
      }
     },
     {
+     "id": "a-15008",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10327,6 +10998,7 @@
      }
     },
     {
+     "id": "a-15009",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10357,6 +11029,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15010",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10385,6 +11058,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15011",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10396,6 +11070,7 @@
      }
     },
     {
+     "id": "a-15012",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10403,6 +11078,7 @@
      }
     },
     {
+     "id": "a-15013",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10432,6 +11108,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15014",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10460,6 +11137,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15015",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10471,6 +11149,7 @@
      }
     },
     {
+     "id": "a-15016",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10496,6 +11175,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15017",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10524,6 +11204,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15018",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10535,6 +11216,7 @@
      }
     },
     {
+     "id": "a-15019",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10560,6 +11242,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15020",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10588,6 +11271,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15021",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10599,6 +11283,7 @@
      }
     },
     {
+     "id": "a-15022",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10624,6 +11309,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15023",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10652,6 +11338,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15024",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10663,6 +11350,7 @@
      }
     },
     {
+     "id": "a-15025",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10688,6 +11376,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15026",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10716,6 +11405,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15027",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10727,6 +11417,7 @@
      }
     },
     {
+     "id": "a-15028",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10755,6 +11446,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15029",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10766,6 +11458,7 @@
      }
     },
     {
+     "id": "a-15030",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10773,6 +11466,7 @@
      }
     },
     {
+     "id": "a-15031",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -10804,6 +11498,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15032",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10832,6 +11527,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15033",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10842,6 +11538,7 @@
      }
     },
     {
+     "id": "a-15034",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10867,6 +11564,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15035",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10895,6 +11593,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15036",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10906,6 +11605,7 @@
      }
     },
     {
+     "id": "a-15037",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -10916,6 +11616,7 @@
      }
     },
     {
+     "id": "a-15038",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10941,6 +11642,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15039",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -10969,6 +11671,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15040",
      "sec": 5,
      "field": "status",
      "value": {
@@ -10980,6 +11683,7 @@
      }
     },
     {
+     "id": "a-15041",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -10990,6 +11694,7 @@
      }
     },
     {
+     "id": "a-15042",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11015,6 +11720,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15043",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11022,6 +11728,7 @@
      }
     },
     {
+     "id": "a-15044",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11054,6 +11761,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15045",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11065,6 +11773,7 @@
      }
     },
     {
+     "id": "a-15046",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11075,6 +11784,7 @@
      }
     },
     {
+     "id": "a-15047",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11103,6 +11813,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15048",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11114,6 +11825,7 @@
      }
     },
     {
+     "id": "a-15049",
      "sec": 15,
      "field": "places",
      "value": {
@@ -11125,6 +11837,7 @@
      }
     },
     {
+     "id": "a-15050",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11135,6 +11848,7 @@
      }
     },
     {
+     "id": "a-15051",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11163,6 +11877,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15052",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11174,6 +11889,7 @@
      }
     },
     {
+     "id": "a-15053",
      "sec": 15,
      "field": "places",
      "value": {
@@ -11185,6 +11901,7 @@
      }
     },
     {
+     "id": "a-15054",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11195,6 +11912,7 @@
      }
     },
     {
+     "id": "a-15055",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11223,6 +11941,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15056",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11234,6 +11953,7 @@
      }
     },
     {
+     "id": "a-15057",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11244,6 +11964,7 @@
      }
     },
     {
+     "id": "a-15058",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11254,6 +11975,7 @@
      }
     },
     {
+     "id": "a-15059",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11261,6 +11983,7 @@
      }
     },
     {
+     "id": "a-15060",
      "sec": 24,
      "field": "notes",
      "value": {
@@ -11293,6 +12016,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15061",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11304,6 +12028,7 @@
      }
     },
     {
+     "id": "a-15062",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11314,6 +12039,7 @@
      }
     },
     {
+     "id": "a-15063",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11342,6 +12068,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15064",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11353,6 +12080,7 @@
      }
     },
     {
+     "id": "a-15065",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11363,6 +12091,7 @@
      }
     },
     {
+     "id": "a-15066",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11373,6 +12102,7 @@
      }
     },
     {
+     "id": "a-15067",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11398,6 +12128,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15068",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11426,6 +12157,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15069",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11437,6 +12169,7 @@
      }
     },
     {
+     "id": "a-15070",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11447,6 +12180,7 @@
      }
     },
     {
+     "id": "a-15071",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11475,6 +12209,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15072",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11486,6 +12221,7 @@
      }
     },
     {
+     "id": "a-15073",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11496,6 +12232,7 @@
      }
     },
     {
+     "id": "a-15074",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11506,6 +12243,7 @@
      }
     },
     {
+     "id": "a-15075",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11534,6 +12272,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15076",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11545,6 +12284,7 @@
      }
     },
     {
+     "id": "a-15077",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11555,6 +12295,7 @@
      }
     },
     {
+     "id": "a-15078",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11565,6 +12306,7 @@
      }
     },
     {
+     "id": "a-15079",
      "sec": 23,
      "field": "scripture",
      "value": {
@@ -11593,6 +12335,7 @@
    "prominence": 1,
    "facts": [
     {
+     "id": "a-15080",
      "sec": 5,
      "field": "status",
      "value": {
@@ -11603,6 +12346,7 @@
      }
     },
     {
+     "id": "a-15081",
      "sec": 7,
      "field": "lineage",
      "value": {
@@ -11613,6 +12357,7 @@
      }
     },
     {
+     "id": "a-15082",
      "sec": 16,
      "field": "offices",
      "value": {
@@ -11623,6 +12368,7 @@
      }
     },
     {
+     "id": "a-15083",
      "sec": 23,
      "field": "scripture",
      "value": {
