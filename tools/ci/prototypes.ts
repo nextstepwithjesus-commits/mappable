@@ -23,10 +23,16 @@ const val = (k: string) => (argv.includes(k) ? argv[argv.indexOf(k) + 1] : undef
 const OUT = resolve(val('--out') ?? join(ROOT, 'dist-ci', 'прототипы'));
 const ONLY = val('--only');
 
-/** Экраны: лист-образец (08 ред. 3.3, В-31) и стенд токенов; прототипы инструментов добавляются сюда, когда появятся. */
-export const PAGES: { dir: string; page: string; q: string; stand?: boolean }[] = [
+/** Сборка рабочего прототипа пакета 1 (10 § 4.2.2): адреса приложения — пути, сервер отдаёт `index.html` (09 § 4.4.1). */
+export const SPA = 'prototypes/инструменты/dist';
+/** Экраны: лист-образец (08 ред. 3.3, В-31), стенд токенов и сцены прототипа пакета 1 «Истории и Время». */
+export const PAGES: { dir: string; page: string; q: string; stand?: boolean; spa?: boolean }[] = [
   ...['лист', 'главная', 'каталог', 'история', 'карточка', 'настройки'].map((s) => ({ dir: 'prototypes/лист-образец', page: `${s}.html`, q: 'panel=0' })),
   { dir: 'prototypes/стенд-токенов', page: 'index.html', q: '', stand: true },
+  ...['', 'kniga/byt', 'kniga/mk', 'kniga/iak', 'istoriya/e-noy-i-potop', 'istoriya/e-pyat-khlebov-i-dve-ryby?view=sinopsis', 'istoriya/e-savl-na-puti-v-damask', 'kartochka/p-noy', 'kniga/byt/7', 'paralleli/teksty', 'vremya?view=lives', 'vremya?view=events&sel=e-noy-i-potop', 'vremya?view=rulers'].map((page) => {
+    const [path, q = ''] = page.split('?');
+    return { dir: SPA, page: path, q: [q, 'age=null'].filter(Boolean).join('&'), spa: true };
+  }),
 ];
 
 interface Variant { name: string; ctx: BrowserContextOptions; q?: string }
@@ -54,7 +60,8 @@ const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.j
 function serve(): Promise<{ server: Server; origin: string }> {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url ?? '/', 'http://x').pathname);
-    const file = normalize(join(ROOT, path));
+    let file = normalize(join(ROOT, path));
+    if (file.startsWith(join(ROOT, SPA)) && (!existsSync(file) || statSync(file).isDirectory())) file = join(ROOT, SPA, 'index.html');
     if (!file.startsWith(ROOT) || !existsSync(file) || statSync(file).isDirectory()) {
       res.writeHead(404).end();
       return;
@@ -122,10 +129,14 @@ async function main() {
         if (m.type() === 'error') errors.push(m.text());
       });
       const q = [pg.q, v.q].filter(Boolean).join('&');
-      await p.goto(`${origin}/${pg.dir}/${pg.page}${q ? `?${q}` : ''}`, { waitUntil: 'load' });
+      await p.goto(encodeURI(`${origin}/${pg.dir}/${pg.page}${q ? `?${q}` : ''}`), { waitUntil: 'load' });
+      if (pg.spa) {
+        await p.waitForFunction(() => document.documentElement.dataset.готово === '1', null, { timeout: 30000 });
+        await p.waitForFunction(() => !document.querySelector('[aria-busy="true"]'), null, { timeout: 30000 });
+      }
       await p.evaluate(() => document.fonts.ready);
       await p.waitForTimeout(150);
-      const name = `${pg.dir.split('/').pop()}-${pg.page.replace(/\.html$/, '')}-${v.name}`;
+      const name = `${pg.spa ? 'инструменты' : pg.dir.split('/').pop()}-${(pg.page || 'главная').replace(/\.html$/, '').replace(/[/?&=]/g, '_')}${pg.spa && pg.q !== 'age=null' ? `_${pg.q.replace(/[&=]/g, '_')}` : ''}-${v.name}`;
       await p.screenshot({ path: join(OUT, `${name}.png`) });
       const scroll = await p.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       if (scroll > 0) fails.push({ where, what: `горизонтальная прокрутка ${scroll} px` });

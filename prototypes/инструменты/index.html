@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Библия наглядно — прототип пакета 1</title>
+<script>
+  // тема до первого кадра (08 § 6.1): без вспышки светлой темы
+  try { const t = new URLSearchParams(location.search).get('theme') || JSON.parse(sessionStorage.getItem('бн-прототип:перекрытия') || '{}').тема || JSON.parse(localStorage.getItem('бн-прототип:настройки') || '{}').тема; if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+</script>
+</head>
+<body>
+<!-- РАБОЧИЙ ПРОТОТИП пакета 1 «Истории и Время» (10 § 4.2.2; 09 § 10.1): в продукт не переносится. Данные — проба с плашкой. -->
+<div id="приложение"></div>
+<div id="объявления" role="status" class="скрыто"></div>
+<script type="module" src="./main.tsx"></script>
+</body>
+</html>

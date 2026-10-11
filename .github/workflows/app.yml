@@ -64,12 +64,16 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Браузер для Playwright
-        run: npx playwright install --with-deps chromium
+      - name: Браузеры для Playwright (копия выделения проверяется в трёх движках, 08 § 16.2)
+        run: npx playwright install --with-deps chromium firefox webkit
       - name: Токены для стенда токенов
         run: npm run -s tokens
+      - name: Сборка рабочего прототипа пакета 1 (пакеты «проба» и данные прототипа)
+        run: npm run -s proto:build
       - name: Опись сцен показа — только «выпуск» (10 § 3.3)
         run: npx vitest run tests/prototypes-*.test.ts --testTimeout=60000
+      - name: Поведение прототипа пакета 1 — «Назад», бюджет 300 px, копия в трёх движках, В-28, 11 § 12.2
+        run: npm run -s proto:test
       - name: Playwright и axe — свой сервер на localhost; опорные окна 08, 1 024, 768, 320, 200 %, „Самый крупный“, forced-colors, без движения; без сети
         run: npm run -s ci:prototypes -- --out dist-ci/прототипы
       - if: always()

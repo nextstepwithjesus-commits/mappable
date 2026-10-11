@@ -11,6 +11,10 @@
       "tests/tokens*.ts",
       "tests/prototypes-*.ts",
       "tests/helpers/core-data.ts",
+      "prototypes/инструменты/**/*.ts",
+      "prototypes/инструменты/**/*.tsx",
+      "!prototypes/инструменты/dist",
+      "!prototypes/инструменты/public",
       "!core/search/versification-table.ts"
     ]
   },
@@ -37,5 +41,23 @@
         "useLiteralKeys": "off"
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "prototypes/инструменты/**"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off",
+            "noNoninteractiveTabindex": "off",
+            "useFocusableInteractive": "off",
+            "noNoninteractiveElementToInteractiveRole": "off",
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    }
+  ]
 }

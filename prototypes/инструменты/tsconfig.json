@@ -1,0 +1,6 @@
+{
+  "//": "Рабочий прототип пакета 1 (09 § 10.1): тот же стек и строгость, что у ядра; DOM.",
+  "extends": "../../tsconfig.json",
+  "compilerOptions": { "types": ["node", "vite/client"], "lib": ["ES2023", "DOM", "DOM.Iterable"], "noImplicitOverride": true },
+  "include": ["*.ts", "*.tsx", "общее", "истории", "время", "данные", "тесты"]
+}

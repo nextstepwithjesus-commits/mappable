@@ -1,0 +1,79 @@
+/* Основа (из листа-образца ред. 3.2, принятого В-31) (08 ред. 3.2): шрифты, сброс, ступени шкалы, голоса, фокус.
+   Значения — только переменные из токены.css; сырые значения ловит собрать.mjs. ПРОТОТИП. */
+
+@font-face { font-family: "Literata"; src: url("../../../inputs/fonts/Literata[opsz,wght].ttf") format("truetype"); font-weight: 200 900; font-style: normal; font-display: swap; }
+@font-face { font-family: "Literata"; src: url("../../../inputs/fonts/Literata-Italic[opsz,wght].ttf") format("truetype"); font-weight: 200 900; font-style: italic; font-display: swap; }
+@font-face { font-family: "Golos Text"; src: url("../../../inputs/fonts/GolosText[wght].ttf") format("truetype"); font-weight: 400 900; font-style: normal; font-display: swap; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; scroll-padding-top: calc(var(--komponent-shapka-vysota) + var(--otstup-16)); }
+body {
+  margin: 0; background: var(--tsvet-fon); color: var(--tsvet-chernila);
+  font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); font-weight: var(--tekst-interfeys-font-weight);
+  font-synthesis: none; font-optical-sizing: auto; font-variant-numeric: lining-nums;
+}
+h1, h2, h3, h4, p, ul, ol, dl, dd, figure, blockquote { margin: 0; }
+ul, ol { padding: 0; list-style: none; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+img, svg { display: block; max-width: 100%; }
+table { border-collapse: collapse; }
+[hidden] { display: none !important; }
+.скрыто { position: absolute !important; width: var(--liniya-volosyanaya); height: var(--liniya-volosyanaya); overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+.нс { white-space: nowrap; }
+
+/* ---------- Ступени шкалы (08 § 3.3.2) ---------- */
+.т-h1 { font-family: var(--tekst-zagolovok-stranitsy-font-family); font-size: var(--tekst-zagolovok-stranitsy-font-size); line-height: var(--tekst-zagolovok-stranitsy-line-height); font-weight: var(--tekst-zagolovok-stranitsy-font-weight); }
+.т-номер-истории { font-family: var(--tekst-nomer-istorii-font-family); font-size: var(--tekst-nomer-istorii-font-size); line-height: var(--tekst-nomer-istorii-line-height); font-weight: var(--tekst-nomer-istorii-font-weight); font-variant-numeric: tabular-nums lining-nums; }
+.т-h2 { font-family: var(--tekst-zagolovok-bloka-font-family); font-size: var(--tekst-zagolovok-bloka-font-size); line-height: var(--tekst-zagolovok-bloka-line-height); font-weight: var(--tekst-zagolovok-bloka-font-weight); }
+.т-номер-главы { font-family: var(--tekst-nomer-glavy-font-family); font-size: var(--tekst-nomer-glavy-font-size); line-height: var(--tekst-nomer-glavy-line-height); font-weight: var(--tekst-nomer-glavy-font-weight); }
+.т-писание { font-family: var(--tekst-pisanie-font-family); font-size: var(--tekst-pisanie-font-size); line-height: var(--tekst-pisanie-line-height); font-weight: var(--tekst-pisanie-font-weight); font-variant-numeric: oldstyle-nums; }
+.т-книга { font-family: var(--tekst-kniga-font-family); font-size: var(--tekst-kniga-font-size); line-height: var(--tekst-kniga-line-height); font-weight: var(--tekst-kniga-font-weight); }
+.т-проза { font-family: var(--tekst-proza-font-family); font-size: var(--tekst-proza-font-size); line-height: var(--tekst-proza-line-height); font-weight: var(--tekst-proza-font-weight); font-variant-numeric: lining-nums; }
+.т-цитата { font-family: var(--tekst-tsitata-apparat-font-family); font-size: var(--tekst-tsitata-apparat-font-size); line-height: var(--tekst-tsitata-apparat-line-height); font-weight: var(--tekst-tsitata-apparat-font-weight); }
+.т-название { font-family: var(--tekst-nazvanie-stroki-font-family); font-size: var(--tekst-nazvanie-stroki-font-size); line-height: var(--tekst-nazvanie-stroki-line-height); font-weight: var(--tekst-nazvanie-stroki-font-weight); }
+.т-интерфейс { font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); font-weight: var(--tekst-interfeys-font-weight); }
+.т-повествование { font-family: var(--tekst-povestvovanie-font-family); font-size: var(--tekst-povestvovanie-font-size); line-height: var(--tekst-povestvovanie-line-height); font-weight: var(--tekst-povestvovanie-font-weight); color: var(--tsvet-chernila-2); }
+.т-адрес { font-family: var(--tekst-adres-font-family); font-size: var(--tekst-adres-font-size); line-height: var(--tekst-adres-line-height); font-weight: var(--tekst-adres-font-weight); font-variant-numeric: tabular-nums lining-nums; color: var(--tsvet-chernila-2); }
+.сильно { font-weight: 600; }
+.ч2 { color: var(--tsvet-chernila-2); }
+.ч3 { color: var(--tsvet-chernila-3); }
+.ч-вз { color: var(--tsvet-chernila-vz); }
+.ч-нз { color: var(--tsvet-chernila-nz); }
+.цифры { font-variant-numeric: tabular-nums lining-nums; }
+
+/* ---------- Ссылки (08 § 3.2.1, § 7.8) ---------- */
+a { color: var(--tsvet-chernila); text-decoration: underline; text-decoration-thickness: var(--liniya-volosyanaya); text-underline-offset: 0.15em; }
+a:hover { text-decoration-thickness: var(--liniya-silnaya); color: var(--tsvet-deystvie); }
+
+/* ---------- Фокус клавиатуры (08 § 5.2): рамка 3 px «чернила», зазор 2 px, кайма 2 px «лист» ---------- */
+:focus { outline: none; }
+:focus-visible, .как-фокус {
+  outline: var(--liniya-fokus) solid var(--tsvet-chernila);
+  outline-offset: var(--liniya-zazor);
+  box-shadow: var(--черта, 0 0 0 0 transparent), 0 0 0 calc(var(--liniya-zazor) * 2 + var(--liniya-fokus)) var(--tsvet-list);
+}
+/* цитаты: кавычки уже в тексте («…») — браузер своих не добавляет (Н-1, Н5) */
+q { quotes: none; }
+@media (forced-colors: active) {
+  :focus-visible, .как-фокус { outline-color: Highlight; box-shadow: none; }
+}
+
+/* ---------- Голоса (08 § 4.1) ---------- */
+.голос-библия { font-family: var(--shrift-knizhnyy); border-left: var(--liniya-silnaya) solid var(--tsvet-liniya); padding-left: var(--otstup-12); }
+.голос-мы { font-family: var(--tekst-interfeys-font-family); font-size: var(--tekst-interfeys-font-size); line-height: var(--tekst-interfeys-line-height); color: var(--tsvet-chernila-3); }
+.подпись-голоса { font-family: var(--tekst-adres-font-family); font-size: var(--tekst-adres-font-size); line-height: var(--tekst-adres-line-height); color: var(--tsvet-chernila-2); }
+
+/* Скобки (08 § 4.2): тем же цветом; скрытые метки — сгенерированным содержимым с альтернативным текстом, не копируются */
+.скобка::before { content: "" / "в скобках:"; }
+.скобка::after { content: "" / "конец скобок"; }
+.скобка-бг::before, .скобка-бг::after { content: none; }
+
+/* Слово словаря (08 § 7.26): подчёркивание точками */
+.слово-словаря { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline dotted var(--tsvet-chernila-2); text-decoration-thickness: var(--liniya-volosyanaya); text-underline-offset: 0.2em; cursor: pointer; }
+
+/* ---------- Движение (08 § 3.7) ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root:not([data-motion="с"]) * { transition-duration: 0s !important; animation-duration: 0s !important; scroll-behavior: auto !important; }
+}
+:root[data-motion="без"] * { transition-duration: 0s !important; animation-duration: 0s !important; scroll-behavior: auto !important; }
