@@ -914,6 +914,1264 @@
    }
   },
   {
+   "key": "chrono:p-aaron",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4f2284d6cb90957e7fac2527d96740be1bb0bf0da6731a51be7b65394e8bd8e9",
+   "inputs": {
+    "verses": [
+     "Исх 12:41",
+     "Исх 7:7",
+     "Чис 33:38",
+     "Чис 33:39"
+    ],
+    "text": "274d3a8eff394326620d31102552d76cbd8fbe856be2f3669a7dafb8bd1bf451",
+    "brackets": "280e3d53f02c5c7715d95fe5a747d28ed9b448c30273329c0696f9bd54de0ea0",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-adam",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "dbd279a2ed28e1b507ea263de4d3cfb74b4ee878ba136c0ef41083b6343a18d0",
+   "inputs": {
+    "verses": [
+     "Быт 5:5"
+    ],
+    "text": "e6ecf87be0b8f30894a30e1f3e5d8c54efdee38f67a2aced8bbdac9cc3984027",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-akhaz",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "c6ade9a5826290f9f418f5016c251f8af6193049924a70526592e4f5603b4c23",
+   "inputs": {
+    "verses": [
+     "2Пар 28:1",
+     "4Цар 15:38",
+     "4Цар 16:1",
+     "4Цар 16:2"
+    ],
+    "text": "1d99c3cc2d995ca4c73aa48db86c928caf5f672bc991fc79f2cace0c791009bf",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-amasiya",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f715418222ed599bd8c4673166ac700dd9f8e5152af1fad7fbccb583527775b1",
+   "inputs": {
+    "verses": [
+     "2Пар 25:1",
+     "4Цар 14:1",
+     "4Цар 14:2"
+    ],
+    "text": "7b7b566ef1728f0deaaaac318946acd597d64e1ea1ddc61468020d37bcd03547",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-amram",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "d127a2b40a78daa4a5491987cbc2b506cd887d2ee2e16c9dae0a97f5f752b72b",
+   "inputs": {
+    "verses": [
+     "Исх 6:20",
+     "Чис 26:59"
+    ],
+    "text": "04b8b9b01f845e0cbd074054a55597c16620de754292aaf37be385fc908b734f",
+    "brackets": "08add7392d90be5f6b40424c710a76f6d40c33cfe61baa8aec2fee429417d99c",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-arfaksad",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "82b2d34f8edf780c59a9700e313caa146fd51972a9de36d6aab0f02d383c3786",
+   "inputs": {
+    "verses": [
+     "Быт 11:10",
+     "Быт 11:12",
+     "Быт 11:13"
+    ],
+    "text": "fdd0cb532f5b931a223f1e15f0f468af0364940e18d4c5054248f0010388f4bc",
+    "brackets": "a61902507e806010009b7fcad95fcbba941521ffbf12e32058738eb4c986eac5",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-asaf",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "766f4b13669f1049d63f15de913ee0d51a89cd70bed963cfb33e9e7166d5d3d7",
+   "inputs": {
+    "verses": [
+     "1Пар 25:1",
+     "1Пар 25:2"
+    ],
+    "text": "a3bc13e0dc27f95479de18423be0c25b5e2ce0e688aae4c1343a952fb255a24b",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-avraam",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "d4759e240b73557b36fe93f0c74bdfdfa81d960b2a00f8945d60557c2b5ed892",
+   "inputs": {
+    "verses": [
+     "Быт 11:26",
+     "Быт 11:32",
+     "Быт 12:4",
+     "Быт 25:7",
+     "Деян 7:4"
+    ],
+    "text": "7a334a8372d79a310f5e2413adff6f7daac31dd3c59e6cfbe332d6ea8e91ddf4",
+    "brackets": "3ed6e0e39e5300aeb40ce46ec51c3be856149df246d31ad59b3eb61b519dcda3",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-beera-syn-vaala",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "d86353bc61f4f31717a9b48887318e3c54eddfb44064ae0c559a3ac2c58c5875",
+   "inputs": {
+    "verses": [
+     "1Пар 5:6",
+     "4Цар 15:29"
+    ],
+    "text": "7b039ec27d8cb827a8b585880b82473b0daae970d2ca1bcf9dce654cf306dbdc",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-david",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "3bddcaae1e3b88ac88f691297944c36c8378c57e39293677bcd0f41bb5bcbef6",
+   "inputs": {
+    "verses": [
+     "1Пар 29:27",
+     "2Цар 2:11",
+     "2Цар 5:4",
+     "2Цар 5:5",
+     "3Цар 2:10",
+     "3Цар 2:11"
+    ],
+    "text": "fbfa4d5f2bc8b6fa736d6e38cbf25cdaa7bbd68b0dfb096e344bc046a53826ab",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-eliakim-syn-khelkii",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4e5aa6fc57b5529b8ca71d3e51e7ffd1a242c177a520f8027f62cad45ea17767",
+   "inputs": {
+    "verses": [
+     "4Цар 18:13",
+     "4Цар 18:18"
+    ],
+    "text": "df39a54f40357eda7b488e7c46a95d51069a50d94620fb4a706a4883672da1f0",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-enos",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "456d727e3a920308ad7637a308787fb88dd70df1a27cb090c0fa7b77b686fa7d",
+   "inputs": {
+    "verses": [
+     "Быт 5:11",
+     "Быт 5:6"
+    ],
+    "text": "858d77ea01df5e8a7bfba7790c96ac7297922f8e45297729156c2588cd2cc6cd",
+    "brackets": "732a60db3555eb251ddeb7ef72a84f73f8372bc13083f952d9d3e1104bbb0a34",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ever",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "0b76667208104f102ff3fadef9ab3f5c48b17a8e78b0cb90afe20bab4a523a03",
+   "inputs": {
+    "verses": [
+     "Быт 11:14",
+     "Быт 11:16",
+     "Быт 11:17"
+    ],
+    "text": "15b10ed93cedf04af0ceb5b86d50768521edf0b2407832cde60fb1ac12fb22f6",
+    "brackets": "dab9447105258522c597152e9c6129d83b0f1ed15103ed50161fcdf3ff36f348",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ezekiya",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "a16da64c936b278bedf61b9d1cf012142b8c552b7a898c31b8f11f1ac171aa60",
+   "inputs": {
+    "verses": [
+     "2Пар 28:27",
+     "2Пар 29:1",
+     "4Цар 16:20",
+     "4Цар 18:1",
+     "4Цар 18:10",
+     "4Цар 18:2",
+     "4Цар 18:9"
+    ],
+    "text": "c7b4b5c72b4042d3f0c61ae832ec83b7d57479956ff848c466dffb312426400a",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ezekiya-syn-shalluma",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f938a981ef81398f6df5962ba513d9e682fb706625f9bd3f6aafd0eec92cacc1",
+   "inputs": {
+    "verses": [
+     "2Пар 28:1",
+     "2Пар 28:10",
+     "2Пар 28:11",
+     "2Пар 28:12",
+     "2Пар 28:5",
+     "2Пар 28:6",
+     "2Пар 28:7",
+     "2Пар 28:8",
+     "2Пар 28:9"
+    ],
+    "text": "10c7c00a401f37ab4dbcd5a95e366f1d7fb63634e618027a1a9a3502c8452d66",
+    "brackets": "872924e2c793b613bfa9ab047d5c9aa39856b54d6c4e8ea3317fe87083baf9e7",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-falek",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "bd9e715cc4b71df8c6094ac4b98b82703c6d3f2f2c5021660ca4904b352b8a3b",
+   "inputs": {
+    "verses": [
+     "Быт 11:16",
+     "Быт 11:18",
+     "Быт 11:19"
+    ],
+    "text": "43c1942b326ee70a7f0daf7196c815990e56357477f0cea84e4cafd91eba7bcb",
+    "brackets": "34eaa6b24fc3106ed44799cf02e27150221891695a7240946fd5259ed463199d",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-farra",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f376cea209279dea9c650c60acab835f101496abf0dd13cdc67ab53f478102ac",
+   "inputs": {
+    "verses": [
+     "Быт 11:24",
+     "Быт 11:32"
+    ],
+    "text": "d480d8e1a5884c0f871d79f58ce7be36cc57f754e64cfe6ebf4e445d7ea9d7a2",
+    "brackets": "8b779468a08f08813ed9411e64ea81492cb30cfe758d94af658a2843b3c1b7f6",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-feglaffellasar",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "50bcaff2e83700f534ad0f976544a0a04c19f2a0147b894d16562b501e3f92c5",
+   "inputs": {
+    "verses": [
+     "4Цар 15:29",
+     "4Цар 16:7",
+     "4Цар 16:8",
+     "4Цар 16:9"
+    ],
+    "text": "8ed04bb5f884181c02351f595f30fbecd6d64c45001175c8bf3b39b4b2225e97",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-filistimlyane",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "841fd9ef02522554beae85666def2619f152bdfe0abc17bdc2c65a3d926c7868",
+   "inputs": {
+    "verses": [
+     "Быт 10:1",
+     "Быт 10:14"
+    ],
+    "text": "eabdc9163fdc56745e3f70f151e9de797a192d70d9874fbd5c51e47ef365e9a2",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ful",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f3d528cc4542ec3d52095332c76f269347f8aa08c3202d3b2039f5990b8f58d7",
+   "inputs": {
+    "verses": [
+     "4Цар 15:19"
+    ],
+    "text": "81e632bc7f6084b2270117f9b27e345732012430f1e104a7e3a06cf3c6e35144",
+    "brackets": "c1f85c8ad86052f9ee5b9f5060aaa2a4bec2707500a5a8e488551b4d58476c0c",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iafet",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "6cbe7286bfa2bdc4b61e4fe83e9cc5dd249eb89aedd800e686eb27c3c7a85874",
+   "inputs": {
+    "verses": [
+     "Быт 5:32",
+     "Быт 7:6",
+     "Быт 9:18"
+    ],
+    "text": "e90010554f45c60c316f0087de412a708e4c08f5909de746f7d25278babf467f",
+    "brackets": "cb5c05a670d42df0adefba74b061b2847acbb8c7537ba33ead75a66c256696e0",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iair-syn-seguva",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "2b5a9cda025e982c460db92d20130a421fc359e64a40c07b873ddc49eb676b92",
+   "inputs": {
+    "verses": [
+     "Втор 1:3",
+     "Втор 3:14",
+     "Исх 12:41",
+     "Чис 32:41",
+     "Чис 33:38"
+    ],
+    "text": "6bdc34dd0ee2e37ef787504b1166dee9c46dddcfaa9f5100cc5f41d875431096",
+    "brackets": "d6ad2e8360fdb04e2d812f5f80cc47f141c58c009fb1cc6cdc3b55f77041a2f2",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iared",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "1502cfad33c416baa70ae058b78cffeec176b46194cb67966b81b25d56180d4c",
+   "inputs": {
+    "verses": [
+     "Быт 5:15",
+     "Быт 5:20"
+    ],
+    "text": "bcc76a75bc59974acb6582c8939e41c2278ef6721dcad17357b13c760f2ae98f",
+    "brackets": "a29a70a798819afe4335737495a71b04ed796c23b83bb6d5169d04eb3f9b9cc1",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ieroboam",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "cc54f961893f033c86509c1dfcf3fb8f2eb0335c90bf4cc6f235f7db13489006",
+   "inputs": {
+    "verses": [
+     "3Цар 14:20"
+    ],
+    "text": "7d035006c134aa9b98666eee045530e43a46cd767d3caea9e1d7baa6f5054f8d",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ieroboam-vtoroy",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "b60a4a6c68f832570303248adc9dafc6e9833c67211223335269e42f3c8403d7",
+   "inputs": {
+    "verses": [
+     "4Цар 14:23"
+    ],
+    "text": "359760460740f76c2b7d32d5b7a761d3160f311c68597777afb7b7eb38082f58",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iiuy",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "bd767475127d544902de3198f17da42d330525632b42a35edddaa7e60eacfe2d",
+   "inputs": {
+    "verses": [
+     "4Цар 10:36"
+    ],
+    "text": "4e00c71f04e36e5ab48fe4b87be62388e17fc5e026ab3c07d6f5ccf721797a5b",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ila-syn-vaasy",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "7e08e26ebf678d51960d1b59aae6085bb9f4612beadcd4a242aa7599ed1b8ce5",
+   "inputs": {
+    "verses": [
+     "3Цар 16:10",
+     "3Цар 16:8"
+    ],
+    "text": "6d534622f348dfe158af467be0aa751113622b0de910dbac998b5980d2b678d6",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ioakh-syn-asafa",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "282e1ba71f29d2f3be29b50f317c81d7312eecc00e0d4eedff35b787e2772efa",
+   "inputs": {
+    "verses": [
+     "4Цар 18:13",
+     "4Цар 18:18"
+    ],
+    "text": "df39a54f40357eda7b488e7c46a95d51069a50d94620fb4a706a4883672da1f0",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iofam-syn-gedeona",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "36c471f2d3cbb89a4f0875ee96cf9fabb2eb041d091a05bdda240211024c6420",
+   "inputs": {
+    "verses": [
+     "Суд 8:32",
+     "Суд 9:5"
+    ],
+    "text": "812987d4baedf5958dea2d10507155613339f5cfb98a261cf707b294efe2e039",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iokhaveda",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "4917681eac76685e62f368aa747c15d0b6d6d6afb31c4737793554bbb7e6ca11",
+   "inputs": {
+    "verses": [
+     "Быт 47:9",
+     "Чис 26:59"
+    ],
+    "text": "6dd506f9b7556a888a7b60f83774584c280f5388d36feb96e74a6165d21b115c",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-iosif",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f9e0aa93c16edf0810cdaed471fc24c263ea7659b69c24ffe99da564a6a8b2f6",
+   "inputs": {
+    "verses": [
+     "Быт 41:46",
+     "Быт 41:53",
+     "Быт 41:54",
+     "Быт 45:6",
+     "Быт 47:9",
+     "Быт 50:22",
+     "Быт 50:26"
+    ],
+    "text": "f58248de3a3975070fb14f4fee2e6703f7a3597525a2692eb7237c3762a89b7a",
+    "brackets": "932ee0e9e331c0df9dfcaf3c548df6af1db88a5ade16fa885353a9187d99f1a6",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-kaaf",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f9c818a507d20d30ccd48ce7c0396f83d71a03e9337f99fa8d830e54fbf88ce9",
+   "inputs": {
+    "verses": [
+     "Быт 46:11",
+     "Быт 46:8",
+     "Быт 47:9",
+     "Исх 6:18"
+    ],
+    "text": "6f8d04f516ce5f9d1c19cb456ea0d753bf1386498c496438960661165572c468",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-kainan",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "5bdf999d29f010a4e7f776e6e3611bca6ab27647e736c61a7d01343d019f638f",
+   "inputs": {
+    "verses": [
+     "Быт 5:14",
+     "Быт 5:9"
+    ],
+    "text": "da5b0201bc93ff981e2f5d19ce924faf51cff4489c9983e6559d30c8941e2c96",
+    "brackets": "36bea836d6ff9f00b213e45320144b1e9f6e4ccfca4e8647597d16de23a208f2",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-kham",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "418b7a858a54c49e029830710ad07e488c09fa5111628407f4a035a98dd8e9e0",
+   "inputs": {
+    "verses": [
+     "Быт 5:32",
+     "Быт 7:6",
+     "Быт 9:18"
+    ],
+    "text": "e90010554f45c60c316f0087de412a708e4c08f5909de746f7d25278babf467f",
+    "brackets": "cb5c05a670d42df0adefba74b061b2847acbb8c7537ba33ead75a66c256696e0",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-khanaan",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "95a79ca4225e12672965f70eb9789f27d630403e67d0bb50b34e6deaaa038000",
+   "inputs": {
+    "verses": [
+     "1Пет 3:20",
+     "Быт 10:1",
+     "Быт 10:6",
+     "Быт 7:6",
+     "Быт 8:13",
+     "Быт 8:14"
+    ],
+    "text": "f2144c8491086a355c3d89e749907dc5cebd8169d692f1612d8f828b0c0e4226",
+    "brackets": "5edbff76f10c18655051f3cedf598817437786ea9e21938b15fe8185485c9c46",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-kir",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "444f547d7314d7d96ccdce039d8066e8f5f7623b219e778d48a22c63f01c27d9",
+   "inputs": {
+    "verses": [
+     "2Пар 36:22",
+     "Езд 1:1"
+    ],
+    "text": "b3431ae88a9920c60b00148b7093f68edc9697bddcd86bd300965a282964d78f",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-lamekh",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "b86d3d9166e56e4a69868f2067cc78ed3b943092e1d1164ea538ccf9b23335f0",
+   "inputs": {
+    "verses": [
+     "Быт 5:25",
+     "Быт 5:31"
+    ],
+    "text": "7b7598dac6bd7d0492e0ede8538b5e83dde035a9b9db924d8751c5ea700d94b5",
+    "brackets": "df0246f380d9bdafeb2e2b3906293ba342d8f2cef2f38ff8665bc468c3a37048",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-maaseya-syn-akhaza",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "b8da8048ebdd9e91750d49b917096f759da3312e436c4aaf58c0447fa9151395",
+   "inputs": {
+    "verses": [
+     "2Пар 28:6",
+     "2Пар 28:7"
+    ],
+    "text": "c596ed4841198eccd0cf5e4b5da45aeaa1c1ec8a40292d06f8e6a801cc8531a2",
+    "brackets": "872924e2c793b613bfa9ab047d5c9aa39856b54d6c4e8ea3317fe87083baf9e7",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-maday",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "2cf1e0f201d083071d374d05f9e7c81420d2dfda09958e787f2944276ef37745",
+   "inputs": {
+    "verses": [
+     "1Пет 3:20",
+     "Быт 10:1",
+     "Быт 10:2",
+     "Быт 7:6",
+     "Быт 8:13",
+     "Быт 8:14"
+    ],
+    "text": "206ffa3a32f84f1e9c52ca2e80c445645ca52101df81947774f4689873b554a0",
+    "brackets": "51e51f9fa2186f2bef3c2f2ff1f6d41b647c671c54808f589a0f12c958eb80cb",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-mafusal",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "47645a1cd610907738c29d2ea64d6584fc36f1a382c393c946b0aa5f2e437429",
+   "inputs": {
+    "verses": [
+     "Быт 5:21",
+     "Быт 5:27"
+    ],
+    "text": "38f1787e8f17bea93d47178fca9f920a7cfa9dd958957436e382f34166290a23",
+    "brackets": "1315e51376fc2e8a798d3ae82377ee61b48d233c851067be046860ad26764dd5",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-maleleil",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "7063d1fbdb242b9a11252fffebdee95f3d806defa06375e07f39fa033e9ee1c6",
+   "inputs": {
+    "verses": [
+     "Быт 5:12",
+     "Быт 5:17"
+    ],
+    "text": "d35da846c9a7a8a02538cac8c4692d9824661e7844e325862c9a6a2d4c4dbb2b",
+    "brackets": "2f66af2b79c8f6d5430e17ccc71836a47ca480a16edd62464f4194bdf05c794d",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-mariam",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "262a446f3ad7e41badbad0133e1eb0d67d928170fb1755788330d6c58e052b8c",
+   "inputs": {
+    "verses": [
+     "1Пар 6:3",
+     "Исх 12:41",
+     "Исх 15:20",
+     "Исх 2:4",
+     "Исх 2:7",
+     "Исх 2:8",
+     "Чис 20:1",
+     "Чис 20:22",
+     "Чис 20:23",
+     "Чис 20:24",
+     "Чис 20:25",
+     "Чис 20:26",
+     "Чис 20:27",
+     "Чис 20:28",
+     "Чис 26:59",
+     "Чис 33:38"
+    ],
+    "text": "dc3b975339e62077b30d8fb23349210a3223ef6c1049aae8f9a71cbaa6e42e6a",
+    "brackets": "fbbf63aef67a6ecdb067bb2ac2d363e3aad35e0610165cc39eb545f6e7f99bd4",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-moisey",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "371cbcc890308f8c481525a929791638ad37c1edf38fde2d662b9f5d729c1d87",
+   "inputs": {
+    "verses": [
+     "Втор 31:2",
+     "Втор 34:7",
+     "Исх 12:41",
+     "Исх 12:50",
+     "Исх 12:51",
+     "Исх 7:7"
+    ],
+    "text": "a467051812901838ca8c12af0bcf3014fc172b38430b522ca0e8ee84e61b2778",
+    "brackets": "280e3d53f02c5c7715d95fe5a747d28ed9b448c30273329c0696f9bd54de0ea0",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-nakhor",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "60d0b54315f511ffdc8f79973f9f4ad86e750c5dfe5f6b5241a66d1ec220c45c",
+   "inputs": {
+    "verses": [
+     "Быт 11:22",
+     "Быт 11:24",
+     "Быт 11:25"
+    ],
+    "text": "c0433199c7e7815d43cd8b3dbd5e8ddaef44d36c5794207b7e64ee46d6efd0b8",
+    "brackets": "846dbae3aea1409c4c53fc5d5df7ffc0f13183209fa989e1a57e314a68ddd60c",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-noy",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "17fd0612091cfa3d92816ce530eb9c75f89f19a2bad0f9adb1c7ec4d351f1dae",
+   "inputs": {
+    "verses": [
+     "Быт 5:28",
+     "Быт 5:29",
+     "Быт 9:29"
+    ],
+    "text": "b8fb0ecc6530ab2805dfaf3c05054e74f54acbbcd18a5b0be3c5e708a5d496f3",
+    "brackets": "def3d02ead5e79e1c6fa386c0837caabb4fd0e337744b0659db77f974b2239ef",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-osiya-prorok",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "0a331873c3d6d039e306fc7c59cc7cc253e8292abad2ec284253de6dc977d6bc",
+   "inputs": {
+    "verses": [
+     "Ос 1:1"
+    ],
+    "text": "96d9cea3ed57b2bd897b06fbbc1364ba23a9ac6c3b052449dae746571da53ff3",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-osiya-syn-ily",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "fa68d260c69545705a8754814470ec3cc51dd5ec26cfebc9c42e999d07069604",
+   "inputs": {
+    "verses": [
+     "4Цар 15:30",
+     "4Цар 17:1"
+    ],
+    "text": "e476c9f94adb42d1b268245b17e88338e4599796760de1e3903f557488525d95",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-ragav",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "8dbece73d46bf79e34eb125a8947dc64c1634cfdccc98214a2b1cdbea409427d",
+   "inputs": {
+    "verses": [
+     "Быт 11:18",
+     "Быт 11:20",
+     "Быт 11:21"
+    ],
+    "text": "5630cf08ad701012390cab24f5efdbcd134a7462ab063097f02842b52f798eaa",
+    "brackets": "aed12700dffca5cb3d7168236feeab3687de726dea2bb1ef601d5c542a6fba34",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-razon",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f94ee86c25d5b5978a277776500efd2a196f89d3eadf6d5ae41cdba6ddb2ada6",
+   "inputs": {
+    "verses": [
+     "3Цар 11:25"
+    ],
+    "text": "e610555e5d896fcd23884fee9557252662b0b021123dab3b5a15da014a629e83",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-sala",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "dfc078bcb06abe8ad50df24463c2ac0506aaddfea978425e0abbb563a0758307",
+   "inputs": {
+    "verses": [
+     "Быт 11:12",
+     "Быт 11:14",
+     "Быт 11:15"
+    ],
+    "text": "ef2015a0f18361c702f6870f156eed08118d9c2797b986625769ce3445fafbc7",
+    "brackets": "74106757d75eeddd5c7b168b164155d7e724c3756608c394ddeed270fa6939a6",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-salmanassar",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "9e09c337d52537db97f413bcd02e6c96022a9d9194a96f93bdcaf64829305b3c",
+   "inputs": {
+    "verses": [
+     "4Цар 17:3",
+     "4Цар 18:9"
+    ],
+    "text": "6b2b8a1e802b028c35e7275463806f10956aea94723590a76660635759c29356",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-serukh",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "5d41e5f89b7ebcbe0959b71c0155639b22e74c5c4f424ae566a634ffe91c4e96",
+   "inputs": {
+    "verses": [
+     "Быт 11:20",
+     "Быт 11:22",
+     "Быт 11:23"
+    ],
+    "text": "bbed0bb5e409611ff1e4141883848fc0a94967116796ed5dba2d1457cdbfe7c8",
+    "brackets": "82e039430d8d7698d7add2c7afeae6622deec130c79a93b97accf4a50936dc0a",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-sif",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "6e8e37b8c6cf121d973ea867cc1e93db5a8cd055962b8bd70bb178986a2b85b5",
+   "inputs": {
+    "verses": [
+     "Быт 5:3",
+     "Быт 5:8"
+    ],
+    "text": "0a3b593ff686fda0e37c7c5a9a8a0ef09f79154f3cfcba4931ec8f50cae7a5b5",
+    "brackets": "91b43d7d6552ba62c11a6a8996ecaf666cd4f3d25064b8f30a6d9aa325511f34",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-sim",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "cdeae2ffe4e885c4c6970994eb06ba8364d3bde58c42fe1b20e1c7205bd15d60",
+   "inputs": {
+    "verses": [
+     "Быт 11:10",
+     "Быт 11:11",
+     "Быт 5:32",
+     "Быт 7:6"
+    ],
+    "text": "942b8b7624f43d0988e0e178f566731a81af7ffe61ae47d615c007fb41deb88e",
+    "brackets": "8961307b27f4fd9397ab3f878c5c4851e6b89456eae17606fb84444c1f093a9f",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-sinnakherim",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "1d90b2c18186ab5b9f341ae3bbae7668beaff8f44c1c4fe2eb2c8b233f625109",
+   "inputs": {
+    "verses": [
+     "4Цар 18:13"
+    ],
+    "text": "dd90b9d497342f129aa16960a99e77c8321af408e81a2d1601ea5a3ee680f818",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "chrono:p-uriya-syn-shemaii",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "fe54fa0ce068df9b40621af744c45a901e7847ddc37295497cba79c8cb8456df",
+   "inputs": {
+    "verses": [
+     "Иер 26:20",
+     "Иер 26:21",
+     "Иер 26:23"
+    ],
+    "text": "7df38cbdd5b6900dfab4eebca6e64178021ccbc3a2bac2b6bddcfe7679179261",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-egypt",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "159be2088abc9e2679d92292c5c685519378997964546734f0a01250cd2499d6",
+   "inputs": {
+    "verses": [
+     "3Цар 6:1",
+     "Быт 46:26",
+     "Быт 46:27",
+     "Быт 46:6",
+     "Быт 47:28",
+     "Быт 47:9",
+     "Быт 50:26",
+     "Исх 12:40",
+     "Исх 12:41",
+     "Исх 2:1",
+     "Исх 2:2",
+     "Исх 7:7"
+    ],
+    "text": "c0182714e498430a32dcad92258cbb6edb14ae19501dba6762a0621210270704",
+    "brackets": "43fc1e642a24109c766041abd807cd05ed0ee0183c908b5d3371c3679b850570",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-exodus",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "b96fb4e78297d32c9d83a9e1e54e8f73acd30d953a162b44bc8bd53b09b1e330",
+   "inputs": {
+    "verses": [
+     "3Цар 6:1",
+     "Втор 1:3",
+     "Втор 34:5",
+     "Втор 34:6",
+     "Втор 34:7",
+     "Исх 12:40",
+     "Исх 12:41",
+     "Нав 3:17",
+     "Чис 14:33",
+     "Чис 14:34",
+     "Чис 33:38",
+     "Чис 33:39"
+    ],
+    "text": "f13fb335f0f02efdc6acbf8620de0e3bf224b1daa8dac7bce321c45a2801edd0",
+    "brackets": "edebe88b5978a47e5f6b5ea62e10f59d7b669b2adab9eda62e519389b9f283ea",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-patriarchs",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "260ab983293d39651e023176a4a5a51ef74aefefa783df30ed437e3386fec8e1",
+   "inputs": {
+    "verses": [
+     "Быт 12:4",
+     "Быт 21:5",
+     "Быт 25:26",
+     "Быт 25:7",
+     "Быт 25:8",
+     "Быт 37:2",
+     "Быт 37:28",
+     "Быт 41:46",
+     "Быт 46:6",
+     "Быт 47:9"
+    ],
+    "text": "b51d1487e5d2f712eadbc15c87091a6d48a86ef381d71a565153dde43aa9e067",
+    "brackets": "344f102538943516c8422bc741e212ea5fef0d7a7b970ce31b7f8897fcb657ff",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "epoch:era-postdiluvian",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "cfdbc54b9a1c684ab88f36df97c3b1f4ca6fc5bb838611cefbf4a0134c7420e8",
+   "inputs": {
+    "verses": [
+     "Быт 10:25",
+     "Быт 11:10",
+     "Быт 11:11",
+     "Быт 11:12",
+     "Быт 11:13",
+     "Быт 11:14",
+     "Быт 11:15",
+     "Быт 11:16",
+     "Быт 11:17",
+     "Быт 11:18",
+     "Быт 11:19",
+     "Быт 11:20",
+     "Быт 11:21",
+     "Быт 11:22",
+     "Быт 11:23",
+     "Быт 11:24",
+     "Быт 11:25",
+     "Быт 11:26",
+     "Быт 11:32",
+     "Быт 12:4",
+     "Быт 7:11",
+     "Быт 7:6",
+     "Быт 9:28",
+     "Быт 9:29",
+     "Деян 7:4"
+    ],
+    "text": "600f50431928bbcc83e9c33758a5273c861ba77a3114a42e59c6bea09f0f5590",
+    "brackets": "93184da6046783f131432ecff97e0a5db13c057abef4d2080a4e5db939b2e487",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
    "key": "fact:a-10009",
    "by": "bibleist-reviewer (второй ключ, Д-партия-1-второй-ключ.md)",
    "kind": "agent",
@@ -9191,6 +10449,73 @@
      "Лк 17:15"
     ],
     "text": "0316227f4c9b20ac289e1786219bd18b0ac6e67b0bc3d9cc5c53e03bf3013fc8",
+    "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "model:m-dolgoe",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "f32e4d6f31cfb19e7f141c57c76f94f8785508f322975286205dc28ed367275f",
+   "inputs": {
+    "verses": [
+     "3Цар 6:1",
+     "Быт 11:32",
+     "Быт 12:4",
+     "Быт 47:9",
+     "Деян 7:4",
+     "Исх 12:40",
+     "Исх 12:41",
+     "Исх 7:7"
+    ],
+    "text": "4046c314a4ad47a71cd4bb2968ae9b72b60d3c1e5958c042f8051199c970ac21",
+    "brackets": "b30b2ff45311a7abddbe09f1aaea388d871fa451605ab6c6439e883c8a7019e5",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "model:m-skobki",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "1e46a4e69d5e740de76aae71a871ef79cc9e9d2bbabc2b64cf489b3af807d7de",
+   "inputs": {
+    "verses": [
+     "3Цар 6:1",
+     "Быт 11:12",
+     "Быт 11:13",
+     "Быт 11:32",
+     "Быт 12:4",
+     "Быт 5:3",
+     "Деян 7:4",
+     "Исх 12:40",
+     "Исх 12:41"
+    ],
+    "text": "6c8b079ed6b499d87540133d7e633a90645c2816762ae1110702651402390004",
+    "brackets": "bfc62885804077864401c92d8a1d80cc7556e43c7fa93fd69f2fd3e2cc157056",
+    "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "sources": {
+     "src-synodal": "tools/bible/synodal.tsv"
+    }
+   }
+  },
+  {
+   "key": "model:s-galil",
+   "by": "bibleist-reviewer (второй ключ, Д6 пакет 1)",
+   "kind": "agent",
+   "at": "2026-10-11",
+   "hash": "b9f588c440baac0f15c8e1e42d7d4801b99137ebbf6bb5645e28fb1c6f49603c",
+   "inputs": {
+    "verses": [],
+    "text": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "brackets": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "issues": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "sources": {
