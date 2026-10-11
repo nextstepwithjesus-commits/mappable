@@ -6,6 +6,7 @@
 |---|---|---|---|
 | `fonts/` | Literata, Golos Text, Noto Serif Hebrew (переменные TTF); для шага 0 (08 § 2.1, направления Б и В) — Piazzolla, Ysabeau Office, Source Serif 4, Onest, скачаны 10 октября 2026 с согласия владельца | google/fonts, ветка `main` | SIL Open Font License 1.1 (тексты лицензий — `fonts/licenses/`) |
 | `openbible/` | `ancient.jsonl`, `modern.jsonl` — сводка отождествлений мест | openbibleinfo/Bible-Geocoding-Data, коммит `7eb18a5` | CC BY 4.0 (`openbible/LICENSE.txt`), с указанием авторства OpenBible.info |
+| `crosswire/` | модули SWORD `RusSynodal.zip` (Синодальный перевод 1876, OSIS, версия 1.9.1, нумерация Synodal) и `TSK.zip` (Treasury of Scripture Knowledge 1.4, ThML, нумерация английская), скачаны 11 октября 2026 с разрешения владельца (В-29) | crosswire.org, `ftpmirror/pub/sword/packages/rawzip/` | Public Domain (поле `DistributionLicense` в `.conf` модулей) |
 | `natural-earth/` | суша и реки, масштаб 1 : 10 млн | Natural Earth | общественное достояние |
 
 Это справочные данные для расчётов документации, а не основание фактов Писания. Условия выпуска приложения — вопрос владельца ВП-40.
